@@ -136,10 +136,14 @@ levels(catches$PROCEDENCIA)
 
 ##search errors in gear
 ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
+ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", "TIPO.MUESTREO.ICES", "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["gears"]] <- unique(ERRORS$gears)
+ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
 
 ##search errors in origin
 ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-  #unique(ERRORS$division$ORIGEN)
+ERRORS[["division"]] <- ERRORS$division[,c("FECHA", "TIPO.MUESTREO.ICES", "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["division"]] <- unique(ERRORS$division)
 
 ##search errors in 'unipescod'
 ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
