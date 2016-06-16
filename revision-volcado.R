@@ -189,6 +189,19 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 # ---- errors sampled weight greater than landing weight ----
     ERRORS[["sampled_weight_greater_landing_weight"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] > catches_in_lengths[,"P.DESEM."],]
 
+# ---- erros in species from the categories: all of them has exactly the same sampled weight
+#    TO DO
+    
+# ---- errors in the weight sampled similar to the category weight?
+    desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", "TIPO.MUESTREO.ICES", "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
+    desem_mues_sop <- desem_mues_sop[desem_mues_sop[, "P.DESEM."]==desem_mues_sop[,"P.MUE.DES"],]    
+    desem_mues_sop <- arrange(desem_mues_sop, PUERTO, TIPO.MUESTREO.ICES, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
+    desem_mues_sop["P.MUE.DES-SOP"] <- desem_mues_sop["P.MUE.DES"] - desem_mues_sop["S.O.P."]
+    desem_mues_sop["P.MUE.DES-SOP"] <- round(desem_mues_sop["P.MUE.DES-SOP"])
+    desem_mues_sop["POR.DIF"] <- (desem_mues_sop["P.MUE.DES-SOP"] * 100) / desem_mues_sop["P.MUE.DES"]
+    desem_mues_sop["POR.DIF"] <- round(desem_mues_sop["POR.DIF"])
+    ERRORS$desem_mues_sop<-desem_mues_sop
+
 # ---- errors sop = 0
     ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0,]
 
