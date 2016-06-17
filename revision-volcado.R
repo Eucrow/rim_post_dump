@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 16/6/2016
-#### version: 1
+#### date of last modification: 17/6/2016
+#### version: 1.1
 ####
 #### files required: esp mezcla.csv, estratorim_arte.csv, divisiones.csv
 
