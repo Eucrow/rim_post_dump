@@ -34,9 +34,9 @@ MESSAGE_ERRORS<- list() #list with the errors
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
-PATH_FILENAME <- "F:/misdoc/sap/revision volcado/enero 2016/"
-FILENAME <- "tallas x up 01-2016.csv"
-MONTH <- "01"
+PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
+FILENAME <- "tallas_x_up_1er_trim_2016.txt"
+MONTH <- "3"
 YEAR <- "2016"
 ################################################################################
 
@@ -44,10 +44,11 @@ PATH_ERRORS <- paste(PATH_FILENAME,"/errors",sep="")
 
 # #### FUNCTIONS ###############################################################
 
+
 #function to split the file tallas_x_up
   ##filename: name to import
   ##export = "TRUE" the file is export to csc
-split_tallas_x_up <- function(path_filename, filename, export="FALSE"){
+split_tallas_x_up <- function(path_filename, filename, export="FALSE", month_selected=""){
   
   fullpath<-paste(path_filename, filename, sep="/")
   
@@ -71,12 +72,40 @@ split_tallas_x_up <- function(path_filename, filename, export="FALSE"){
     catches<-read.table(file=fullpath, skip=(cut_rows[2]), sep=";", head=TRUE)
     sapply(catches, class)
   
+  #select only the month
+    if (month_selected != ""){
+      # to avoid some problems with Spanish_Spain.1252 (or if you are use another locale), change locale a Spanish_United States.1252:
+      lct <- Sys.getlocale("LC_TIME")
+      Sys.setlocale("LC_TIME","Spanish_United States.1252")
+      
+      catches$fecha_formateada <- (as.character(catches$FECHA))
+      catches$fecha_formateada <- as.Date(catches$fecha_formateada, "%d-%b-%y")
+      catches$fecha_formateada <- as.POSIXlt(catches$fecha_formateada)
+      catches$month <- catches$fecha_formateada$mon+1 #+1 because POSIXlt$mon is 0 to 11
+      catches <- catches[catches$month==month_selected,]
+      
+      catches_in_lengths$fecha_formateada <- (as.character(catches_in_lengths$FECHA))
+      catches_in_lengths$fecha_formateada <- as.Date(catches_in_lengths$fecha_formateada, "%d-%b-%y")
+      catches_in_lengths$fecha_formateada <- as.POSIXlt(catches_in_lengths$fecha_formateada)
+      catches_in_lengths$month <- catches_in_lengths$fecha_formateada$mon+1 #+1 because POSIXlt$mon is 0 to 11
+      catches_in_lengths <- catches_in_lengths[catches_in_lengths$month==month_selected,]
+  
+      lengths$fecha_formateada <- (as.character(lengths$FECHA))
+      lengths$fecha_formateada <- as.Date(lengths$fecha_formateada, "%d-%b-%y")
+      lengths$fecha_formateada <- as.POSIXlt(lengths$fecha_formateada)
+      lengths$month <- lengths$fecha_formateada$mon+1 #+1 because POSIXlt$mon is 0 to 11
+      lengths <- lengths[lengths$month==month_selected,]
+      
+      # and now the return the initial configuration of locale:
+      Sys.setlocale("LC_TIME", lct)
+    }
   #group in list
   tallas_x_up<-list(catches_in_lengths=catches_in_lengths, lengths=lengths, catches=catches)
   
   #remove the extension
   filename_without_extension <- file_path_sans_ext(filename)
   
+  #export in csv
   if(export=="TRUE"){
     write.csv(tallas_x_up$catches, paste(PATH_FILENAME, filename_without_extension, "_catches.csv", sep=""), quote=FALSE, row.names=FALSE)
     write.csv(tallas_x_up$catches_in_lengths, paste(PATH_FILENAME, filename_without_extension, "_catches_in_lengths.cvs", sep=""), quote=FALSE, row.names=FALSE)
@@ -85,7 +114,6 @@ split_tallas_x_up <- function(path_filename, filename, export="FALSE"){
   #return data
   return(tallas_x_up)
 }
-
 
 #function to save the errors in csv files:
 export_errors_lapply<-function(x, errors){
@@ -105,7 +133,7 @@ export_errors_lapply<-function(x, errors){
 # #### IMPORT DATA #############################################################
 
 #import tallas_x_up
-tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, export=FALSE)
+tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, export=FALSE, month_selected = MONTH)
 
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
@@ -127,6 +155,8 @@ CORRECT_UNIPESCOD<-levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
 #isolating dataframes
 catches<-tallas_x_up[["catches"]]
 catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
+
+#select only information of the month
 
 
 # #### SEARCHING ERRORS ########################################################
@@ -211,7 +241,7 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 
   
 # #### EXPORT ERRORS TO CSV ####################################################
-  lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argumento to the export_errors_lapply function
+  lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
 
 
