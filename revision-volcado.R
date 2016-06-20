@@ -36,7 +36,7 @@ MESSAGE_ERRORS<- list() #list with the errors
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
 FILENAME <- "MUESTREOS_1T_2016.csv"
-MONTH <- "3"
+MONTH <- "1"
 YEAR <- "2016"
 ################################################################################
 
@@ -193,6 +193,11 @@ coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("
 incoherent_data<- -which(coherence_unipescod_gear$VALID)
 ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 
+# ---- number of ships (empty field, =0 or >2)
+ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
+
+# ---- number of rejects (only empty fields)
+ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
@@ -253,9 +258,5 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
-
-
-
-
 
 
