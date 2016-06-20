@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 17/6/2016
-#### version: 1.1
+#### date of last modification: 20/6/2016
+#### version: 1.2
 ####
 #### files required: esp mezcla.csv, estratorim_arte.csv, divisiones.csv
 
@@ -15,8 +15,8 @@
 
 # ---- PACKAGES ----------------------------------------------------------------
 
-library(plyr)
-library(tools) #for file_path_sans_ext()
+library(dplyr) #arrange_()
+library(tools) #file_path_sans_ext()
 
 
 # ---- SET WORKING DIRECTORY ---------------------------------------------------
@@ -35,8 +35,8 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "tallas_x_up_1er_trim_2016.txt"
-MONTH <- "3"
+FILENAME <- "MUESTREOS_1T_2016.csv"
+MONTH <- "1"
 YEAR <- "2016"
 ################################################################################
 
@@ -49,7 +49,7 @@ PATH_ERRORS <- paste(PATH_FILENAME,"/errors",sep="")
   ##filename: name to import
   ##export = "TRUE" the file is export to csc
 split_tallas_x_up <- function(path_filename, filename, export="FALSE", month_selected=""){
-  
+
   fullpath<-paste(path_filename, filename, sep="/")
   
   #read the file to find where are the "----"
@@ -135,8 +135,20 @@ export_errors_lapply<-function(x, errors){
 #import tallas_x_up
 tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, export=FALSE, month_selected = MONTH)
 
+
+##select tipe of file: tallas_x_up from SIRENO or tallas_x_up extracted by sireno's team
+GLOBAL.TIPO.MUESTREO.ICES <- ""
+
+if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
+  GLOBAL.TIPO.MUESTREO.ICES="TIP_MUESTREO"
+}
+  
+
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
+
+#read the no mixed species file
+sam_spe_no_mixed<-read.csv("especies_no_mezcla.csv", header=TRUE)
 
 #read the estrato-rim - arte file to obtain the correct estratorim, gear and its relation
 CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
@@ -167,13 +179,13 @@ levels(catches$PROCEDENCIA)
 
 ##search errors in gear
 ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", "TIPO.MUESTREO.ICES", "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["gears"]] <- unique(ERRORS$gears)
 ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
 
 ##search errors in origin
 ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-ERRORS[["division"]] <- ERRORS$division[,c("FECHA", "TIPO.MUESTREO.ICES", "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["division"]] <- unique(ERRORS$division)
 
 ##search errors in 'unipescod'
@@ -184,6 +196,11 @@ coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("
 incoherent_data<- -which(coherence_unipescod_gear$VALID)
 ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 
+# ---- number of ships (empty field, =0 or >2)
+ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
+
+# ---- number of rejects (only empty fields)
+ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
@@ -193,28 +210,39 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 
     #busca las especies para la categoria que estan en especies del muestreo
     # ---- errors in mixed species of the sample ----
-    selected_fields<-catches[,c("PUERTO", "TIPO.MUESTREO.ICES", "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]
+    selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]
     #search the errors:
     ERRORS[["mixed_species_sample"]]<-merge(x=selected_fields, y=cat_spe_mixed["ESP_CATEGORIA"], by.x="ESPECIE.TAX.", by.y="ESP_CATEGORIA")
     #change the name of a column in dataframe. ???OMG!!!:
     names(ERRORS$mixed_species_sample)[names(ERRORS$mixed_species_sample) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
     #order columns dataframe:
-    ERRORS$mixed_species_sample <- ERRORS$mixed_species_sample[, c("PUERTO", "TIPO.MUESTREO.ICES", "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE","ESP_MUESTREO_INCORRECTA")]
+    ERRORS$mixed_species_sample <- ERRORS$mixed_species_sample[, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE","ESP_MUESTREO_INCORRECTA")]
     #order dataframe:
-    ERRORS[["mixed_species_sample"]]<-arrange(ERRORS[["mixed_species_sample"]], PUERTO, TIPO.MUESTREO.ICES, FECHA, BARCO)
-    rm(selected_fields)
+    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
+    ERRORS[["mixed_species_sample"]]<-arrange_(ERRORS[["mixed_species_sample"]], temporal_list)
+    rm(selected_fields, temporal_list)
+    
+    # ---- errors in not mixed species keyed as mixed species
+    selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]    
+    #search the errors:
+    ERRORS[["no_mixed_species_sample"]] <- merge(x=selected_fields, y=sam_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
+    #order dataframe:
+    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
+    ERRORS[["no_mixed_species_sample"]]<-arrange_(ERRORS[["no_mixed_species_sample"]], temporal_list)
+    rm(selected_fields, temporal_list)
     
     # ---- errors in mixed species of the category ----
-    selected_fields<-catches_in_lengths[,c("PUERTO", "TIPO.MUESTREO.ICES", "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
+    selected_fields<-catches_in_lengths[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
     #search the errors:
     ERRORS[["mixed_species_category"]]<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
     #change the name of a column in dataframe. ???OMG!!!:
     names(ERRORS$mixed_species_category)[names(ERRORS$mixed_species_category) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
     #order columns dataframe:
-    ERRORS$mixed_species_category <- ERRORS$mixed_species_category[, c("PUERTO", "TIPO.MUESTREO.ICES", "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    ERRORS$mixed_species_category <- ERRORS$mixed_species_category[, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
     #order dataframe:
-    ERRORS[["mixed_species_category"]]<-arrange(ERRORS[["mixed_species_category"]], PUERTO, TIPO.MUESTREO.ICES, FECHA, BARCO)
-    rm(selected_fields)  
+    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
+    ERRORS[["mixed_species_category"]]<-arrange_(ERRORS[["mixed_species_category"]], temporal_list)
+    rm(selected_fields, temporal_list)  
 
 # ---- IN WEIGHTS
 # ---- errors sampled weight greater than landing weight ----
@@ -224,9 +252,9 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 #    TO DO
     
 # ---- errors in the weight sampled similar to the category weight?
-    desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", "TIPO.MUESTREO.ICES", "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
+    desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
     desem_mues_sop <- desem_mues_sop[desem_mues_sop[, "P.DESEM."]==desem_mues_sop[,"P.MUE.DES"],]    
-    desem_mues_sop <- arrange(desem_mues_sop, PUERTO, TIPO.MUESTREO.ICES, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
+    desem_mues_sop <- arrange_(desem_mues_sop, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "ESPECIE.TAX.", "CATEGORIA"))
     desem_mues_sop["P.MUE.DES-SOP"] <- desem_mues_sop["P.MUE.DES"] - desem_mues_sop["S.O.P."]
     desem_mues_sop["P.MUE.DES-SOP"] <- round(desem_mues_sop["P.MUE.DES-SOP"])
     desem_mues_sop["POR.DIF"] <- (desem_mues_sop["P.MUE.DES-SOP"] * 100) / desem_mues_sop["P.MUE.DES"]
@@ -242,9 +270,5 @@ ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
-
-
-
-
 
 
