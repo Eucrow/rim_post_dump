@@ -147,6 +147,9 @@ if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
 
+#read the no mixed species file
+sam_spe_no_mixed<-read.csv("especies_no_mezcla.csv", header=TRUE)
+
 #read the estrato-rim - arte file to obtain the correct estratorim, gear and its relation
 CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
@@ -217,6 +220,15 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     #order dataframe:
     temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
     ERRORS[["mixed_species_sample"]]<-arrange_(ERRORS[["mixed_species_sample"]], temporal_list)
+    rm(selected_fields, temporal_list)
+    
+    # ---- errors in not mixed species keyed as mixed species
+    selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]    
+    #search the errors:
+    ERRORS[["no_mixed_species_sample"]] <- merge(x=selected_fields, y=sam_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
+    #order dataframe:
+    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
+    ERRORS[["no_mixed_species_sample"]]<-arrange_(ERRORS[["no_mixed_species_sample"]], temporal_list)
     rm(selected_fields, temporal_list)
     
     # ---- errors in mixed species of the category ----
