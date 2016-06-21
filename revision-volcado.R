@@ -6,7 +6,7 @@
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
 #### date of last modification: 21/6/2016
-#### version: 1.2
+#### version: 1.21
 ####
 #### files required: esp mezcla.csv, estratorim_arte.csv, divisiones.csv
 
@@ -138,6 +138,7 @@ tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, e
 
 ##select type of file: tallas_x_up from SIRENO or tallas_x_up extracted by sireno's team
 ##in the future, the tallas_x_up file from SIRENO will be similar than the extracted by sirenos's team
+##so this won't be necessary
 GLOBAL.TIPO.MUESTREO.ICES <- ""
 
 if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
@@ -175,6 +176,11 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 # ---- 'procedencia': must be allways IEO ----
 levels(catches$PROCEDENCIA)
 
+##search errors in type sample
+ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
+ERRORS[["type_sample"]] <- unique(type_sample[,c("FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
+ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, FECHA, BARCO, UNIPESCOD)
+  
 ##search errors in 'gear'
 ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
 ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
