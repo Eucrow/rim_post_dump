@@ -5,7 +5,7 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 20/6/2016
+#### date of last modification: 21/6/2016
 #### version: 1.2
 ####
 #### files required: esp mezcla.csv, estratorim_arte.csv, divisiones.csv
@@ -136,13 +136,13 @@ export_errors_lapply<-function(x, errors){
 tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, export=FALSE, month_selected = MONTH)
 
 
-##select tipe of file: tallas_x_up from SIRENO or tallas_x_up extracted by sireno's team
+##select type of file: tallas_x_up from SIRENO or tallas_x_up extracted by sireno's team
+##in the future, the tallas_x_up file from SIRENO will be similar than the extracted by sirenos's team
 GLOBAL.TIPO.MUESTREO.ICES <- ""
 
 if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
   GLOBAL.TIPO.MUESTREO.ICES="TIP_MUESTREO"
 }
-  
 
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
@@ -168,8 +168,6 @@ CORRECT_UNIPESCOD<-levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
 catches<-tallas_x_up[["catches"]]
 catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 
-#select only information of the month
-
 
 # #### SEARCHING ERRORS ########################################################
 # ---- IN HEADER ----
@@ -177,13 +175,13 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 # ---- 'procedencia': must be allways IEO ----
 levels(catches$PROCEDENCIA)
 
-##search errors in gear
+##search errors in 'gear'
 ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
 ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["gears"]] <- unique(ERRORS$gears)
 ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
 
-##search errors in origin
+##search errors in 'origin'
 ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
 ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["division"]] <- unique(ERRORS$division)
@@ -196,11 +194,17 @@ coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("
 incoherent_data<- -which(coherence_unipescod_gear$VALID)
 ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
 
-# ---- number of ships (empty field, =0 or >2)
-ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
+# search errors in number of ships (empty field, =0 or >2)
+# only available in tallas_x_up extracted by sireno's team:
+if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
+  ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
+}
 
-# ---- number of rejects (only empty fields)
+# search errors in number of rejects (only empty fields)
+# only available in tallas_x_up extracted by sireno's team:
+if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
 ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
+}
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
