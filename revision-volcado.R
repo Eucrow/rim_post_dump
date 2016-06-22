@@ -178,18 +178,18 @@ levels(catches$PROCEDENCIA)
 
 ##search errors in type sample
 ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
-ERRORS[["type_sample"]] <- unique(type_sample[,c("FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
+ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
 ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, FECHA, BARCO, UNIPESCOD)
   
 ##search errors in 'gear'
 ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["gears"]] <- unique(ERRORS$gears)
 ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
 
 ##search errors in 'origin'
 ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "PROCEDENCIA", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
 ERRORS[["division"]] <- unique(ERRORS$division)
 
 ##search errors in 'unipescod'
@@ -198,7 +198,8 @@ ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
 ##coherence between 'unipescod' and 'gear'
 coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
 incoherent_data<- -which(coherence_unipescod_gear$VALID)
-ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,]
+ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE")]
+ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
 
 # search errors in number of ships (empty field, =0 or >2)
 # only available in tallas_x_up extracted by sireno's team:
@@ -272,10 +273,10 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     ERRORS$desem_mues_sop<-desem_mues_sop
 
 # ---- errors sop = 0
-    ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0,]
+    ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]
 
 # ---- errors 
-    ERRORS[["sampled_weight_zero"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] == 0,]    
+    ERRORS[["sampled_weight_zero"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]    
 
   
 # #### EXPORT ERRORS TO CSV ####################################################
