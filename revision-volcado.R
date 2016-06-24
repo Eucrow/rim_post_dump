@@ -260,7 +260,14 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     ERRORS[["sampled_weight_greater_landing_weight"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] > catches_in_lengths[,"P.DESEM."],]
 
 # ---- erros in species from the categories: all of them has exactly the same sampled weight
-#    TO DO
+    selected_fields<-c("FECHA","TIPO.MUESTREO","PROCEDENCIA","UNIPESCOD","PUERTO","TIP_MUESTREO","BARCO","DIVISION","ORIGEN","ARTE","NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","ESPECIE","SEXO","P.MUE.DES","P.MUE.VIVO")
+    same_sampled_weight<-catches_in_lengths[,selected_fields]
+    by <- list(same_sampled_weight$FECHA,same_sampled_weight$TIPO.MUESTREO,same_sampled_weight$UNIPESCOD,same_sampled_weight$PUERTO,same_sampled_weight$BARCO,same_sampled_weight$ESPECIE.TAX.,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$P.VIVO,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES,same_sampled_weight$P.MUE.VIVO)
+    same_sampled_weight<-aggregate(x = same_sampled_weight$P.MUE.DES, by = by, FUN= length)
+    colnames(same_sampled_weight) <- c("FECHA","TIPO.MUESTREO","UNIPESCOD","PUERTO","BARCO","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","SEXO","P.MUE.DES","P.MUE.VIVO","NUM_OCU")
+    same_sampled_weight<-same_sampled_weight[same_sampled_weight$NUM_OCU>1,]
+    same_sampled_weight<-arrange(same_sampled_weight, PUERTO, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
+    ERRORS$same_sampled_weight<-same_sampled_weight   
     
 # ---- errors in the weight sampled similar to the category weight?
     desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
