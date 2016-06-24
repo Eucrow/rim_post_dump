@@ -149,21 +149,24 @@ if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
 
 #read the no mixed species file
-sam_spe_no_mixed<-read.csv("especies_no_mezcla.csv", header=TRUE)
+sampled_spe_no_mixed<-read.csv("especies_no_mezcla.csv", header=TRUE)
 
 #read the estrato-rim - arte file to obtain the correct estratorim, gear and its relation
 CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
 
 ##obtain the correct division from divisiones.csv
-CORRECT_DIVISION<-read.csv("divisiones.csv", fileEncoding = "UTF-8")
-CORRECT_DIVISION<-levels(CORRECT_DIVISION$DIVISION)
+CORRECT_DIVISION <- read.csv("divisiones.csv", fileEncoding = "UTF-8")
+CORRECT_DIVISION <- levels(CORRECT_DIVISION$DIVISION)
 
 ###obtain the correct gears
-CORRECT_GEARS<-levels(CORRECT_ESTRATORIM_ARTE$ARTE)
+CORRECT_GEARS <- levels(CORRECT_ESTRATORIM_ARTE$ARTE)
 
 ###obtain the correct unipescod
-CORRECT_UNIPESCOD<-levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
+CORRECT_UNIPESCOD <- levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
+
+###obtain the not allowed species
+NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
 #isolating dataframes
 catches<-tallas_x_up[["catches"]]
@@ -236,7 +239,7 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     # ---- errors in not mixed species keyed as mixed species
     selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]    
     #search the errors:
-    ERRORS[["no_mixed_species_sample"]] <- merge(x=selected_fields, y=sam_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
+    ERRORS[["no_mixed_species_sample"]] <- merge(x=selected_fields, y=sampled_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
     #order dataframe:
     temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
     ERRORS[["no_mixed_species_sample"]]<-arrange_(ERRORS[["no_mixed_species_sample"]], temporal_list)
@@ -254,6 +257,14 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
     ERRORS[["mixed_species_category"]]<-arrange_(ERRORS[["mixed_species_category"]], temporal_list)
     rm(selected_fields, temporal_list)  
+    
+    # ---- not allowed species
+    selected_fields <- catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESPECIE.TAX.")]    
+    ERRORS[["not_allowed_species"]] <- merge(x = selected_fields, y = NOT_ALLOWED_SPECIES, by.x = "ESPECIE.TAX.", by.y = "ESPECIE")
+    temporal_list <- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "ESPECIE.TAX.")
+    ERRORS[["not_allowed_species"]] <- arrange_(ERRORS[["not_allowed_species"]], temporal_list)
+    rm(selected_fields, temporal_list)
+    
 
 # ---- IN WEIGHTS
 # ---- errors sampled weight greater than landing weight ----
@@ -267,7 +278,8 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     colnames(same_sampled_weight) <- c("FECHA","TIPO.MUESTREO","UNIPESCOD","PUERTO","BARCO","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","SEXO","P.MUE.DES","P.MUE.VIVO","NUM_OCU")
     same_sampled_weight<-same_sampled_weight[same_sampled_weight$NUM_OCU>1,]
     same_sampled_weight<-arrange(same_sampled_weight, PUERTO, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
-    ERRORS$same_sampled_weight<-same_sampled_weight   
+    ERRORS$same_sampled_weight<-same_sampled_weight 
+    rm (selected_fields, by, same_sampled_weight)
     
 # ---- errors in the weight sampled similar to the category weight?
     desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
@@ -278,6 +290,7 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     desem_mues_sop["POR.DIF"] <- (desem_mues_sop["P.MUE.DES-SOP"] * 100) / desem_mues_sop["P.MUE.DES"]
     desem_mues_sop["POR.DIF"] <- round(desem_mues_sop["POR.DIF"])
     ERRORS$desem_mues_sop<-desem_mues_sop
+    rm(desem_mues_sop)
 
 # ---- errors sop = 0
     ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]
