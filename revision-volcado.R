@@ -272,7 +272,7 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
     ERRORS[["sampled_weight_greater_landing_weight"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] > catches_in_lengths[,"P.DESEM."],]
 
 # ---- erros in species from the categories: all of them has exactly the same sampled weight
-    selected_fields<-c("FECHA","TIPO.MUESTREO","PROCEDENCIA","UNIPESCOD","PUERTO","TIP_MUESTREO","BARCO","DIVISION","ORIGEN","ARTE","NÂºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","ESPECIE","SEXO","P.MUE.DES","P.MUE.VIVO")
+    selected_fields<-c("FECHA","TIPO.MUESTREO","PROCEDENCIA","UNIPESCOD","PUERTO","TIP_MUESTREO","BARCO","DIVISION","ORIGEN","ARTE","NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","ESPECIE","SEXO","P.MUE.DES","P.MUE.VIVO")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
     by <- list(same_sampled_weight$FECHA,same_sampled_weight$TIPO.MUESTREO,same_sampled_weight$UNIPESCOD,same_sampled_weight$PUERTO,same_sampled_weight$BARCO,same_sampled_weight$ESPECIE.TAX.,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$P.VIVO,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES,same_sampled_weight$P.MUE.VIVO)
     same_sampled_weight<-aggregate(x = same_sampled_weight$P.MUE.DES, by = by, FUN= length)
@@ -299,6 +299,8 @@ ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
 # ---- errors 
     ERRORS[["sampled_weight_zero"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]    
 
+# ---- errors p.desem = 0
+    ERRORS[["weight_landed_zero"]] <- catches_in_lengths[catches_in_lengths["P.DESEM."]=="0" | is.na(catches_in_lengths["P.DESEM."]),c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO")]
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
