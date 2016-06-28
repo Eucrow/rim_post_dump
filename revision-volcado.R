@@ -36,7 +36,7 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "MUESTREOS_1T_2016.csv"
+FILENAME <- "MUESTREOS_1T_2016 - copia.csv"
 MONTH <- "1"
 YEAR <- "2016"
 ################################################################################
@@ -176,46 +176,56 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 
 # #### SEARCHING ERRORS ########################################################
 # ---- IN HEADER ----
-
-# ---- 'procedencia': must be allways IEO ----
-levels(catches$PROCEDENCIA)
-
-##search errors in type sample
-ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
-ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
-ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, FECHA, BARCO, UNIPESCOD)
   
-##search errors in 'gear'
-ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
-ERRORS[["gears"]] <- unique(ERRORS$gears)
-ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
+  # ---- 'procedencia': must be allways IEO ----
+  levels(catches$PROCEDENCIA)
+  
+  ##search errors in type sample
+  ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
+  ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
+  ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, FECHA, BARCO, UNIPESCOD)
+    
+  ##search errors in 'gear'
+  ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
+  ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+  ERRORS[["gears"]] <- unique(ERRORS$gears)
+  ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
+  
+  ##search errors in 'origin'
+  ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
+  ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+  ERRORS[["division"]] <- unique(ERRORS$division)
+  
+  ##search errors in 'unipescod'
+  ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
+  
+  ##coherence between 'unipescod' and 'gear'
+  coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
+  incoherent_data<- -which(coherence_unipescod_gear$VALID)
+  ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE")]
+  ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
+  
+  # search errors in number of ships (empty field, =0 or >2)
+  # only available in tallas_x_up extracted by sireno's team:
+  if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
+    ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
+  }
+  
+  # search errors in number of rejects (only empty fields)
+  # only available in tallas_x_up extracted by sireno's team:
+  if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
+  ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
+  }
+  
+  ## search duplicate samples between MT1 and MT2
+  dup <- catches[,c("PUERTO", "FECHA", "BARCO", "TIP_MUESTREO")]
+  dup <- unique(dup)
+  dup <- dup[,c("PUERTO", "FECHA", "BARCO")]
+  dup <- aggregate(x = dup$FECHA, by = list(dup$PUERTO, dup$FECHA, dup$BARCO), FUN = length)
+  colnames(dup) <-c ("PUERTO", "FECHA", "BARCO", "DUPLICADOS")
+  dup <- dup[dup$DUPLICADOS>1,]
+  ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO)
 
-##search errors in 'origin'
-ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
-ERRORS[["division"]] <- unique(ERRORS$division)
-
-##search errors in 'unipescod'
-ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
-
-##coherence between 'unipescod' and 'gear'
-coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-incoherent_data<- -which(coherence_unipescod_gear$VALID)
-ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE")]
-ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
-
-# search errors in number of ships (empty field, =0 or >2)
-# only available in tallas_x_up extracted by sireno's team:
-if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
-  ERRORS[["ships"]] <- subset(catches, NUMBARCOS==0 | NUMBARCOS>2 | is.null(NUMBARCOS))
-}
-
-# search errors in number of rejects (only empty fields)
-# only available in tallas_x_up extracted by sireno's team:
-if (GLOBAL.TIPO.MUESTREO.ICES == "TIP_MUESTREO"){
-ERRORS[["rejections"]] <- subset(catches, is.null(NRECHAZOS))
-}
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
