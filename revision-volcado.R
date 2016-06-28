@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 24/6/2016
-#### version: 1.3
+#### date of last modification: 28/6/2016
+#### version: 1.4
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
 #### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv
