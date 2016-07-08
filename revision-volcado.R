@@ -36,8 +36,8 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "MUESTREOS_1T_2016 - copia.csv"
-MONTH <- "1"
+FILENAME <- "muestreos_2016_1t.TXT"
+MONTH <- ""
 YEAR <- "2016"
 ################################################################################
 
@@ -182,22 +182,30 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   
   ##search errors in type sample
   ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
-  ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIPO.MUESTREO")])
-  ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, FECHA, BARCO, UNIPESCOD)
+  ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO")])
+  ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, PUERTO, FECHA, BARCO, UNIPESCOD)
+  levels(droplevels(ERRORS$type_sample$PUERTO))
     
   ##search errors in 'gear'
   ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-  ERRORS[["gears"]] <- ERRORS$gears[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+  ERRORS[["gears"]] <- ERRORS$gears[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES, "ARTE")]
   ERRORS[["gears"]] <- unique(ERRORS$gears)
-  ERRORS[["gears"]] <- arrange(ERRORS$gears, UNIPESCOD, ARTE, FECHA, BARCO)
-  
+  ERRORS[["gears"]] <- arrange(ERRORS$gears, PUERTO, FECHA, BARCO, UNIPESCOD, ARTE)
+  levels(droplevels(ERRORS$gears$PUERTO))
+  levels(droplevels(ERRORS$gears$ARTE))
+ 
   ##search errors in 'origin'
   ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-  ERRORS[["division"]] <- ERRORS$division[,c("FECHA", GLOBAL.TIPO.MUESTREO.ICES, "TIPO.MUESTREO", "UNIPESCOD", "PUERTO", "BARCO", "ORIGEN", "ARTE")]
+  ERRORS[["division"]] <- ERRORS$division[,c("PUERTO", "FECHA", "BARCO","UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES, "ORIGEN")]
   ERRORS[["division"]] <- unique(ERRORS$division)
+  ERRORS[["division"]] <- arrange(ERRORS$division, PUERTO, FECHA, BARCO, UNIPESCOD, ORIGEN)
+  levels(droplevels(ERRORS$division$PUERTO))
+  levels(droplevels(ERRORS$division$ORIGEN))
   
   ##search errors in 'unipescod'
   ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
+  ERRORS[["unipescod"]] <- ERRORS$unipescod[,c("PUERTO", "FECHA", "BARCO","UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)]
+  ERRORS[["unipescod"]] <- arrange(ERRORS$unipescod, PUERTO, FECHA, BARCO, UNIPESCOD)
   
   ##coherence between 'unipescod' and 'gear'
   coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
@@ -218,12 +226,13 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   }
   
   ## search duplicate samples between MT1 and MT2
-  dup <- catches[,c("PUERTO", "FECHA", "BARCO", "TIP_MUESTREO")]
+  dup <- catches[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO")]
   dup <- unique(dup)
-  dup <- dup[,c("PUERTO", "FECHA", "BARCO")]
-  dup <- aggregate(x = dup$FECHA, by = list(dup$PUERTO, dup$FECHA, dup$BARCO), FUN = length)
-  colnames(dup) <-c ("PUERTO", "FECHA", "BARCO", "DUPLICADOS")
+  dup <- dup[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD")]
+  dup <- aggregate(x = dup$FECHA, by = list(dup$PUERTO, dup$FECHA, dup$BARCO, dup$UNIPESCOD), FUN = length)
+  colnames(dup) <-c ("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "DUPLICADOS")
   dup <- dup[dup$DUPLICADOS>1,]
+  dup <- arrange(dup, PUERTO, FECHA, BARCO, UNIPESCOD)
   ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO)
 
 
