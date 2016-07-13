@@ -36,7 +36,7 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "muestreos_2016_1t.TXT"
+FILENAME <- "MUESTREOS_2016.TXT"
 MONTH <- ""
 YEAR <- "2016"
 ################################################################################
