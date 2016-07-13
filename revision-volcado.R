@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 28/6/2016
-#### version: 1.4
+#### date of last modification: 13/7/2016
+#### version: 1.41
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
 #### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv
@@ -41,7 +41,8 @@ MONTH <- ""
 YEAR <- "2016"
 ################################################################################
 
-PATH_ERRORS <- paste(PATH_FILENAME,"/errors",sep="")
+PATH_ERRORS <- paste(PATH_FILENAME,"errors",sep="")
+PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # #### FUNCTIONS ###############################################################
 
@@ -129,6 +130,21 @@ export_errors_lapply<-function(x, errors){
     MESSAGE_ERRORS[[x]]<<-"errors free" #this not recomended in R but is the only way I know
     print(paste('Great,', x, 'is error free!'))
   }
+}
+
+#function to make a copy of the files previous to send to the Area Supervisor
+backup_files_to_send <- function(){
+  date <- Sys.time();
+  date <- as.POSIXlt(date);
+  
+  directory_backup<-paste(PATH_BACKUP, "/", YEAR, "_", MONTH, "_backup_", date$mday,
+                   '_', date$mon, '_', date$year+1900, '_', date$hour, '_',
+                   date$min, '_', round(date$sec, 0), "/", sep="")
+  dir.create(directory_backup, recursive=TRUE); #create the directory backup
+  
+  files <- list.files(PATH_ERRORS, pattern = "*.csv", full.names = TRUE)
+
+  lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
 }
 
 # #### IMPORT DATA #############################################################
@@ -323,5 +339,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
-
+# #### MAKE A BACKUP
+# #### usually, when the files will be send to Supervisors Area
+    backup_files_to_send();
 
