@@ -73,6 +73,21 @@ split_tallas_x_up <- function(path_filename, filename, export="FALSE", month_sel
     ##catchs
     catches<-read.table(file=fullpath, skip=(cut_rows[2]), sep=";", head=TRUE)
     sapply(catches, class)
+    
+
+    #correct category 'jureles
+    catches$CATEGORIA <- as.character(catches$CATEGORIA)
+    catches$CATEGORIA[catches$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    catches$CATEGORIA <- as.factor(catches$CATEGORIA)
+    
+    catches_in_lengths$CATEGORIA <- as.character(catches_in_lengths$CATEGORIA)
+    catches_in_lengths$CATEGORIA[catches_in_lengths$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    catches_in_lengths$CATEGORIA <- as.factor(catches_in_lengths$CATEGORIA)
+    
+    lengths$CATEGORIA <- as.character(lengths$CATEGORIA)
+    lengths$CATEGORIA[lengths$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    lengths$CATEGORIA <- as.factor(lengths$CATEGORIA)
+    
   
   #select only the month
     if (month_selected != ""){
