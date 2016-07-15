@@ -349,15 +349,17 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     weight_sampled_similar_weight_landing["POR.DIF"] <- round(weight_sampled_similar_weight_landing["POR.DIF"])
     ERRORS$weight_sampled_similar_weight_landing<-weight_sampled_similar_weight_landing
     rm(weight_sampled_similar_weight_landing)
+    unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
 # ---- errors sop = 0
-    ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]
-
+    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    
 # ---- errors 
-    ERRORS[["sampled_weight_zero"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]    
-
+    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P.MUE.DES == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    
 # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- catches_in_lengths[catches_in_lengths["P.DESEM."]=="0" | is.na(catches_in_lengths["P.DESEM."]),c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO")]
+    # ERRORS[["weight_landed_zero"]] <- catches_in_lengths[catches_in_lengths["P.DESEM."]=="0" | is.na(catches_in_lengths["P.DESEM."]),c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO")]
+    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
     
 # ---- errors species of the category WITHOUT length sample but WITH weight sample
     ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
