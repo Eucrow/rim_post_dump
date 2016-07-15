@@ -265,9 +265,12 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   colnames(dup) <-c ("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "DUPLICADOS")
   dup <- dup[dup$DUPLICADOS>1,]
   dup <- arrange(dup, PUERTO, FECHA, BARCO, UNIPESCOD)
-  ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO)
+  ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO) 
   rm(dup)
   
+  ##search errors in country
+  ERRORS$errors_countries_mt1 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 1 & (PAIS != 724 | is.na(PAIS)), c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "PAIS"))
+  ERRORS$errors_countries_mt2 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 2 & (PAIS != 724 | is.na(PAIS)), c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "PAIS"))
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
