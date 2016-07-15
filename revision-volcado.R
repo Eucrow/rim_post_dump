@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 13/7/2016
-#### version: 1.41
+#### date of last modification: 15/7/2016
+#### version: 1.43
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
 #### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv
@@ -36,7 +36,7 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "MUESTREOS_2016.TXT"
+FILENAME <- "muestreos_1t_2016.TXT"
 MONTH <- ""
 YEAR <- "2016"
 ################################################################################
@@ -73,10 +73,25 @@ split_tallas_x_up <- function(path_filename, filename, export="FALSE", month_sel
     ##catchs
     catches<-read.table(file=fullpath, skip=(cut_rows[2]), sep=";", head=TRUE)
     sapply(catches, class)
+    
+
+    #correct category 'jureles
+    catches$CATEGORIA <- as.character(catches$CATEGORIA)
+    catches$CATEGORIA[catches$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    catches$CATEGORIA <- as.factor(catches$CATEGORIA)
+    
+    catches_in_lengths$CATEGORIA <- as.character(catches_in_lengths$CATEGORIA)
+    catches_in_lengths$CATEGORIA[catches_in_lengths$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    catches_in_lengths$CATEGORIA <- as.factor(catches_in_lengths$CATEGORIA)
+    
+    lengths$CATEGORIA <- as.character(lengths$CATEGORIA)
+    lengths$CATEGORIA[lengths$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
+    lengths$CATEGORIA <- as.factor(lengths$CATEGORIA)
+    
   
   #select only the month
     if (month_selected != ""){
-      # to avoid some problems with Spanish_Spain.1252 (or if you are use another locale), change locale a Spanish_United States.1252:
+      # to avoid some problems with Spanish_Spain.1252 (or if you are using another locale), change locale to Spanish_United States.1252:
       lct <- Sys.getlocale("LC_TIME")
       Sys.setlocale("LC_TIME","Spanish_United States.1252")
       
@@ -228,6 +243,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   incoherent_data<- -which(coherence_unipescod_gear$VALID)
   ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE")]
   ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
+  levels(droplevels(ERRORS$coherence_unipescod_gear$PUERTO))
   
   # search errors in number of ships (empty field, =0 or >2)
   # only available in tallas_x_up extracted by sireno's team:
@@ -249,8 +265,12 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   colnames(dup) <-c ("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "DUPLICADOS")
   dup <- dup[dup$DUPLICADOS>1,]
   dup <- arrange(dup, PUERTO, FECHA, BARCO, UNIPESCOD)
-  ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO)
-
+  ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO) 
+  rm(dup)
+  
+  ##search errors in country
+  ERRORS$errors_countries_mt1 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 1 & (PAIS != 724 | is.na(PAIS)), c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "PAIS"))
+  ERRORS$errors_countries_mt2 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 2 & (PAIS != 724 | is.na(PAIS)), c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "PAIS"))
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
@@ -260,15 +280,15 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 
     #busca las especies para la categoria que estan en especies del muestreo
     # ---- errors in mixed species of the sample ----
-    selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.")]
+    selected_fields<-catches[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESPECIE.TAX.")]
     #search the errors:
     ERRORS[["mixed_species_sample"]]<-merge(x=selected_fields, y=cat_spe_mixed["ESP_CATEGORIA"], by.x="ESPECIE.TAX.", by.y="ESP_CATEGORIA")
     #change the name of a column in dataframe. ???OMG!!!:
     names(ERRORS$mixed_species_sample)[names(ERRORS$mixed_species_sample) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
     #order columns dataframe:
-    ERRORS$mixed_species_sample <- ERRORS$mixed_species_sample[, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE","ESP_MUESTREO_INCORRECTA")]
+    ERRORS$mixed_species_sample <- ERRORS$mixed_species_sample[, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESP_MUESTREO_INCORRECTA")]
     #order dataframe:
-    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO")
+    temporal_list<- c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "UNIPESCOD")
     ERRORS[["mixed_species_sample"]]<-arrange_(ERRORS[["mixed_species_sample"]], temporal_list)
     rm(selected_fields, temporal_list)
     
@@ -303,43 +323,57 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     
 
 # ---- IN WEIGHTS
+    
 # ---- errors sampled weight greater than landing weight ----
-    ERRORS[["sampled_weight_greater_landing_weight"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] > catches_in_lengths[,"P.DESEM."],]
+    sampled_weight_greater_landing_weight <- subset(catches_in_lengths, P.MUE.DES > P.DESEM.)    
+    sampled_weight_greater_landing_weight <- sampled_weight_greater_landing_weight[,c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ORIGEN", "ARTE", "ESPECIE.TAX.", "CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES" )]
+    sampled_weight_greater_landing_weight["DIF.DESEM.-MUE."] <- round(sampled_weight_greater_landing_weight["P.DESEM."] - sampled_weight_greater_landing_weight["P.MUE.DES"])
+    ERRORS$sampled_weight_greater_landing_weight<-sampled_weight_greater_landing_weight
 
-# ---- erros in species from the categories: all of them has exactly the same sampled weight
-    selected_fields<-c("FECHA","TIPO.MUESTREO","PROCEDENCIA","UNIPESCOD","PUERTO","TIP_MUESTREO","BARCO","DIVISION","ORIGEN","ARTE","NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","ESPECIE","SEXO","P.MUE.DES","P.MUE.VIVO")
+# ---- errors in species from the categories: all of them has exactly the same sampled weight
+    selected_fields<-c("PUERTO","FECHA","BARCO","UNIPESCOD","TIPO.MUESTREO","TIP_MUESTREO","NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
-    by <- list(same_sampled_weight$FECHA,same_sampled_weight$TIPO.MUESTREO,same_sampled_weight$UNIPESCOD,same_sampled_weight$PUERTO,same_sampled_weight$BARCO,same_sampled_weight$ESPECIE.TAX.,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$P.VIVO,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES,same_sampled_weight$P.MUE.VIVO)
+    by <- list(same_sampled_weight$PUERTO,same_sampled_weight$FECHA,same_sampled_weight$BARCO,same_sampled_weight$TIPO.MUESTREO,same_sampled_weight$UNIPESCOD,same_sampled_weight$ESPECIE.TAX.,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES)
     same_sampled_weight<-aggregate(x = same_sampled_weight$P.MUE.DES, by = by, FUN= length)
-    colnames(same_sampled_weight) <- c("FECHA","TIPO.MUESTREO","UNIPESCOD","PUERTO","BARCO","ESPECIE.TAX.","CATEGORIA","P.DESEM.","P.VIVO","SEXO","P.MUE.DES","P.MUE.VIVO","NUM_OCU")
+    colnames(same_sampled_weight) <- c("PUERTO","FECHA","BARCO","UNIPESCOD","TIPO.MUESTREO","ESPECIE.TAX.","CATEGORIA","P.DESEM.","SEXO","P.MUE.DES","NUM_OCU")
     same_sampled_weight<-same_sampled_weight[same_sampled_weight$NUM_OCU>1,]
+    same_sampled_weight2<-subset ( same_sampled_weight, NUM_OCU >1)
     same_sampled_weight<-arrange(same_sampled_weight, PUERTO, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
     ERRORS$same_sampled_weight<-same_sampled_weight 
     rm (selected_fields, by, same_sampled_weight)
     
 # ---- errors in the weight sampled similar to the category weight?
-    desem_mues_sop <- catches_in_lengths[,c("FECHA", "PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "S.O.P.")]
-    desem_mues_sop <- desem_mues_sop[desem_mues_sop[, "P.DESEM."]==desem_mues_sop[,"P.MUE.DES"],]    
-    desem_mues_sop <- arrange_(desem_mues_sop, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "ESPECIE.TAX.", "CATEGORIA"))
-    desem_mues_sop["P.MUE.DES-SOP"] <- desem_mues_sop["P.MUE.DES"] - desem_mues_sop["S.O.P."]
-    desem_mues_sop["P.MUE.DES-SOP"] <- round(desem_mues_sop["P.MUE.DES-SOP"])
-    desem_mues_sop["POR.DIF"] <- (desem_mues_sop["P.MUE.DES-SOP"] * 100) / desem_mues_sop["P.MUE.DES"]
-    desem_mues_sop["POR.DIF"] <- round(desem_mues_sop["POR.DIF"])
-    ERRORS$desem_mues_sop<-desem_mues_sop
-    rm(desem_mues_sop)
+    weight_sampled_similar_weight_landing <- catches_in_lengths[,c("PUERTO", "FECHA", GLOBAL.TIPO.MUESTREO.ICES, "BARCO", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.VIVO", "S.O.P.")]
+    weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing[weight_sampled_similar_weight_landing[, "P.DESEM."]==weight_sampled_similar_weight_landing[,"P.MUE.VIVO"],]    
+    weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "ESPECIE.TAX.", "CATEGORIA"))
+    weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] <- weight_sampled_similar_weight_landing["P.MUE.VIVO"] - weight_sampled_similar_weight_landing["S.O.P."]
+    weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"])
+    weight_sampled_similar_weight_landing["POR.DIF"] <- (weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P.MUE.VIVO"]
+    weight_sampled_similar_weight_landing["POR.DIF"] <- round(weight_sampled_similar_weight_landing["POR.DIF"])
+    ERRORS$weight_sampled_similar_weight_landing<-weight_sampled_similar_weight_landing
+    rm(weight_sampled_similar_weight_landing)
+    unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
 # ---- errors sop = 0
-    ERRORS[["sop_zero"]]<-catches_in_lengths[catches_in_lengths[,"S.O.P."] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]
-
+    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    
 # ---- errors 
-    ERRORS[["sampled_weight_zero"]]<-catches_in_lengths[catches_in_lengths[,"P.MUE.DES"] == 0, c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P.")]    
-
+    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P.MUE.DES == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    
 # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- catches_in_lengths[catches_in_lengths["P.DESEM."]=="0" | is.na(catches_in_lengths["P.DESEM."]),c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO")]
+    # ERRORS[["weight_landed_zero"]] <- catches_in_lengths[catches_in_lengths["P.DESEM."]=="0" | is.na(catches_in_lengths["P.DESEM."]),c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO")]
+    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "ARTE", "ORIGEN", "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
+    
+# ---- errors species of the category WITHOUT length sample but WITH weight sample
+    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    
+# ---- errors species of the category WITH length sample but WITHOUT weight sample
+    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", "TIP_MUESTREO", "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 # #### MAKE A BACKUP
 # #### usually, when the files will be send to Supervisors Area
-    backup_files_to_send();
+    backup_files_to_send()
 
