@@ -309,14 +309,15 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   # ---- errors in mixed species of the category ----
     selected_fields<-catches_in_lengths[,c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
     #search the errors:
-    ERRORS[["mixed_species_category"]]<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
+    mixed_species_category<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
     #change the name of a column in dataframe. ???OMG!!!:
-    names(ERRORS$mixed_species_category)[names(ERRORS$mixed_species_category) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
-    #order columns dataframe:
-    ERRORS$mixed_species_category <- ERRORS$mixed_species_category[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
-    #order dataframe:
-    ERRORS[["mixed_species_category"]]<-arrange_(ERRORS[["mixed_species_category"]], base_fields)
-    mixed_species_category_mt2 <- subset(ERRORS$mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
+    names(mixed_species_category)[names(mixed_species_category) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
+    # ---- MT2
+    ERRORS$mixed_species_category_mt2 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
+    ERRORS$mixed_species_category_mt2 <- ERRORS$mixed_species_category_mt2[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    # ---- MT1
+    ERRORS$mixed_species_category_mt1 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "1")
+    ERRORS$mixed_species_category_mt1 <- ERRORS$mixed_species_category_mt1[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
     rm(selected_fields)
     
   # ---- not allowed species
