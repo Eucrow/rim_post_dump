@@ -297,13 +297,17 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   # ---- errors in not mixed species keyed as mixed species
     selected_fields<-catches[,c(base_fields, "ESPECIE.TAX.")]    
     #search the errors:
-    ERRORS[["no_mixed_species_sample"]] <- merge(x=selected_fields, y=sampled_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
+    no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
     #order columns dataframe:
-    ERRORS$no_mixed_species_sample <- ERRORS$no_mixed_species_sample[c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESPECIE.TAX.")]
+    no_mixed_species_sample <- no_mixed_species_sample[c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESPECIE.TAX.")]
     #change the name of a column in dataframe. ???OMG!!!:
-    names(ERRORS$no_mixed_species_sample)[names(ERRORS$no_mixed_species_sample) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
+    names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
     #order dataframe:
-    ERRORS[["no_mixed_species_sample"]]<-arrange_(ERRORS[["no_mixed_species_sample"]], base_fields)
+    no_mixed_species_sample<-arrange_(no_mixed_species_sample, base_fields)
+    # ---- MT1
+    ERRORS$no_mixed_species_sample_mt1<-subset(no_mixed_species_sample, get(GLOBAL.TIPO.MUESTREO.ICES) == "1")
+    # ---- MT2
+    ERRORS$no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
     rm(selected_fields)
 
   # ---- errors in mixed species of the category ----
