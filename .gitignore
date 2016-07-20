@@ -4,3 +4,6 @@
 .RData
 .Ruserdata
 
+#confidential files
+.CFPO2015.csv
+

@@ -5,11 +5,12 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 19/7/2016
-#### version: 1.44
+#### date of last modification: 20/7/2016
+#### version: 1.45
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
-#### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv
+#### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv,
+#### CFPO2015.csv (this one not available in github)
 
 
 # #### CONFIG ##################################################################
@@ -202,8 +203,10 @@ CORRECT_UNIPESCOD <- levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
 ###obtain the not allowed species
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
-### obtain cfpo file
-CFPO <- read.table("CFPO2015.csv", head = TRUE, fileEncoding = "UTF-8", sep=";")
+### obtain the cfpo
+CFPO <- read.table("CFPO2015.csv", sep=";", quote = "", header = TRUE)
+  # ignore superfluous columns
+  CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
 
 #isolating dataframes
 catches<-tallas_x_up[["catches"]]
@@ -276,6 +279,23 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   # ---- search errors in country
     ERRORS$errors_countries_mt1 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 1 & (PAIS != 724 | is.na(PAIS)), c(base_fields, "PAIS"))
     ERRORS$errors_countries_mt2 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 2 & (PAIS != 724 | is.na(PAIS)), c(base_fields, "PAIS"))
+    
+  # ---- search errors in ships
+  ##### TO DO: ADD CHECKING WITH SIRENO FILES
+    to_ships <- unique(catches[,c(base_fields, "CODSGPM")])
+    errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+
+      #ships withouth coincidences in cfpo
+      errors_ships_not_in_cfpo <- subset(errors_ships, is.na(errors_ships$ESTADO))
+      errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(base_fields, "CODSGPM", "ESTADO")]
+      errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, base_fields)
+      ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
+      
+      #ships with state different to "alta definitiva"
+      errors_ships_not_registered <- subset(errors_ships, ESTADO != "ALTA DEFINITIVA")
+      errors_ships_not_registered <- errors_ships_not_registered[, c(base_fields, "CODSGPM", "ESTADO")]
+      errors_ships_not_registered <- arrange_(errors_ships_not_registered, base_fields)
+      ERRORS$errors_ships_not_registered <- errors_ships_not_registered
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO  
