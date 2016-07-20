@@ -167,7 +167,6 @@ backup_files_to_send <- function(){
 #import tallas_x_up
 tallas_x_up<-split_tallas_x_up(path_filename=PATH_FILENAME, filename=FILENAME, export=FALSE, month_selected = MONTH)
 
-
 ##select type of file: tallas_x_up from SIRENO or tallas_x_up extracted by sireno's team
 ##in the future, the tallas_x_up file from SIRENO will be similar than the extracted by sirenos's team
 ##so this won't be necessary
@@ -203,6 +202,8 @@ CORRECT_UNIPESCOD <- levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
 ###obtain the not allowed species
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
+### obtain cfpo file
+CFPO <- read.table("CFPO2015.csv", head = TRUE, fileEncoding = "UTF-8", sep=";")
 
 #isolating dataframes
 catches<-tallas_x_up[["catches"]]
@@ -312,16 +313,23 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 
   # ---- errors in mixed species of the category ----
     selected_fields<-catches_in_lengths[,c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
+    #species not allowed in category because are mixed especies:
+    not_allowed_in_category <- as.data.frame(cat_spe_mixed$ESP_MUESTREO)
+    not_allowed_in_category <- unique(not_allowed_in_category)
+    colnames(not_allowed_in_category)<- c("ESP_MUESTREO")
     #search the errors:
-    mixed_species_category<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
+    #mixed_species_category<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
+    mixed_species_category<-merge(x=selected_fields, y=not_allowed_in_category["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
     #change the name of a column in dataframe. ???OMG!!!:
     names(mixed_species_category)[names(mixed_species_category) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
     # ---- MT2
     ERRORS$mixed_species_category_mt2 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
     ERRORS$mixed_species_category_mt2 <- ERRORS$mixed_species_category_mt2[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    ERRORS$mixed_species_category_mt2<-arrange_(ERRORS$mixed_species_category_mt2, base_fields)
     # ---- MT1
     ERRORS$mixed_species_category_mt1 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "1")
     ERRORS$mixed_species_category_mt1 <- ERRORS$mixed_species_category_mt1[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    ERRORS$mixed_species_category_mt1<-arrange_(ERRORS$mixed_species_category_mt1, base_fields)
     rm(selected_fields)
     
   # ---- not allowed species
