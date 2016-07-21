@@ -397,7 +397,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     weight_sampled_similar_weight_landing["POR.DIF"] <- round(weight_sampled_similar_weight_landing["POR.DIF"])
     ERRORS$weight_sampled_similar_weight_landing<-weight_sampled_similar_weight_landing
     rm(weight_sampled_similar_weight_landing)
-    //unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
+    unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
   # ---- errors sop = 0
     ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
