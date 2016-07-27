@@ -5,8 +5,8 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 20/7/2016
-#### version: 1.45
+#### date of last modification: 27/7/2016
+#### version: 1.46
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
 #### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv,
@@ -33,6 +33,7 @@ PATH <- getwd()
 # ---- GLOBAL VARIABLES --------------------------------------------------------
 ERRORS <- list() #list with all errors found in dataframes
 MESSAGE_ERRORS<- list() #list with the errors
+BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)  ###list with the common fields used in the tables
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
@@ -76,7 +77,7 @@ split_tallas_x_up <- function(path_filename, filename, export="FALSE", month_sel
     sapply(catches, class)
     
 
-    #correct category 'jureles
+    #correct category "0901 Chicharros, jureles"
     catches$CATEGORIA <- as.character(catches$CATEGORIA)
     catches$CATEGORIA[catches$CATEGORIA == "0901 Chicharros, jureles"] <- "0901 Chicharros jureles"
     catches$CATEGORIA <- as.factor(catches$CATEGORIA)
@@ -177,9 +178,6 @@ if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
   GLOBAL.TIPO.MUESTREO.ICES="TIP_MUESTREO"
 }
 
-###list with the common fields used in the tables
-base_fields <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)
-
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
 
@@ -221,13 +219,13 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   
   # ---- search errors in type sample
     ERRORS[["type_sample"]] <- catches[catches["TIPO.MUESTREO"]!="Concurrente en lonja" & catches["TIPO.MUESTREO"]!="Concurrente a bordo" ,]
-    ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c(base_fields, "TIPO.MUESTREO")])
+    ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c(BASE_FIELDS, "TIPO.MUESTREO")])
     ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, PUERTO, FECHA, BARCO, UNIPESCOD)
     levels(droplevels(ERRORS$type_sample$PUERTO))
     
   # ---- search errors in 'gear'
     ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-    ERRORS[["gears"]] <- ERRORS$gears[,c(base_fields, "ARTE")]
+    ERRORS[["gears"]] <- ERRORS$gears[,c(BASE_FIELDS, "ARTE")]
     ERRORS[["gears"]] <- unique(ERRORS$gears)
     ERRORS[["gears"]] <- arrange(ERRORS$gears, PUERTO, FECHA, BARCO, UNIPESCOD, ARTE)
     levels(droplevels(ERRORS$gears$PUERTO))
@@ -235,7 +233,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
  
   # ---- search errors in 'origin'
     ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-    ERRORS[["division"]] <- ERRORS$division[,c(base_fields, "ORIGEN")]
+    ERRORS[["division"]] <- ERRORS$division[,c(BASE_FIELDS, "ORIGEN")]
     ERRORS[["division"]] <- unique(ERRORS$division)
     ERRORS[["division"]] <- arrange(ERRORS$division, PUERTO, FECHA, BARCO, UNIPESCOD, ORIGEN)
     levels(droplevels(ERRORS$division$PUERTO))
@@ -243,13 +241,13 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   
   # ---- search errors in 'unipescod'
     ERRORS[["unipescod"]] <- catches[!catches$UNIPESCOD %in% CORRECT_UNIPESCOD, ]
-    ERRORS[["unipescod"]] <- ERRORS$unipescod[,c(base_fields)]
+    ERRORS[["unipescod"]] <- ERRORS$unipescod[,c(BASE_FIELDS)]
     ERRORS[["unipescod"]] <- arrange(ERRORS$unipescod, PUERTO, FECHA, BARCO, UNIPESCOD)
   
   # ---- coherence between 'unipescod' and 'gear'
     coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
     incoherent_data<- -which(coherence_unipescod_gear$VALID)
-    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(base_fields)]
+    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(BASE_FIELDS)]
     ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
     levels(droplevels(ERRORS$coherence_unipescod_gear$PUERTO))
   
@@ -266,7 +264,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     }
   
   # ---- search duplicate samples between MT1 and MT2
-    dup <- catches[,c(base_fields)]
+    dup <- catches[,c(BASE_FIELDS)]
     dup <- unique(dup)
     dup <- dup[,c("PUERTO", "FECHA", "BARCO", "UNIPESCOD")]
     dup <- aggregate(x = dup$FECHA, by = list(dup$PUERTO, dup$FECHA, dup$BARCO, dup$UNIPESCOD), FUN = length)
@@ -277,24 +275,24 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     rm(dup)
   
   # ---- search errors in country
-    ERRORS$errors_countries_mt1 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 1 & (PAIS != 724 | is.na(PAIS)), c(base_fields, "PAIS"))
-    ERRORS$errors_countries_mt2 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 2 & (PAIS != 724 | is.na(PAIS)), c(base_fields, "PAIS"))
+    ERRORS$errors_countries_mt1 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 1 & (PAIS != 724 | is.na(PAIS)), c(BASE_FIELDS, "PAIS"))
+    ERRORS$errors_countries_mt2 <- subset(catches, get(GLOBAL.TIPO.MUESTREO.ICES) == 2 & (PAIS != 724 | is.na(PAIS)), c(BASE_FIELDS, "PAIS"))
     
   # ---- search errors in ships
   ##### TO DO: ADD CHECKING WITH SIRENO FILES
-    to_ships <- unique(catches[,c(base_fields, "CODSGPM")])
+    to_ships <- unique(catches[,c(BASE_FIELDS, "CODSGPM")])
     errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
 
       #ships withouth coincidences in cfpo
       errors_ships_not_in_cfpo <- subset(errors_ships, is.na(errors_ships$ESTADO))
-      errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(base_fields, "CODSGPM", "ESTADO")]
-      errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, base_fields)
+      errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
+      errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
       ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
       
       #ships with state different to "alta definitiva"
       errors_ships_not_registered <- subset(errors_ships, ESTADO != "ALTA DEFINITIVA")
-      errors_ships_not_registered <- errors_ships_not_registered[, c(base_fields, "CODSGPM", "ESTADO")]
-      errors_ships_not_registered <- arrange_(errors_ships_not_registered, base_fields)
+      errors_ships_not_registered <- errors_ships_not_registered[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
+      errors_ships_not_registered <- arrange_(errors_ships_not_registered, BASE_FIELDS)
       ERRORS$errors_ships_not_registered <- errors_ships_not_registered
 
 # ---- estrato_rim, gear and division coherence ----
@@ -304,7 +302,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
 # ---- IN SPECIES ----
 
   # ---- errors in mixed species of the sample ----
-    selected_fields<-catches[,c(base_fields, "ESPECIE.TAX.")]
+    selected_fields<-catches[,c(BASE_FIELDS, "ESPECIE.TAX.")]
     #search the errors:
     ERRORS[["mixed_species_sample"]]<-merge(x=selected_fields, y=cat_spe_mixed["ESP_CATEGORIA"], by.x="ESPECIE.TAX.", by.y="ESP_CATEGORIA")
     #change the name of a column in dataframe. ???OMG!!!:
@@ -312,11 +310,11 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     #order columns dataframe:
     ERRORS$mixed_species_sample <- ERRORS$mixed_species_sample[, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "UNIPESCOD", "FECHA", "BARCO", "ESP_MUESTREO_INCORRECTA")]
     #order dataframe:
-    ERRORS[["mixed_species_sample"]]<-arrange_(ERRORS[["mixed_species_sample"]], base_fields)
+    ERRORS[["mixed_species_sample"]]<-arrange_(ERRORS[["mixed_species_sample"]], BASE_FIELDS)
     rm(selected_fields)
     
   # ---- errors in not mixed species keyed as mixed species
-    selected_fields<-catches[,c(base_fields, "ESPECIE.TAX.")]    
+    selected_fields<-catches[,c(BASE_FIELDS, "ESPECIE.TAX.")]    
     #search the errors:
     no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed["ESPECIE"], by.x="ESPECIE.TAX.", by.y="ESPECIE")    
     #order columns dataframe:
@@ -324,15 +322,33 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     #change the name of a column in dataframe. ???OMG!!!:
     names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
     #order dataframe:
-    no_mixed_species_sample<-arrange_(no_mixed_species_sample, base_fields)
+    no_mixed_species_sample<-arrange_(no_mixed_species_sample, BASE_FIELDS)
     # ---- MT1
     ERRORS$no_mixed_species_sample_mt1<-subset(no_mixed_species_sample, get(GLOBAL.TIPO.MUESTREO.ICES) == "1")
     # ---- MT2
-    ERRORS$no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
-    rm(selected_fields)
+    no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
+    ERRORS$no_mixed_species_sample_mt2 <- no_mixed_species_sample_mt2
+      # ---- Special format to send Ricardo: he has to change the sampled species to its category species
+      # byx = c(BASE_FIELDS, "ESP_MUESTREO_INCORRECTA")
+      # byy = c(BASE_FIELDS, "ESPECIE.TAX.")
+      # Ricardo_no_mixed_species_sample_mt2 <- merge(x = no_mixed_species_sample_mt2, y = catches_in_lengths, by.x = byx, by.y = byy, all.x = TRUE)
+      # Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c(BASE_FIELDS, "BARCOD", "ESP_MUESTREO_INCORRECTA","ESPCOD", "CATEGORIA", "ESPECIE", "ESPCOD2")]
+      # # ---- change column names
+      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD"] <- "COD_ESP_MUESTREO_INCORRECTA"
+      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPECIE"] <- "ESP_MUESTREO_CORRECTA"
+      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD2"] <- "COD_ESP_MUESTREO_CORRECTA"
+      #   # delete the species that have non-grouped specie in species category
+      #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[ ! Ricardo_no_mixed_species_sample_mt2$ESP_MUESTREO_CORRECTA %in% as.character(sampled_spe_no_mixed$ESPECIE),]
+      #   # ---- reorder columns
+      #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c("PUERTO","FECHA","BARCO","BARCOD","UNIPESCOD","TIP_MUESTREO","ESP_MUESTREO_INCORRECTA","COD_ESP_MUESTREO_INCORRECTA","CATEGORIA","ESP_MUESTREO_CORRECTA", "COD_ESP_MUESTREO_CORRECTA")]
+      #   write.csv(Ricardo_no_mixed_species_sample_mt2, file=paste(PATH_ERRORS, "Ricardo_no_mixed_species_sample_mt2.csv", sep="/"), quote = FALSE, row.names = FALSE)
+      
+    rm(selected_fields) 
+    
+    
 
   # ---- errors in mixed species of the category ----
-    selected_fields<-catches_in_lengths[,c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
+    selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "ESPECIE")]
     #species not allowed in category because are mixed especies:
     not_allowed_in_category <- as.data.frame(cat_spe_mixed$ESP_MUESTREO)
     not_allowed_in_category <- unique(not_allowed_in_category)
@@ -344,51 +360,51 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     names(mixed_species_category)[names(mixed_species_category) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
     # ---- MT2
     ERRORS$mixed_species_category_mt2 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "2")
-    ERRORS$mixed_species_category_mt2 <- ERRORS$mixed_species_category_mt2[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
-    ERRORS$mixed_species_category_mt2<-arrange_(ERRORS$mixed_species_category_mt2, base_fields)
+    ERRORS$mixed_species_category_mt2 <- ERRORS$mixed_species_category_mt2[, c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    ERRORS$mixed_species_category_mt2<-arrange_(ERRORS$mixed_species_category_mt2, BASE_FIELDS)
     # ---- MT1
     ERRORS$mixed_species_category_mt1 <- subset(mixed_species_category, get(GLOBAL.TIPO.MUESTREO.ICES) == "1")
-    ERRORS$mixed_species_category_mt1 <- ERRORS$mixed_species_category_mt1[, c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
-    ERRORS$mixed_species_category_mt1<-arrange_(ERRORS$mixed_species_category_mt1, base_fields)
+    ERRORS$mixed_species_category_mt1 <- ERRORS$mixed_species_category_mt1[, c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "ESP_CATEGORIA_INCORRECTA")]
+    ERRORS$mixed_species_category_mt1<-arrange_(ERRORS$mixed_species_category_mt1, BASE_FIELDS)
     rm(selected_fields)
     
   # ---- not allowed species
     # ---- in sampled species
       ERRORS$not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "ESPECIE.TAX.", by.y = "ESPECIE")
-      ERRORS$not_allowed_sampling_species <- ERRORS$not_allowed_sampling_species[c(base_fields,"COD","ESPECIE.TAX.")]
+      ERRORS$not_allowed_sampling_species <- ERRORS$not_allowed_sampling_species[c(BASE_FIELDS,"COD","ESPECIE.TAX.")]
       #change the name of a column in dataframe. ???OMG!!!:
       names(ERRORS$not_allowed_sampling_species)[names(ERRORS$not_allowed_sampling_species) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
-      ERRORS$not_allowed_sampling_species <- arrange_(ERRORS[["not_allowed_sampling_species"]], base_fields)
+      ERRORS$not_allowed_sampling_species <- arrange_(ERRORS[["not_allowed_sampling_species"]], BASE_FIELDS)
       
     # ---- in category species
       ERRORS$not_allowed_category_species <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "ESPECIE", by.y = "ESPECIE")
-      ERRORS$not_allowed_category_species <- ERRORS$not_allowed_category_species[c(base_fields,"ESPECIE.TAX.","CATEGORIA", "ESPECIE", "COD")]
+      ERRORS$not_allowed_category_species <- ERRORS$not_allowed_category_species[c(BASE_FIELDS,"ESPECIE.TAX.","CATEGORIA", "ESPECIE", "COD")]
       #change the name of a column in dataframe. ???OMG!!!:
       names(ERRORS$not_allowed_category_species)[names(ERRORS$not_allowed_category_species) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
-      ERRORS$not_allowed_category_species <- arrange_(ERRORS[["not_allowed_category_species"]], base_fields)
+      ERRORS$not_allowed_category_species <- arrange_(ERRORS[["not_allowed_category_species"]], BASE_FIELDS)
 
 
 # ---- IN WEIGHTS
     
   # ---- errors sampled weight greater than landing weight ----
     sampled_weight_greater_landing_weight <- subset(catches_in_lengths, P.MUE.DES > P.DESEM.)    
-    sampled_weight_greater_landing_weight <- sampled_weight_greater_landing_weight[,c(base_fields, "ESPECIE.TAX.", "CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES" )]
+    sampled_weight_greater_landing_weight <- sampled_weight_greater_landing_weight[,c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES" )]
     sampled_weight_greater_landing_weight["DIF.DESEM.-MUE."] <- round(sampled_weight_greater_landing_weight["P.DESEM."] - sampled_weight_greater_landing_weight["P.MUE.DES"])
     ERRORS$sampled_weight_greater_landing_weight<-sampled_weight_greater_landing_weight
 
   # ---- errors in species from the categories: all of them has exactly the same sampled weight
-    selected_fields<-c(base_fields,"NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES")
+    selected_fields<-c(BASE_FIELDS,"NºCAT.","ESPECIE.TAX.","CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
     by <- list(same_sampled_weight$PUERTO,same_sampled_weight$FECHA,same_sampled_weight$BARCO,same_sampled_weight$TIP_MUESTREO,same_sampled_weight$UNIPESCOD,same_sampled_weight$ESPECIE.TAX.,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES)
     same_sampled_weight<-aggregate(x = same_sampled_weight$P.MUE.DES, by = by, FUN= length)
-    colnames(same_sampled_weight) <- c(base_fields, "ESPECIE.TAX.","CATEGORIA","P.DESEM.","SEXO","P.MUE.DES","NUM_OCU")
+    colnames(same_sampled_weight) <- c(BASE_FIELDS, "ESPECIE.TAX.","CATEGORIA","P.DESEM.","SEXO","P.MUE.DES","NUM_OCU")
     same_sampled_weight<-subset ( same_sampled_weight, NUM_OCU >1)
     same_sampled_weight<-arrange(same_sampled_weight, PUERTO, FECHA, BARCO, ESPECIE.TAX., CATEGORIA)
     ERRORS$same_sampled_weight<-same_sampled_weight 
     rm (selected_fields, by, same_sampled_weight)
     
   # ---- errors in the weight sampled similar to the category weight?
-    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.VIVO", "S.O.P.")]
+    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.VIVO", "S.O.P.")]
     weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing[weight_sampled_similar_weight_landing[, "P.DESEM."]==weight_sampled_similar_weight_landing[,"P.MUE.VIVO"],]    
     weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", GLOBAL.TIPO.MUESTREO.ICES, "FECHA", "BARCO", "ESPECIE.TAX.", "CATEGORIA"))
     weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] <- weight_sampled_similar_weight_landing["P.MUE.VIVO"] - weight_sampled_similar_weight_landing["S.O.P."]
@@ -400,19 +416,19 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
   # ---- errors sop = 0
-    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
     
   # ---- errors 
-    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P.MUE.DES == 0, select = c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P.MUE.DES == 0, select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
     
   # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c(base_fields, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
+    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
     
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(base_fields, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c(base_fields, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
     
   
 # #### EXPORT ERRORS TO CSV ####################################################
