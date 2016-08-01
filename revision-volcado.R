@@ -38,7 +38,7 @@ BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.I
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "muestreos_1t_2016.TXT"
+FILENAME <- "MUESTREOS_2016_NEW.TXT"
 MONTH <- ""
 YEAR <- "2016"
 ################################################################################
@@ -189,7 +189,7 @@ CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
 
 ##obtain the correct division from divisiones.csv
-CORRECT_DIVISION <- read.csv("divisiones.csv", fileEncoding = "UTF-8")
+CORRECT_DIVISION <- read.csv("divisiones.csv")
 CORRECT_DIVISION <- levels(CORRECT_DIVISION$DIVISION)
 
 ###obtain the correct gears
