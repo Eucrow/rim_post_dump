@@ -33,7 +33,8 @@ PATH <- getwd()
 # ---- GLOBAL VARIABLES --------------------------------------------------------
 ERRORS <- list() #list with all errors found in dataframes
 MESSAGE_ERRORS<- list() #list with the errors
-BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)  ###list with the common fields used in the tables
+# GLOBAL.TIPO.MUESTREO.ICES create in the import_tallas_x_up
+# BASE_FIELDS create in the import_tallas_x_up
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
@@ -177,6 +178,8 @@ GLOBAL.TIPO.MUESTREO.ICES <- ""
 if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
   GLOBAL.TIPO.MUESTREO.ICES="TIP_MUESTREO"
 }
+
+BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)  ###list with the common fields used in the tables
 
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
