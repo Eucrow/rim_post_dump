@@ -1,5 +1,5 @@
 #### Review data dump
-#### Script to check the data dumps monthly in SIRENO
+#### Script to check the monthly data dumps in SIRENO
 #### 
 #### Return csv files with errors detected
 ####
@@ -39,7 +39,7 @@ MESSAGE_ERRORS<- list() #list with the errors
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "MUESTREOS_2016_NEW.TXT"
+FILENAME <- "muestreos_2016_new0108.TXT"
 MONTH <- ""
 YEAR <- "2016"
 ################################################################################
@@ -250,7 +250,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   # ---- coherence between 'unipescod' and 'gear'
     coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
     incoherent_data<- -which(coherence_unipescod_gear$VALID)
-    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(BASE_FIELDS)]
+    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
     ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
     levels(droplevels(ERRORS$coherence_unipescod_gear$PUERTO))
   
@@ -426,9 +426,9 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     
   # ---- errors p.desem = 0
     ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
-    
+
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
