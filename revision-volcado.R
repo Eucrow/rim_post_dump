@@ -1,5 +1,5 @@
 #### Review data dump
-#### Script to check the data dumps monthly in SIRENO
+#### Script to check the monthly data dumps in SIRENO
 #### 
 #### Return csv files with errors detected
 ####
@@ -33,12 +33,13 @@ PATH <- getwd()
 # ---- GLOBAL VARIABLES --------------------------------------------------------
 ERRORS <- list() #list with all errors found in dataframes
 MESSAGE_ERRORS<- list() #list with the errors
-BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)  ###list with the common fields used in the tables
+# GLOBAL.TIPO.MUESTREO.ICES create in the import_tallas_x_up
+# BASE_FIELDS create in the import_tallas_x_up
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME <- "muestreos_1t_2016.TXT"
+FILENAME <- "muestreos_2016_new0108.TXT"
 MONTH <- ""
 YEAR <- "2016"
 ################################################################################
@@ -178,6 +179,8 @@ if (is.null(tallas_x_up$catches$TIPO.MUESTREO.ICES)){
   GLOBAL.TIPO.MUESTREO.ICES="TIP_MUESTREO"
 }
 
+BASE_FIELDS <- c("PUERTO", "FECHA", "BARCO", "UNIPESCOD", GLOBAL.TIPO.MUESTREO.ICES)  ###list with the common fields used in the tables
+
 #read the mixed species file
 cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
 
@@ -189,7 +192,7 @@ CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
 
 ##obtain the correct division from divisiones.csv
-CORRECT_DIVISION <- read.csv("divisiones.csv", fileEncoding = "UTF-8")
+CORRECT_DIVISION <- read.csv("divisiones.csv")
 CORRECT_DIVISION <- levels(CORRECT_DIVISION$DIVISION)
 
 ###obtain the correct gears
@@ -247,7 +250,7 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
   # ---- coherence between 'unipescod' and 'gear'
     coherence_unipescod_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("UNIPESCOD","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
     incoherent_data<- -which(coherence_unipescod_gear$VALID)
-    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(BASE_FIELDS)]
+    ERRORS[["coherence_unipescod_gear"]]<-coherence_unipescod_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
     ERRORS[["coherence_unipescod_gear"]] <-  unique(ERRORS[["coherence_unipescod_gear"]])
     levels(droplevels(ERRORS$coherence_unipescod_gear$PUERTO))
   
@@ -423,9 +426,9 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
     
   # ---- errors p.desem = 0
     ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
-    
+
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "ESPECIE.TAX.", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
