@@ -19,6 +19,7 @@
 
 library(dplyr) #arrange_()
 library(tools) #file_path_sans_ext()
+library(stringr) #str_subset()
 
 
 # ---- SET WORKING DIRECTORY ---------------------------------------------------
@@ -378,6 +379,37 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
       #change the name of a column in dataframe. ???OMG!!!:
       names(ERRORS$not_allowed_sampling_species)[names(ERRORS$not_allowed_sampling_species) == 'ESPECIE.TAX.'] <- 'ESP_MUESTREO_INCORRECTA'
       ERRORS$not_allowed_sampling_species <- arrange_(ERRORS[["not_allowed_sampling_species"]], BASE_FIELDS)
+      # ---- genus not allowed
+        # select all the genus to check
+        to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESPECIE.TAX.)
+          # . = any single character
+          # + = one of more of previous
+          # | = or
+        to_check_genus<-catches[to_check_genus, c(BASE_FIELDS, "ESPECIE.TAX.")]
+        
+        # allowed genus
+        # allowed genus from mixed species
+        allowed_genus_mixed <- as.data.frame(unique(cat_spe_mixed$ESP_CATEGORIA))
+        colnames(allowed_genus_mixed)<-"ESPECIE"
+        
+        # allowed genus from non mixed species
+        allowed_genus_no_mixed <- as.data.frame(sampled_spe_no_mixed$ESPECIE)
+        colnames(allowed_genus_no_mixed)<-"ESPECIE"
+        
+        #allowed genus complete
+        allowed_genus <- rbind(allowed_genus_mixed, allowed_genus_no_mixed)
+        allowed_genus$ALLOWED <- "ok"
+        
+        #check the genus
+        check_genus_allowed <- merge(x = to_check_genus, y =allowed_genus, all.x = TRUE)
+        not_allowed_genus_sampled_species <- check_genus_allowed[is.na(check_genus_allowed$ALLOWED),]
+        
+        #to the ERRORS
+        ERRORS$not_allowed_genus_sampled_species <- subset(not_allowed_genus_sampled_species, select = -c(ALLOWED))
+        
+        #remove unnecesary variables
+        rm(to_check_genus, allowed_genus_mixed, allowed_genus_no_mixed, allowed_genus,check_genus_allowed)
+
       
     # ---- in category species
       ERRORS$not_allowed_category_species <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "ESPECIE", by.y = "ESPECIE")
@@ -385,6 +417,36 @@ catches_in_lengths<-tallas_x_up[["catches_in_lengths"]]
       #change the name of a column in dataframe. ???OMG!!!:
       names(ERRORS$not_allowed_category_species)[names(ERRORS$not_allowed_category_species) == 'ESPECIE'] <- 'ESP_CATEGORIA_INCORRECTA'
       ERRORS$not_allowed_category_species <- arrange_(ERRORS[["not_allowed_category_species"]], BASE_FIELDS)
+      # ---- genus not allowed
+        # select all the genus to check
+        to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESPECIE)
+          # . = any single character
+          # + = one of more of previous
+          # | = or
+        to_check_genus<-catches_in_lengths[to_check_genus, c(BASE_FIELDS, "ESPECIE.TAX.","CATEGORIA", "ESPECIE")]
+        
+        # allowed genus
+          # allowed genus from mixed species
+          allowed_genus_mixed <- as.data.frame(unique(cat_spe_mixed$ESP_CATEGORIA))
+          colnames(allowed_genus_mixed)<-"ESPECIE"
+        
+          # allowed genus from non mixed species
+          allowed_genus_no_mixed <- as.data.frame(sampled_spe_no_mixed$ESPECIE)
+          colnames(allowed_genus_no_mixed)<-"ESPECIE"
+        
+          #allowed genus complete
+          allowed_genus <- rbind(allowed_genus_mixed, allowed_genus_no_mixed)
+          allowed_genus$ALLOWED <- "ok"
+        
+        #check the genus
+        check_genus_allowed <- merge(x = to_check_genus, y =allowed_genus, all.x = TRUE)
+        not_allowed_genus_category_species <- check_genus_allowed[is.na(check_genus_allowed$ALLOWED),]
+        
+        #to the ERRORS
+        ERRORS$not_allowed_genus_category_species <- subset(not_allowed_genus_category_species, select = -c(ALLOWED))
+        
+        #remove unnecesary variables
+        rm(to_check_genus, allowed_genus_mixed, allowed_genus_no_mixed, allowed_genus,check_genus_allowed)
 
 
 # ---- IN WEIGHTS
