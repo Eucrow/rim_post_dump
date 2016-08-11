@@ -155,7 +155,7 @@ backup_files_to_send <- function(){
   date <- as.POSIXlt(date);
   
   directory_backup<-paste(PATH_BACKUP, "/", YEAR, "_", MONTH, "_backup_", date$mday,
-                   '_', date$mon, '_', date$year+1900, '_', date$hour, '_',
+                   '_', date$mon+1, '_', date$year+1900, '_', date$hour, '_',
                    date$min, '_', round(date$sec, 0), "/", sep="")
   dir.create(directory_backup, recursive=TRUE); #create the directory backup
   
@@ -445,48 +445,61 @@ lengths <- muestreos_up$lengths
 # ---- IN WEIGHTS
     
   # ---- errors sampled weight greater than landing weight ----
-    sampled_weight_greater_landing_weight <- subset(catches_in_lengths, P.MUE.DES > P.DESEM.)    
-    sampled_weight_greater_landing_weight <- sampled_weight_greater_landing_weight[,c(BASE_FIELDS, "ESP_MUE", "CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES" )]
-    sampled_weight_greater_landing_weight["DIF.DESEM.-MUE."] <- round(sampled_weight_greater_landing_weight["P.DESEM."] - sampled_weight_greater_landing_weight["P.MUE.DES"])
+    sampled_weight_greater_landing_weight <- subset(catches_in_lengths, P_MUE_DESEM > P_DESEM)    
+    sampled_weight_greater_landing_weight <- sampled_weight_greater_landing_weight[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT","P_DESEM", "COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM" )]
+    sampled_weight_greater_landing_weight["P_DESEM-P_MUE_DESEM"] <- round(sampled_weight_greater_landing_weight["P_DESEM"] - sampled_weight_greater_landing_weight["P_MUE_DESEM"],1)
     ERRORS$sampled_weight_greater_landing_weight<-sampled_weight_greater_landing_weight
 
   # ---- errors in species from the categories: all of them has exactly the same sampled weight
-    selected_fields<-c(BASE_FIELDS,"NºCAT.","ESP_MUE","CATEGORIA","P.DESEM.","ESPECIE","SEXO","P.MUE.DES")
+  # the last column in the ERRORS$same_sampled_weight dataframe show the number of category species with exactly the same sampled weight in every specie of the category
+    selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CAT","CAT","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
-    by <- list(same_sampled_weight$PUERTO,same_sampled_weight$FECHA,same_sampled_weight$BARCO,same_sampled_weight$TIP_MUESTREO,same_sampled_weight$ESTRATO_RIM,same_sampled_weight$ESP_MUE,same_sampled_weight$CATEGORIA,same_sampled_weight$P.DESEM.,same_sampled_weight$SEXO,same_sampled_weight$P.MUE.DES)
-    same_sampled_weight<-aggregate(x = same_sampled_weight$P.MUE.DES, by = by, FUN= length)
-    colnames(same_sampled_weight) <- c(BASE_FIELDS, "ESP_MUE","CATEGORIA","P.DESEM.","SEXO","P.MUE.DES","NUM_OCU")
+        by <- list(same_sampled_weight$PUERTO,
+                   same_sampled_weight$LOCCODE,
+               same_sampled_weight$FECHA,
+               same_sampled_weight$COD_BARCO,
+               same_sampled_weight$BARCO,
+               same_sampled_weight$TIPO_MUE,
+               same_sampled_weight$ESTRATO_RIM,
+               same_sampled_weight$ESP_MUE,
+               same_sampled_weight$COD_CAT,
+               same_sampled_weight$CAT,
+               same_sampled_weight$P_DESEM,
+               same_sampled_weight$SEXO,
+               same_sampled_weight$P_MUE_DESEM)
+    same_sampled_weight<-aggregate(x = same_sampled_weight$P_MUE_DESEM, by = by, FUN= length)
+    colnames(same_sampled_weight) <- c(BASE_FIELDS, "ESP_MUE", "COD_CAT","CATEGORIA","P_DESEM","SEXO","P_MUE_DESEM","NUM_OCU")
     same_sampled_weight<-subset ( same_sampled_weight, NUM_OCU >1)
-    same_sampled_weight<-arrange(same_sampled_weight, PUERTO, FECHA, BARCO, ESP_MUE, CATEGORIA)
+    same_sampled_weight<-arrange_(same_sampled_weight, BASE_FIELDS)
     ERRORS$same_sampled_weight<-same_sampled_weight 
     rm (selected_fields, by, same_sampled_weight)
     
   # ---- errors in the weight sampled similar to the category weight?
-    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "ESP_MUE", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.VIVO", "S.O.P.")]
-    weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing[weight_sampled_similar_weight_landing[, "P.DESEM."]==weight_sampled_similar_weight_landing[,"P.MUE.VIVO"],]    
-    weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", TIPO_MUE, "FECHA", "BARCO", "ESP_MUE", "CATEGORIA"))
-    weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] <- weight_sampled_similar_weight_landing["P.MUE.VIVO"] - weight_sampled_similar_weight_landing["S.O.P."]
-    weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"], digits = 1)
-    weight_sampled_similar_weight_landing["POR.DIF"] <- (weight_sampled_similar_weight_landing["P.MUE.VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P.MUE.VIVO"]
+    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")]
+    weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing[weight_sampled_similar_weight_landing[, "P_DESEM"]==weight_sampled_similar_weight_landing[,"P_MUE_VIVO"],]    
+    weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", "TIPO_MUE", "FECHA", "BARCO", "ESP_MUE", "CAT"))
+    weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- weight_sampled_similar_weight_landing["P_MUE_VIVO"] - weight_sampled_similar_weight_landing["SOP"]
+    weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"], digits = 1)
+    weight_sampled_similar_weight_landing["POR.DIF"] <- (weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P_MUE_VIVO"]
     weight_sampled_similar_weight_landing["POR.DIF"] <- round(weight_sampled_similar_weight_landing["POR.DIF"])
     ERRORS$weight_sampled_similar_weight_landing<-weight_sampled_similar_weight_landing
     rm(weight_sampled_similar_weight_landing)
     unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
   # ---- errors sop = 0
-    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, S.O.P. == 0, select = c(BASE_FIELDS, "ESP_MUE", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))   
     
   # ---- errors 
-    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P.MUE.DES == 0, select = c(BASE_FIELDS, "ESP_MUE", "CATEGORIA", "P.DESEM.", "P.VIVO", "ESPECIE", "P.MUE.DES", "P.MUE.VIVO", "S.O.P."))   
+    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
     
   # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P.DESEM. == 0 | is.na( P.DESEM.),select = c(BASE_FIELDS, "ESP_MUE", "CATEGORIA", "P.DESEM.", "P.VIVO"))   
+    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT", "P_DESEM", "P_VIVO"))   
 
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS == 0, select = c(BASE_FIELDS, "ESP_MUE", "CATEGORIA", "P.DESEM.", "ESPECIE", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CAT", "CAT", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS"))
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P.MUE.DES == 0 & EJEMPLARES.MEDIDOS != 0, select = c(BASE_FIELDS, "P.DESEM.", "P.MUE.DES", "EJEMPLARES.MEDIDOS"))
+    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
     
   
 # #### EXPORT ERRORS TO CSV ####################################################
