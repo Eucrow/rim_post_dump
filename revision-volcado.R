@@ -49,7 +49,7 @@ FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 2 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- "" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -201,7 +201,7 @@ CFPO <- read.table("CFPO2015.csv", sep=";", quote = "", header = TRUE)
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- import_muestreos_up(by_month = TRUE)
+muestreos_up <- import_muestreos_up(by_month = FALSE)
   
 #isolate dataframes
 catches <- muestreos_up$catches
@@ -268,10 +268,9 @@ lengths <- muestreos_up$lengths
     ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO) 
     rm(dup)
   
-  # ---- search errors in country ###FALTA CAMPO PAÍS!!!!!
-    !################ TO DO: CORRECT PAIS IN FILE
-    ERRORS$errors_countries_mt1 <- subset(catches, TIPO_MUE == "MT1A (Encuestas IEO)" & (PAIS != 724 | is.na(PAIS)), c(BASE_FIELDS, "PAIS"))
-    ERRORS$errors_countries_mt2 <- subset(catches, TIPO_MUE == "MT2A (Biometrico puerto)" & (PAIS != 724 | is.na(PAIS)), c(BASE_FIELDS, "PAIS"))
+  # ---- search errors in country
+    ERRORS$errors_countries_mt1 <- subset(catches, COD_TIP_MUE == 1 & (COD_PAIS != 724 | is.na(COD_PAIS)), c(BASE_FIELDS, "COD_PAIS"))
+    ERRORS$errors_countries_mt2 <- subset(catches, COD_TIP_MUE == 2 & (COD_PAIS != 724 | is.na(COD_PAIS)), c(BASE_FIELDS, "COD_PAIS"))
     
   # ---- search errors in ships
   ##### TO DO: ADD CHECKING WITH SIRENO FILES
