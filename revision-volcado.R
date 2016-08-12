@@ -39,15 +39,15 @@ PATH <- getwd()
     MESSAGE_ERRORS<- list()
     
   # list with the common fields used in all tables
-  BASE_FIELDS <- c("PUERTO", "LOCCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "TIPO_MUE")
+  BASE_FIELDS <- c("PUERTO", "LOCCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIP_MUE", "TIPO_MUE")
   
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 MONTH <- "" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
@@ -207,20 +207,22 @@ muestreos_up <- import_muestreos_up(by_month = FALSE)
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
+################################################################################  
 
 
 # #### SEARCHING ERRORS ########################################################
 # ---- IN HEADER ----
-  
+
   # ---- 'procedencia': must be allways IEO ----
     levels(catches$PROCEDENCIA)
   
   # ---- search errors in type sample
-    ERRORS[["type_sample"]] <- catches[catches["ESTRATEGIA"]!="Concurrente en lonja" & catches["ESTRATEGIA"]!="Concurrente a bordo" ,]
-    ERRORS[["type_sample"]] <- unique(ERRORS$type_sample[,c(BASE_FIELDS, "ESTRATEGIA")])
-    ERRORS[["type_sample"]] <- arrange(ERRORS$type_sample, PUERTO, FECHA, BARCO, ESTRATO_RIM)
-    levels(droplevels(ERRORS$type_sample$PUERTO))
-    
+    errors_type_sample <- catches%>%
+                          select_(.dots = BASE_FIELDS) %>%
+                          filter(COD_TIP_MUE != 1 & COD_TIP_MUE != 2 & COD_TIP_MUE != 4) %>%
+                          group_by_(BASE_FIELDS)  
+    ERRORS$errors_type_sample <- errors_type_sample
+
   # ---- search errors in 'gear'
     #TO DO: USE CODES
     ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
