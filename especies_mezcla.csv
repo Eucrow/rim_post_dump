@@ -1,4 +1,4 @@
-ESP_MUESTREO,COD_ESP_MUESTREO,ESP_CATEGORIA,COD_ESP_CATEGORIA
+ESP_MUE,COD_ESP_MUE,ESP_CAT,COD_ESP_CAT
 Auxis spp,11165,Auxis rochei,10654
 Auxis spp,11165,Auxis thazard,10653
 Beryx spp,10313,Beryx decadactylus,10314
@@ -24,9 +24,9 @@ Mullus spp,10540,Mullus surmuletus,10541
 Mullus spp,10540,Mullus barbutus,10542
 Mustelus spp,10042,Mustelus mustelus,10044
 Mustelus spp,10042,Mustelus asterias,10045
-Ommastrephidae,30174,Illex coindetti,30177
-Ommastrephidae,30174,Todaropsis eblanae,30170
-Ommastrephidae,30174,Todarodes sagitattus,30181
+Ommastrephidae,30171,Illex coindetti,30177
+Ommastrephidae,30171,Todaropsis eblanae,30170
+Ommastrephidae,30171,Todarodes sagitattus,30181
 Rajidae,10864,Raja clavata,10090
 Rajidae,10864,Raja asterias,10096
 Rajidae,10864,Leucoraja naevus,10092
