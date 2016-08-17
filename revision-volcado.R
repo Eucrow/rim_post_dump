@@ -5,7 +5,7 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 27/7/2016
+#### date of last modification: 17/8/2016
 #### version: 2.00
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
@@ -20,7 +20,6 @@
 
 library(dplyr) #arrange_()
 library(tools) #file_path_sans_ext()
-library(stringr) #str_subset()
 library(plyr)
 
 
@@ -136,7 +135,7 @@ import_muestreos_up <- function(by_month = FALSE, export = FALSE){
   return(muestreos_up)
 }
 
-#function to save the errors in csv files:
+# ---- function to save the errors in csv files: -------------------------------
 export_errors_lapply <- function(x, errors){
   if(nrow(errors[[x]])!= 0){
     print(x)  
@@ -161,7 +160,7 @@ export_errors_lapply <- function(x, errors){
 
 
 
-#function to make a copy of the files previous to send to the Area Supervisors
+# ---- function to make a copy of the files previous to send to the Area Supervisors ---
 backup_files_to_send <- function(){
   date <- Sys.time();
   date <- as.POSIXlt(date);
