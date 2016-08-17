@@ -140,10 +140,12 @@ import_muestreos_up <- function(by_month = FALSE, export = FALSE){
 export_errors_lapply <- function(x, errors){
   if(nrow(errors[[x]])!= 0){
     print(x)  
+    # separate by influence area
     by_area <- merge(ERRORS[[x]], AREAS_INFLUENCE, by.x = "LOCCODE", by.y = "LOCCODE", all.x = TRUE )
     by_area <- dlply (by_area, "AREA")
     print(names(by_area))
       for (area in names(by_area)){
+        by_area[[area]] <- by_area[[area]][, !colnames(by_area[[area]]) %in% c("PUERTO.y")]
         fullpath<-paste(PATH_ERRORS, "/", area, "_", YEAR, "_", MONTH, "_errors_", x, ".csv", sep="")
         write.csv(by_area[[area]], file=fullpath, row.names = FALSE, quote = FALSE)
         MESSAGE_ERRORS$by_area$area<<-"has errors" #this not recomended in R but is the only way I know
@@ -158,7 +160,6 @@ export_errors_lapply <- function(x, errors){
 }
 
 
-#lapply(names(ERRORS), export_errors_lapply, ERRORS)
 
 #function to make a copy of the files previous to send to the Area Supervisors
 backup_files_to_send <- function(){
@@ -256,16 +257,17 @@ lengths <- muestreos_up$lengths
     levels(droplevels(ERRORS$division$ORIGEN))
   
   # ---- search errors in 'ESTRATO_RIM'
-    ERRORS[["ESTRATO_RIM"]] <- catches[!catches$ESTRATO_RIM %in% CORRECT_ESTRATO_RIM, ]
-    ERRORS[["ESTRATO_RIM"]] <- ERRORS$ESTRATO_RIM[,c(BASE_FIELDS)]
-    ERRORS[["ESTRATO_RIM"]] <- arrange(ERRORS$ESTRATO_RIM, PUERTO, FECHA, BARCO, ESTRATO_RIM)
+    estrato_rim <- catches[!catches$ESTRATO_RIM %in% CORRECT_ESTRATO_RIM, ]
+    estrato_rim <- estrato_rim[,c(BASE_FIELDS)]
+    estrato_rim <- unique(estrato_rim)
+    ERRORS[["estrato_rim"]] <- arrange(estrato_rim, PUERTO, FECHA, BARCO, ESTRATO_RIM)
   
   # ---- coherence between 'ESTRATO_RIM' and 'gear'
-    coherence_ESTRATO_RIM_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-    incoherent_data<- -which(coherence_ESTRATO_RIM_gear$VALID)
-    ERRORS[["coherence_ESTRATO_RIM_gear"]]<-coherence_ESTRATO_RIM_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
-    ERRORS[["coherence_ESTRATO_RIM_gear"]] <-  unique(ERRORS[["coherence_ESTRATO_RIM_gear"]])
-    levels(droplevels(ERRORS$coherence_ESTRATO_RIM_gear$PUERTO))
+    coherence_estrato_rim_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
+    incoherent_data<- -which(coherence_estrato_rim_gear$VALID)
+    ERRORS[["coherence_estrato_rim_gear"]]<-coherence_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
+    ERRORS[["coherence_estrato_rim_gear"]] <-  unique(ERRORS[["coherence_estrato_rim_gear"]])
+    levels(droplevels(ERRORS$coherence_estrato_rim_gear$PUERTO))
   
   # ---- search errors in number of ships (empty field, =0 or >2)
     ERRORS[["ships"]] <- subset(catches, N_BARCOS==0 | N_BARCOS>2 | is.null(N_BARCOS))
@@ -493,12 +495,12 @@ lengths <- muestreos_up$lengths
     
   # ---- errors in the weight sampled similar to the category weight?
     weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")]
-    weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing[weight_sampled_similar_weight_landing$P_DESEM==weight_sampled_similar_weight_landing$P_MUE_VIVO,]    
+    weight_sampled_similar_weight_landing <- subset(weight_sampled_similar_weight_landing, P_DESEM==P_MUE_VIVO)    
     weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", "TIPO_MUE", "FECHA", "BARCO", "ESP_MUE", "CATEGORIA"))
     weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- weight_sampled_similar_weight_landing["P_MUE_VIVO"] - weight_sampled_similar_weight_landing["SOP"]
     weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"], digits = 1)
     weight_sampled_similar_weight_landing["POR_DIF"] <- (weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P_MUE_VIVO"]
-    weight_sampled_similar_weight_landing["POR_DIF"] <- round(weight_sampled_similar_weight_landing["POR.DIF"])
+    weight_sampled_similar_weight_landing["POR_DIF"] <- round(weight_sampled_similar_weight_landing["POR_DIF"])
     ERRORS$weight_sampled_similar_weight_landing<-weight_sampled_similar_weight_landing
     rm(weight_sampled_similar_weight_landing)
     unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
