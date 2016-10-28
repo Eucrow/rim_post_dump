@@ -177,6 +177,12 @@ sopGreaterPesMueDesem <- function(df){
   return (err)
 }
 
+#function to search samples with P_MUE_DESEM = 0 or NA
+PesMueDesemZero <- function(df){
+  errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+  return(errors)
+}
+
 
 # #### SEARCHING ERRORS ########################################################
 # ---- IN HEADER ----
@@ -425,8 +431,11 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
 
-  # ---- errros in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
+  # ---- errors in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
     ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
+    
+  # ---- errors in samples with P_MUE_DESEM is 0 or NA
+    ERRORS$pes_mue_desem_zero <- PesMueDesemZero(catches_in_lengths)
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
