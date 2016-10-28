@@ -21,6 +21,11 @@
 library(dplyr) #arrange_()
 library(tools) #file_path_sans_ext()
 library(plyr)
+library(devtools)
+
+# ---- install sapmuebase from local
+install("F:/misdoc/sap/sapmuebase")
+library(sapmuebase)
 
 
 # ---- SET WORKING DIRECTORY ---------------------------------------------------
@@ -45,95 +50,20 @@ PATH <- getwd()
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
-PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/"
+PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/abril"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- "" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- "4" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
-PATH_ERRORS <- paste(PATH_FILENAME,"errors",sep="")
+PATH_ERRORS <- paste(PATH_FILENAME,"/errors",sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # #### FUNCTIONS ###############################################################
 
-
-# ---- function to remove coma in the category "Chicharros, jureles" -----------
-# return the dataframe corrected
-remove_coma_in_category <- function(dataframe){
-  dataframe$CATEGORIA<- gsub(",", "", dataframe$CATEGORIA)
-  #assign('dataframe',dataframe,.GlobalEnv)#this doesn't work, and I dont know why
-  return(dataframe)
-}
-
-# ---- function to change date format in all dataframes of muestreos_up list ----
-change_date_format <- function (dataframe){
-  dataframe$FECHA <- as.Date(dataframe$FECHA, "%d-%b-%y")
-  dataframe$FECHA <- as.POSIXlt(dataframe$FECHA)
-  dataframe$FECHA <- format(dataframe$FECHA, "%d-%m-%y")
-}
-
-# ---- function to filter by month all the dataframes of muestreos_up list ------
-filter_by_month <- function (dataframe){
-  # format the month:
-  MONTH <- sprintf("%02d", MONTH)
-  
-  # filter:
-  dataframe <- dataframe[format.Date(dataframe$FECHA, "%m") == MONTH,]
-  
-  #return dataframe:
-  return(dataframe)
-}
-
-# ---- function to import the 'tallas por up' files ----------------------------
-# require the 3 files from 'tallas por up'
-# return a list with 3 data frames
-# by_month --> to select only one month. MONTH must be fill in the constants section. False by default.
-# export --> to export muestreos_up dataframe in csv file. False by default.
-import_muestreos_up <- function(by_month = FALSE, export = FALSE){
-  # full paths for every file
-  fullpath_des_tot <- paste(PATH_FILENAME, FILENAME_DES_TOT, sep="")
-  fullpath_des_tal <- paste(PATH_FILENAME, FILENAME_DES_TAL, sep="")
-  fullpath_tal <- paste(PATH_FILENAME, FILENAME_TAL, sep="/")
-  
-  # import files to data.frame
-  catches <- read.table(fullpath_des_tot, sep=";", header = TRUE) 
-  catches_in_lengths <- read.table(fullpath_des_tal, sep=";", header = TRUE) 
-  lengths <- read.table(fullpath_tal, sep=";", header = TRUE) 
-  
-  # group in list
-  muestreos_up<-list(catches_in_lengths=catches_in_lengths, lengths=lengths, catches=catches)
-
-  # change the column "FECHA" to a date format
-    # to avoid some problems with Spanish_Spain.1252 (or if you are using another locale), change locale to Spanish_United States.1252:
-    lct <- Sys.getlocale("LC_TIME")
-    Sys.setlocale("LC_TIME","Spanish_United States.1252")
-      
-      # change the format with lapply
-        # it's necesary the last x inside the function, to return de vale of x modified
-      muestreos_up <- lapply(muestreos_up, function(x){x$FECHA <- change_date_format(x); x})
-   
-    # and now the come back to the initial configuration of locale:
-    Sys.setlocale("LC_TIME", lct)
-    
-    # filter by month, only in case by_month == TRUE
-    if (by_month == TRUE){
-      muestreos_up <- lapply(muestreos_up, function(x){x <- filter_by_month(x); x})    
-    }
-    
-    # remove coma in the name of the categories
-    # I don't know why this doesn't work:
-    # lapply(muestreos_up, function(x){x <- remove_coma_in_category(x)})
-    # so I've to do this:
-    muestreos_up$catches <- remove_coma_in_category(muestreos_up$catches)
-    muestreos_up$catches_in_lengths <- remove_coma_in_category(muestreos_up$catches_in_lengths)
-    muestreos_up$lengths <- remove_coma_in_category(muestreos_up$lengths)
-  
-  #return list
-  return(muestreos_up)
-}
 
 # ---- function to save the errors in csv files: -------------------------------
 export_errors_lapply <- function(x, errors){
@@ -184,18 +114,10 @@ cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
 sampled_spe_no_mixed<-read.csv("especies_no_mezcla.csv", header=TRUE)
 
 #read the estrato-rim - arte file to obtain the correct estratorim, gear and its relation
-CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
+# CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
+data(estratorim_arte)
+CORRECT_ESTRATORIM_ARTE <- estratorim_arte
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
-
-##obtain the correct division from divisiones.csv
-CORRECT_DIVISION <- read.csv("divisiones.csv")
-CORRECT_DIVISION <- levels(CORRECT_DIVISION$DIVISION)
-
-###obtain the correct gears
-CORRECT_GEARS <- levels(CORRECT_ESTRATORIM_ARTE$ARTE)
-
-###obtain the correct ESTRATO_RIM
-CORRECT_ESTRATO_RIM <- levels(CORRECT_ESTRATORIM_ARTE$ESTRATO_RIM)
 
 ###obtain the not allowed species
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
@@ -215,75 +137,56 @@ AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- import_muestreos_up(by_month = FALSE)
+muestreos_up <- import_muestreos_up(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = 5, path = PATH_FILENAME)
   
+
 #isolate dataframes
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 ################################################################################  
 
+# #### FUNCTIONS ###############################################################
+
+# Function to check the coherence between 'ESTRATO_RIM' and 'gear'
+coherenceEstratoRimGear <- function(df){
+  merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
+  incoherent_data <- -which(merge_estrato_rim_gear$VALID)
+  incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
+  incoherent_data <- unique(incoherent_data)
+  return(incoherent_data)
+}
+
+# Function to search errors in number of ships (empty field, =0 or >2)
+numberOfShips <- function (df){
+  nof <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
+  return (nof)
+}
+
+# Function to search errors in number of rejects (only empty fields)
+numberOfRejections <- function(df){
+  number_of_rejections <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
+  return(number_of_rejections)
+}
+
+# Function to search samples with SOP > P_MUE_DESEM, when P_MUE_DESEM != 0
+sopGreaterPesMueDesem <- function(df){
+  errors <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!="0",]
+  errors["P_MUE_DESEM-SOP"] <- round(errors["P_MUE_DESEM"] - errors["SOP"],1)
+  errors["POR_DIF"] <- round((errors["P_MUE_DESEM-SOP"] * 100) / errors["P_MUE_DESEM"])
+  return (errors)
+}
+
 
 # #### SEARCHING ERRORS ########################################################
 # ---- IN HEADER ----
 
-  # ---- 'procedencia': must be allways IEO ----
-    levels(catches$PROCEDENCIA)
-  
-  # ---- search errors in type sample
-    errors_type_sample <- catches%>%
-                          select_(.dots = BASE_FIELDS) %>%
-                          filter(COD_TIPO_MUE != 1 & COD_TIPO_MUE != 2 & COD_TIPO_MUE != 4) %>%
-                          group_by_(BASE_FIELDS)  
-    ERRORS$errors_type_sample <- errors_type_sample
 
-  # ---- search errors in 'gear'
-    #TO DO: USE CODES
-    ERRORS[["gears"]] <- catches[!catches$ARTE %in% CORRECT_GEARS, ]
-    ERRORS[["gears"]] <- ERRORS$gears[,c(BASE_FIELDS, "ARTE")]
-    ERRORS[["gears"]] <- unique(ERRORS$gears)
-    ERRORS[["gears"]] <- arrange(ERRORS$gears, PUERTO, FECHA, BARCO, ESTRATO_RIM, ARTE)
-    levels(droplevels(ERRORS$gears$PUERTO))
-    levels(droplevels(ERRORS$gears$ARTE))
- 
-  # ---- search errors in 'origin'
-    #TO DO: USE CODES
-    ERRORS[["division"]] <- catches[!catches$ORIGEN %in% CORRECT_DIVISION, ]
-    ERRORS[["division"]] <- ERRORS$division[,c(BASE_FIELDS, "COD_ORIGEN", "ORIGEN")]
-    ERRORS[["division"]] <- unique(ERRORS$division)
-    ERRORS[["division"]] <- arrange(ERRORS$division, PUERTO, FECHA, BARCO, ESTRATO_RIM, ORIGEN)
-    levels(droplevels(ERRORS$division$PUERTO))
-    levels(droplevels(ERRORS$division$ORIGEN))
-  
-  # ---- search errors in 'ESTRATO_RIM'
-    estrato_rim <- catches[!catches$ESTRATO_RIM %in% CORRECT_ESTRATO_RIM, ]
-    estrato_rim <- estrato_rim[,c(BASE_FIELDS)]
-    estrato_rim <- unique(estrato_rim)
-    ERRORS[["estrato_rim"]] <- arrange(estrato_rim, PUERTO, FECHA, BARCO, ESTRATO_RIM)
-  
-  # ---- coherence between 'ESTRATO_RIM' and 'gear'
-    coherence_estrato_rim_gear<-merge(x=catches, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-    incoherent_data<- -which(coherence_estrato_rim_gear$VALID)
-    ERRORS[["coherence_estrato_rim_gear"]]<-coherence_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
-    ERRORS[["coherence_estrato_rim_gear"]] <-  unique(ERRORS[["coherence_estrato_rim_gear"]])
-    levels(droplevels(ERRORS$coherence_estrato_rim_gear$PUERTO))
-  
-  # ---- search errors in number of ships (empty field, =0 or >2)
-    ERRORS[["ships"]] <- subset(catches, N_BARCOS==0 | N_BARCOS>2 | is.null(N_BARCOS))
-  
-  # ---- search errors in number of rejects (only empty fields)
-    ERRORS[["rejections"]] <- subset(catches, is.null(N_RECHAZOS))
-  
-  # ---- search duplicate samples between MT1 and MT2
-    dup <- catches[,c(BASE_FIELDS)]
-    dup <- unique(dup)
-    dup <- dup[,c("LOCCODE", "PUERTO", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM")]
-    dup <- aggregate(x = dup$FECHA, by = list(dup$LOCCODE, dup$PUERTO, dup$FECHA, dup$COD_BARCO, dup$BARCO, dup$ESTRATO_RIM), FUN = length)
-    colnames(dup) <-c ("LOCCODE", "PUERTO", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "DUPLICADOS")
-    dup <- dup[dup$DUPLICADOS>1,]
-    dup <- arrange(dup, PUERTO, FECHA, BARCO, ESTRATO_RIM)
-    ERRORS[["duplicated_mt1_mt2"]]<-arrange(dup, PUERTO, FECHA, BARCO) 
-    rm(dup)
+ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
+
+ERRORS$number_of_ships <- numberOfShips(catches)
+
+ERRORS$number_of_rejections <- numberOfRejections(catches)
   
   # ---- search errors in country
     ERRORS$errors_countries_mt1 <- subset(catches, COD_TIPO_MUE == 1 & (COD_PAIS != 724 | is.na(COD_PAIS)), c(BASE_FIELDS, "COD_PAIS"))
@@ -325,38 +228,39 @@ lengths <- muestreos_up$lengths
     ERRORS$mixed_species_sample <- mixed_species_sample
     rm(selected_fields, mixed_species_sample)
 
-  # ---- errors in not mixed species keyed as mixed species
-    selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]    
-    #search the errors:
-    no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed, by.x="ESP_MUE", by.y="ESP")    
-    #order columns dataframe:
-    no_mixed_species_sample <- no_mixed_species_sample[c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
-    #change the name of a column in dataframe. ???OMG!!!:
-    names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUESTREO_INCORRECTA'
-    #order dataframe:
-    no_mixed_species_sample<-arrange_(no_mixed_species_sample, BASE_FIELDS)
-    # ---- MT1
-    no_mixed_species_sample_mt1<-subset(no_mixed_species_sample, TIPO_MUE == "MT1A (Encuestas IEO)")
-    ERRORS$no_mixed_species_sample_mt1 <- no_mixed_species_sample_mt1
-    # ---- MT2
-    no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, TIPO_MUE == "MT2A (Biometrico puerto)")
-    ERRORS$no_mixed_species_sample_mt2 <- no_mixed_species_sample_mt2
-      # ---- Special format to send Ricardo: he has to change the sampled species to its category species
-      # byx = c(BASE_FIELDS, "ESP_MUESTREO_INCORRECTA")
-      # byy = c(BASE_FIELDS, "ESP_MUE")
-      # Ricardo_no_mixed_species_sample_mt2 <- merge(x = no_mixed_species_sample_mt2, y = catches_in_lengths, by.x = byx, by.y = byy, all.x = TRUE)
-      # Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c(BASE_FIELDS, "BARCOD", "ESP_MUESTREO_INCORRECTA","ESPCOD", "CATEGORIA", "ESPECIE", "ESPCOD2")]
-      # # ---- change column names
-      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD"] <- "COD_ESP_MUESTREO_INCORRECTA"
-      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPECIE"] <- "ESP_MUESTREO_CORRECTA"
-      # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD2"] <- "COD_ESP_MUESTREO_CORRECTA"
-      #   # delete the species that have non-grouped specie in species category
-      #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[ ! Ricardo_no_mixed_species_sample_mt2$ESP_MUESTREO_CORRECTA %in% as.character(sampled_spe_no_mixed$ESPECIE),]
-      #   # ---- reorder columns
-      #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c("PUERTO","FECHA","BARCO","BARCOD","ESTRATO_RIM","TIP_MUESTREO","ESP_MUESTREO_INCORRECTA","COD_ESP_MUESTREO_INCORRECTA","CATEGORIA","ESP_MUESTREO_CORRECTA", "COD_ESP_MUESTREO_CORRECTA")]
-      #   write.csv(Ricardo_no_mixed_species_sample_mt2, file=paste(PATH_ERRORS, "Ricardo_no_mixed_species_sample_mt2.csv", sep="/"), quote = FALSE, row.names = FALSE)
-      
-    rm(selected_fields, no_mixed_species_sample, no_mixed_species_sample_mt1, no_mixed_species_sample_mt2) 
+  # LO SIGUIENTE QUIERO COMPROBARLO ANTES DE ELIMINARLO
+    # # ---- errors in not mixed species keyed as mixed species
+  #   selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]    
+  #   #search the errors:
+  #   no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed, by.x="ESP_MUE", by.y="ESP")    
+  #   #order columns dataframe:
+  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
+  #   #change the name of a column in dataframe. ???OMG!!!:
+  #   names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUESTREO_INCORRECTA'
+  #   #order dataframe:
+  #   no_mixed_species_sample<-arrange_(no_mixed_species_sample, BASE_FIELDS)
+  #   # ---- MT1
+  #   no_mixed_species_sample_mt1<-subset(no_mixed_species_sample, TIPO_MUE == "MT1A (Encuestas IEO)")
+  #   ERRORS$no_mixed_species_sample_mt1 <- no_mixed_species_sample_mt1
+  #   # ---- MT2
+  #   no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, TIPO_MUE == "MT2A (Biometrico puerto)")
+  #   ERRORS$no_mixed_species_sample_mt2 <- no_mixed_species_sample_mt2
+  #     # ---- Special format to send Ricardo: he has to change the sampled species to its category species
+  #     # byx = c(BASE_FIELDS, "ESP_MUESTREO_INCORRECTA")
+  #     # byy = c(BASE_FIELDS, "ESP_MUE")
+  #     # Ricardo_no_mixed_species_sample_mt2 <- merge(x = no_mixed_species_sample_mt2, y = catches_in_lengths, by.x = byx, by.y = byy, all.x = TRUE)
+  #     # Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c(BASE_FIELDS, "BARCOD", "ESP_MUESTREO_INCORRECTA","ESPCOD", "CATEGORIA", "ESPECIE", "ESPCOD2")]
+  #     # # ---- change column names
+  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD"] <- "COD_ESP_MUESTREO_INCORRECTA"
+  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPECIE"] <- "ESP_MUESTREO_CORRECTA"
+  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD2"] <- "COD_ESP_MUESTREO_CORRECTA"
+  #     #   # delete the species that have non-grouped specie in species category
+  #     #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[ ! Ricardo_no_mixed_species_sample_mt2$ESP_MUESTREO_CORRECTA %in% as.character(sampled_spe_no_mixed$ESPECIE),]
+  #     #   # ---- reorder columns
+  #     #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c("PUERTO","FECHA","BARCO","BARCOD","ESTRATO_RIM","TIP_MUESTREO","ESP_MUESTREO_INCORRECTA","COD_ESP_MUESTREO_INCORRECTA","CATEGORIA","ESP_MUESTREO_CORRECTA", "COD_ESP_MUESTREO_CORRECTA")]
+  #     #   write.csv(Ricardo_no_mixed_species_sample_mt2, file=paste(PATH_ERRORS, "Ricardo_no_mixed_species_sample_mt2.csv", sep="/"), quote = FALSE, row.names = FALSE)
+  #     
+  #   rm(selected_fields, no_mixed_species_sample, no_mixed_species_sample_mt1, no_mixed_species_sample_mt2) 
 
   # ---- errors in mixed species of the category ----
     selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
@@ -444,10 +348,12 @@ lengths <- muestreos_up$lengths
           colnames(allowed_genus_other)<-"COD_ESP"
           
           #allowed genus complete
+          # TO DO: arreglar esto, sobran variables
           allowed_genus <- allowed_genus_other
           allowed_genus$ALLOWED <- "ok" #¡¡CHAPUCILLA!!
           
           #check the genus
+          # TO DO: arreglar esto, sobran variables
           checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_CAT", by.y = "COD_ESP", all.x = TRUE)
           not_allowed_genus <- checked_allowed_genus[is.na(checked_allowed_genus$ALLOWED),]
         
@@ -518,7 +424,9 @@ lengths <- muestreos_up$lengths
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
-    
+
+  # ---- errros in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
+    ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
