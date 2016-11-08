@@ -178,10 +178,22 @@ sopGreaterPesMueDesem <- function(df){
 }
 
 #function to search samples with P_MUE_DESEM = 0 or NA
-PesMueDesemZero <- function(df){
+pesMueDesemZero <- function(df){
   errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
   return(errors)
 }
+
+#function to search categories with multiple weight landings
+speciesWithCategoriesWithSameWeightLanding <- function(df){
+  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
+  fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
+  result <- df %>% 
+    distinct() %>%
+    count_(fields_to_count) %>%
+    filter(n>1)
+  return(result)
+}
+
 
 
 # #### SEARCHING ERRORS ########################################################
@@ -435,7 +447,10 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
     
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
-    ERRORS$pes_mue_desem_zero <- PesMueDesemZero(catches_in_lengths)
+    ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+    
+  # ---- (warning) errors in species with categories with the same weight landing
+    ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
