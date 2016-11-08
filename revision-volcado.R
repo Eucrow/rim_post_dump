@@ -137,7 +137,7 @@ AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- import_muestreos_up(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = 5, path = PATH_FILENAME)
+muestreos_up <- import_muestreos_up(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILENAME)
   
 
 #isolate dataframes
