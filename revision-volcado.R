@@ -45,7 +45,7 @@ PATH <- getwd()
     MESSAGE_ERRORS<- list()
     
   # list with the common fields used in all tables
-  BASE_FIELDS <- c("PUERTO", "LOCCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
+  BASE_FIELDS <- c("PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
   
 
 ################################################################################
@@ -70,7 +70,7 @@ export_errors_lapply <- function(x, errors){
   if(nrow(errors[[x]])!= 0){
     print(x)  
     # separate by influence area
-    by_area <- merge(ERRORS[[x]], AREAS_INFLUENCE, by.x = "LOCCODE", by.y = "LOCCODE", all.x = TRUE )
+    by_area <- merge(ERRORS[[x]], AREAS_INFLUENCE, by.x = "LOCODE", by.y = "LOCODE", all.x = TRUE )
     by_area <- dlply (by_area, "AREA")
     print(names(by_area))
       for (area in names(by_area)){
@@ -240,7 +240,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     #change the name of a column in dataframe. ???OMG!!!:
     names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
     #order columns dataframe:
-    mixed_species_sample <- mixed_species_sample[, c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "BARCO", "ESP_MUE_INCORRECTA")]
+    mixed_species_sample <- mixed_species_sample[, c("LOCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "BARCO", "ESP_MUE_INCORRECTA")]
     #order dataframe:
     mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
     ERRORS$mixed_species_sample <- mixed_species_sample
@@ -252,7 +252,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   #   #search the errors:
   #   no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed, by.x="ESP_MUE", by.y="ESP")
   #   #order columns dataframe:
-  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
+  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
   #   #change the name of a column in dataframe. ???OMG!!!:
   #   names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUESTREO_INCORRECTA'
   #   #order dataframe:
@@ -395,7 +395,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
         by <- list(same_sampled_weight$PUERTO,
-                   same_sampled_weight$LOCCODE,
+                   same_sampled_weight$LOCODE,
                same_sampled_weight$FECHA,
                same_sampled_weight$COD_BARCO,
                same_sampled_weight$BARCO,
