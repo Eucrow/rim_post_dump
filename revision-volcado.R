@@ -55,7 +55,7 @@ FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- "4" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 4 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -67,10 +67,12 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # ---- function to save the errors in csv files: -------------------------------
 export_errors_lapply <- function(x, errors){
+  data(areas_influencia)
+  areas_influencia <- areas_influencia
   if(nrow(errors[[x]])!= 0){
     print(x)  
     # separate by influence area
-    by_area <- merge(ERRORS[[x]], AREAS_INFLUENCE, by.x = "LOCODE", by.y = "LOCODE", all.x = TRUE )
+    by_area <- merge(ERRORS[[x]], areas_influencia, by.x = "LOCODE", by.y = "LOCODE", all.x = TRUE )
     by_area <- dlply (by_area, "AREA")
     print(names(by_area))
       for (area in names(by_area)){
@@ -131,13 +133,14 @@ CFPO <- read.table("CFPO2015.csv", sep=";", quote = "", header = TRUE)
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
 ### obtain areas of invfluence
-AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
+#not necesary because it is in the sapmuebase package
+#AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
 
 
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- import_muestreos_up(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILENAME)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILENAME)
   
 
 #isolate dataframes
@@ -151,11 +154,13 @@ lengths <- muestreos_up$lengths
 # Function to check the coherence between 'ESTRATO_RIM' and 'gear'
 coherenceEstratoRimGear <- function(df){
   merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-  incoherent_data <- -which(merge_estrato_rim_gear$VALID)
+  incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
   incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
   incoherent_data <- unique(incoherent_data)
   return(incoherent_data)
 }
+
+ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
 # Function to search errors in number of ships (empty field, =0 or >2)
 numberOfShips <- function (df){
