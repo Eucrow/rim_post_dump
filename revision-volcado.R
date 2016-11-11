@@ -45,7 +45,7 @@ PATH <- getwd()
     MESSAGE_ERRORS<- list()
     
   # list with the common fields used in all tables
-  BASE_FIELDS <- c("PUERTO", "LOCCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
+  BASE_FIELDS <- c("PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
   
 
 ################################################################################
@@ -55,7 +55,7 @@ FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- "4" #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 4 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -67,10 +67,12 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # ---- function to save the errors in csv files: -------------------------------
 export_errors_lapply <- function(x, errors){
+  data(areas_influencia)
+  areas_influencia <- areas_influencia
   if(nrow(errors[[x]])!= 0){
     print(x)  
     # separate by influence area
-    by_area <- merge(ERRORS[[x]], AREAS_INFLUENCE, by.x = "LOCCODE", by.y = "LOCCODE", all.x = TRUE )
+    by_area <- merge(ERRORS[[x]], areas_influencia, by.x = "LOCODE", by.y = "LOCODE", all.x = TRUE )
     by_area <- dlply (by_area, "AREA")
     print(names(by_area))
       for (area in names(by_area)){
@@ -131,13 +133,14 @@ CFPO <- read.table("CFPO2015.csv", sep=";", quote = "", header = TRUE)
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
 ### obtain areas of invfluence
-AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
+#not necesary because it is in the sapmuebase package
+#AREAS_INFLUENCE <- read.csv("areas_influencia.csv")
 
 
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- import_muestreos_up(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = 5, path = PATH_FILENAME)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILENAME)
   
 
 #isolate dataframes
@@ -151,11 +154,13 @@ lengths <- muestreos_up$lengths
 # Function to check the coherence between 'ESTRATO_RIM' and 'gear'
 coherenceEstratoRimGear <- function(df){
   merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-  incoherent_data <- -which(merge_estrato_rim_gear$VALID)
+  incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
   incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
   incoherent_data <- unique(incoherent_data)
   return(incoherent_data)
 }
+
+ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
 # Function to search errors in number of ships (empty field, =0 or >2)
 numberOfShips <- function (df){
@@ -169,19 +174,40 @@ numberOfRejections <- function(df){
   return(number_of_rejections)
 }
 
+# Don't use: replaced by sopGreaterPesMueVivo
 # Function to search samples with SOP > P_MUE_DESEM, when P_MUE_DESEM != 0
-sopGreaterPesMueDesem <- function(df){
-  err <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!=0 & !is.na(df["P_MUE_DESEM"]),]
-  err["P_MUE_DESEM-SOP"] <- round(err["P_MUE_DESEM"] - err["SOP"],1)
-  err["POR_DIF"] <- round((err["P_MUE_DESEM-SOP"] * 100) / err["P_MUE_DESEM"])
+# sopGreaterPesMueDesem <- function(df){
+#   err <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!=0 & !is.na(df["P_MUE_DESEM"]),]
+#   err["P_MUE_DESEM-SOP"] <- round(err["P_MUE_DESEM"] - err["SOP"],1)
+#   err["POR_DIF"] <- round((err["P_MUE_DESEM-SOP"] * 100) / err["P_MUE_DESEM"])
+#   return (err)
+# }
+
+# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
+sopGreaterPesMueVivo <- function(df){
+  err <- df[df["SOP"]>df["P_MUE_VIVO"] & df["P_MUE_VIVO"]!=0 & !is.na(df["P_MUE_VIVO"]),]
+  err["P_MUE_VIVO-SOP"] <- round(err["P_MUE_VIVO"] - err["SOP"],1)
+  err["POR_DIF"] <- round((err["P_MUE_VIVO-SOP"] * 100) / err["P_MUE_VIVO"])
   return (err)
 }
 
 #function to search samples with P_MUE_DESEM = 0 or NA
-PesMueDesemZero <- function(df){
+pesMueDesemZero <- function(df){
   errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
   return(errors)
 }
+
+#function to search categories with multiple weight landings
+speciesWithCategoriesWithSameWeightLanding <- function(df){
+  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
+  fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
+  result <- df %>% 
+    distinct() %>%
+    count_(fields_to_count) %>%
+    filter(n>1)
+  return(result)
+}
+
 
 
 # #### SEARCHING ERRORS ########################################################
@@ -228,7 +254,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     #change the name of a column in dataframe. ???OMG!!!:
     names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
     #order columns dataframe:
-    mixed_species_sample <- mixed_species_sample[, c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "BARCO", "ESP_MUE_INCORRECTA")]
+    mixed_species_sample <- mixed_species_sample[, c("LOCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "BARCO", "ESP_MUE_INCORRECTA")]
     #order dataframe:
     mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
     ERRORS$mixed_species_sample <- mixed_species_sample
@@ -240,7 +266,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   #   #search the errors:
   #   no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed, by.x="ESP_MUE", by.y="ESP")
   #   #order columns dataframe:
-  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
+  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
   #   #change the name of a column in dataframe. ???OMG!!!:
   #   names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUESTREO_INCORRECTA'
   #   #order dataframe:
@@ -383,7 +409,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
         by <- list(same_sampled_weight$PUERTO,
-                   same_sampled_weight$LOCCODE,
+                   same_sampled_weight$LOCODE,
                same_sampled_weight$FECHA,
                same_sampled_weight$COD_BARCO,
                same_sampled_weight$BARCO,
@@ -431,14 +457,26 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
 
-  # ---- errors in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
-    ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
+    # Don't use: replaced by sopGreaterPesMueVivo
+    # ---- errors in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
+    # ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
+    
+  # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
+    ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
     
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
-    ERRORS$pes_mue_desem_zero <- PesMueDesemZero(catches_in_lengths)
+    ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+    
+  # ---- (warning) errors in species with categories with the same weight landing
+    ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
   
 # #### EXPORT ERRORS TO CSV ####################################################
   lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 # #### MAKE A BACKUP
 # #### usually, when the files will be send to Supervisors Area
     backup_files_to_send()
+
+    lapply(names(ERRORS2), export_errors_lapply, ERRORS2)
+    df_sop_greater_pes_mue_vivo <- ERRORS$sop_greater_pes_mue_vivo
+    ERRORS2 <- list(df_sop_greater_pes_mue_vivo)
+    
