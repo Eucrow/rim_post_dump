@@ -174,11 +174,20 @@ numberOfRejections <- function(df){
   return(number_of_rejections)
 }
 
+# Don't use: replaced by sopGreaterPesMueVivo
 # Function to search samples with SOP > P_MUE_DESEM, when P_MUE_DESEM != 0
-sopGreaterPesMueDesem <- function(df){
-  err <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!=0 & !is.na(df["P_MUE_DESEM"]),]
-  err["P_MUE_DESEM-SOP"] <- round(err["P_MUE_DESEM"] - err["SOP"],1)
-  err["POR_DIF"] <- round((err["P_MUE_DESEM-SOP"] * 100) / err["P_MUE_DESEM"])
+# sopGreaterPesMueDesem <- function(df){
+#   err <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!=0 & !is.na(df["P_MUE_DESEM"]),]
+#   err["P_MUE_DESEM-SOP"] <- round(err["P_MUE_DESEM"] - err["SOP"],1)
+#   err["POR_DIF"] <- round((err["P_MUE_DESEM-SOP"] * 100) / err["P_MUE_DESEM"])
+#   return (err)
+# }
+
+# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
+sopGreaterPesMueVivo <- function(df){
+  err <- df[df["SOP"]>df["P_MUE_VIVO"] & df["P_MUE_VIVO"]!=0 & !is.na(df["P_MUE_VIVO"]),]
+  err["P_MUE_VIVO-SOP"] <- round(err["P_MUE_VIVO"] - err["SOP"],1)
+  err["POR_DIF"] <- round((err["P_MUE_VIVO-SOP"] * 100) / err["P_MUE_VIVO"])
   return (err)
 }
 
@@ -448,8 +457,12 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
 
-  # ---- errors in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
-    ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
+    # Don't use: replaced by sopGreaterPesMueVivo
+    # ---- errors in samples with SOP greater than P_MUE_DESEM when P_MUE_DESEM != 0
+    # ERRORS$sop_greater_pes_mue_desem <- sopGreaterPesMueDesem(catches_in_lengths)
+    
+  # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
+    ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
     
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
@@ -462,3 +475,8 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 # #### MAKE A BACKUP
 # #### usually, when the files will be send to Supervisors Area
     backup_files_to_send()
+
+    lapply(names(ERRORS2), export_errors_lapply, ERRORS2)
+    df_sop_greater_pes_mue_vivo <- ERRORS$sop_greater_pes_mue_vivo
+    ERRORS2 <- list(df_sop_greater_pes_mue_vivo)
+    
