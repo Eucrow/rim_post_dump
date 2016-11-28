@@ -50,12 +50,12 @@ PATH <- getwd()
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
-PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/abril"
+PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/junio"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 4 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 6 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -208,6 +208,18 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
   return(result)
 }
 
+#function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN
+#o ALTA PROVISIONAL POR REACTIVACIÓN
+shipsNotRegistered <- function(df){
+  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
+  errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+  errors_ships <- errors_ships %>%
+    filter( ESTADO != "ALTA DEFINITIVA" &
+              ESTADO != "H - A.P. POR REACTIVACION" &
+              ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
+  return (errors_ships)
+}
+
 
 
 # #### SEARCHING ERRORS ########################################################
@@ -235,11 +247,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
       errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
       ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
 
-      #ships with state different to "alta definitiva"
-      errors_ships_not_registered <- subset(errors_ships, ESTADO != "ALTA DEFINITIVA")
-      errors_ships_not_registered <- errors_ships_not_registered[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
-      errors_ships_not_registered <- arrange_(errors_ships_not_registered, BASE_FIELDS)
-      ERRORS$errors_ships_not_registered <- errors_ships_not_registered
+    ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO
