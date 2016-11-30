@@ -176,15 +176,17 @@ numberOfRejections <- function(df){
 
 # Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
 sopGreaterPesMueVivo <- function(df){
-  err <- df[df["SOP"]>df["P_MUE_VIVO"] & df["P_MUE_VIVO"]!=0 & !is.na(df["P_MUE_VIVO"]),]
-  err["P_MUE_VIVO-SOP"] <- round(err["P_MUE_VIVO"] - err["SOP"],1)
-  err["POR_DIF"] <- round((err["P_MUE_VIVO-SOP"] * 100) / err["P_MUE_VIVO"])
-  return (err)
+  errors <- df[, c(BASE_FIELDS,"P_MUE_VIVO", "SOP")]
+  errors <- errors[errors["SOP"]>errors["P_MUE_VIVO"] & errors["P_MUE_VIVO"]!=0 & !is.na(errors["P_MUE_VIVO"]),]
+  errors["P_MUE_VIVO-SOP"] <- round(errors["P_MUE_VIVO"] - errors["SOP"],1)
+  errors["POR_DIF"] <- round((errors["P_MUE_VIVO-SOP"] * 100) / errors["P_MUE_VIVO"])
+  return (errors)
 }
 
 #function to search samples with P_MUE_DESEM = 0 or NA
 pesMueDesemZero <- function(df){
   errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+  errors <- errors[,c(BASE_FIELDS, "P_MUE_DESEM")]
   return(errors)
 }
 
