@@ -119,6 +119,8 @@ numberOfRejections <- function(df){
   return(errors)
 }
 
+# TODO: This function is useless with the check of 15% difference sop - p_mue_vivo
+# so I have to delete it... sure?
 # Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
 sopGreaterPesMueVivo <- function(df){
   errors <- df[, c(BASE_FIELDS,"P_MUE_VIVO", "SOP")]
@@ -356,7 +358,8 @@ NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UT
 ALLOWED_GENUS <- read.csv("generos_permitidos.csv")
 
 ### obtain the cfpo
-CFPO <- read.table("CFPO2015.csv", sep=";", quote = "", header = TRUE)
+CFPO_filename <- "CFPO2015.csv"
+CFPO <- read.table(CFPO_filename, sep=";", quote = "", header = TRUE)
   # ignore superfluous columns
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
@@ -371,6 +374,77 @@ catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 ################################################################################  
+
+# #### FUNCTIONS ###############################################################
+
+# Function to check the coherence between 'ESTRATO_RIM' and 'gear'
+coherenceEstratoRimGear <- function(df){
+  merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
+  incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
+  incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
+  incoherent_data <- unique(incoherent_data)
+  return(incoherent_data)
+}
+
+ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
+
+# Function to search errors in number of ships (empty field, =0 or >2)
+numberOfShips <- function (df){
+  nof <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
+  return (nof)
+}
+
+# Function to search errors in number of rejects (only empty fields)
+numberOfRejections <- function(df){
+  number_of_rejections <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
+  return(number_of_rejections)
+}
+
+# Don't use: replaced by sopGreaterPesMueVivo
+# Function to search samples with SOP > P_MUE_DESEM, when P_MUE_DESEM != 0
+# sopGreaterPesMueDesem <- function(df){
+#   err <- df[df["SOP"]>df["P_MUE_DESEM"] & df["P_MUE_DESEM"]!=0 & !is.na(df["P_MUE_DESEM"]),]
+#   err["P_MUE_DESEM-SOP"] <- round(err["P_MUE_DESEM"] - err["SOP"],1)
+#   err["POR_DIF"] <- round((err["P_MUE_DESEM-SOP"] * 100) / err["P_MUE_DESEM"])
+#   return (err)
+# }
+
+# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
+sopGreaterPesMueVivo <- function(df){
+  err <- df[df["SOP"]>df["P_MUE_VIVO"] & df["P_MUE_VIVO"]!=0 & !is.na(df["P_MUE_VIVO"]),]
+  err["P_MUE_VIVO-SOP"] <- round(err["P_MUE_VIVO"] - err["SOP"],1)
+  err["POR_DIF"] <- round((err["P_MUE_VIVO-SOP"] * 100) / err["P_MUE_VIVO"])
+  return (err)
+}
+
+#function to search samples with P_MUE_DESEM = 0 or NA
+pesMueDesemZero <- function(df){
+  errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+  return(errors)
+}
+
+#function to search categories with multiple weight landings
+speciesWithCategoriesWithSameWeightLanding <- function(df){
+  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
+  fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
+  result <- df %>% 
+    distinct() %>%
+    count_(fields_to_count) %>%
+    filter(n>1)
+  return(result)
+}
+
+#function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN
+#o ALTA PROVISIONAL POR REACTIVACIÓN
+shipsNotRegistered <- function(df){
+  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
+  errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+  errors_ships <- errors_ships %>%
+    filter( ESTADO != "ALTA DEFINITIVA" &
+              ESTADO != "H - A.P. POR REACTIVACION" &
+              ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
+  return (errors_ships)
+}
 
 
 
@@ -400,16 +474,17 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
       errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
       errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
       ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
-      ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, "este Barco no está en el cfpo")
+      text_type_of_error <- paste0("este Barco no está en ", CFPO_filename)
+      ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, text_type_of_error )
 
       #ships with state different to "alta definitiva"
       errors_ships_not_registered <- subset(errors_ships, ESTADO != "ALTA DEFINITIVA")
       errors_ships_not_registered <- errors_ships_not_registered[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
       errors_ships_not_registered <- arrange_(errors_ships_not_registered, BASE_FIELDS)
       ERRORS$errors_ships_not_registered <- errors_ships_not_registered
-      ERRORS$errors_ships_not_registered <- addTypeOfError(ERRORS$errors_ships_not_registered, "este Barco no está dado de alta en el maestro del SIRENO")
-      
-      
+      text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO_filename)
+      ERRORS$errors_ships_not_registered <- addTypeOfError(ERRORS$errors_ships_not_registered, text_type_of_error)
+
 
 # ---- estrato_rim, gear and division coherence ----
 # TO DO
@@ -587,6 +662,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
     same_sampled_weight<-catches_in_lengths[,selected_fields]
         by <- list(same_sampled_weight$COD_ID,
+               same_sampled_weight$COD_PUERTO,
                same_sampled_weight$PUERTO,
                same_sampled_weight$LOCODE,
                same_sampled_weight$FECHA,
@@ -654,16 +730,17 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
     ERRORS$pes_mue_desem_zero <- addTypeOfError(ERRORS$pes_mue_desem_zero, "peso muestreado desembarcado = 0")
-  
-  # ---- errors in samples with P_DESEM <= P_MUE_DESEM
-    ERRORS$pes_mue_desem_zero <- pesDesemGreaterPesMueDesem(lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
-  
-  # errors in samples with the difference between P_MUE_VIVO and SOP greater than 15% and greater than 1kg of SOP
-    ERRORS$diferencia_15_pes_mue_vivo_sop <- differencePesMueVivoSOP(catches_in_lengths)
-  
-  # errors in samples with SOP greater than P_VIVO
-  prueba <- SopGreaterPesVivo(catches_in_lengths)
-      
+
+#IN JULY, DOSN'T USE THE NEXT ERRORS:    
+  # # ---- errors in samples with P_DESEM <= P_MUE_DESEM
+  #   ERRORS$pes_desem_greater_pes_mue_desem <- pesDesemGreaterPesMueDesem(lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
+  # 
+  # # errors in samples with the difference between P_MUE_VIVO and SOP greater than 15% and greater than 1kg of SOP
+  #   ERRORS$diferencia_15_pes_mue_vivo_sop <- differencePesMueVivoSOP(catches_in_lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
+  # 
+  # # errors in samples with SOP greater than P_VIVO
+  #   ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
+
   # ---- (warning) errors in species with categories with the same weight landing
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- addTypeOfError(ERRORS$especies_con_categorias_igual_peso_desembarcado, "especie con todas sus categorías con igual peso desembarcado")
