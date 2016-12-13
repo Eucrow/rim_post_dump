@@ -137,6 +137,72 @@ pesMueDesemZero <- function(df){
   return(errors)
 }
 
+#function to seach samples with p_desem <= p_mue_desem
+pesDesemGreaterPesMueDesem <- function (df){
+  fields_to_select <- c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "DIF_P_DESEM_P_MUE_DESEM")
+  
+  errors <- df %>%
+        mutate(DIF_P_DESEM_P_MUE_DESEM = P_DESEM - P_MUE_DESEM) %>%
+        filter(DIF_P_DESEM_P_MUE_DESEM <= 0) %>%
+        select(one_of(fields_to_select))
+  
+  errors <- addTypeOfError(errors, "Peso desembarcado menor o igual al peso muestreado desembarcado")
+  
+  return(errors)
+}
+
+#function to seach samples with p_desem <= p_mue_desem
+pesDesemGreaterPesMueDesem <- function (df){
+  fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_DESEM",
+                        "P_MUE_DESEM", "DIF_P_DESEM_P_MUE_DESEM")
+  
+  errors <- df %>%
+    mutate(DIF_P_DESEM_P_MUE_DESEM = P_DESEM - P_MUE_DESEM) %>%
+    filter(DIF_P_DESEM_P_MUE_DESEM <= 0) %>%
+    select(one_of(fields_to_select))
+  
+  errors <- addTypeOfError(errors, "Peso desembarcado menor o igual al peso muestreado desembarcado")
+  
+  return(errors)
+}
+
+# function to check samples with SOP > P_VIVO
+SopGreaterPesVivo <- function (df){
+  fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_VIVO",
+                        "DIF_SOP_P_VIVO")
+  
+  errors <- df %>%
+    mutate(DIF_SOP_P_VIVO = SOP - P_VIVO) %>%
+    filter(DIF_SOP_P_VIVO > 0) %>%
+    select(one_of(fields_to_select))
+  
+  errors <- addTypeOfError(errors, "SOP mayor que peso vivo desembarcado")
+  
+  return(errors)
+}
+
+# function to check samples with the difference between P_MUE_VIVO and SOP greater than +-15% and greater than 1kg of SOP
+differencePesMueVivoSOP <- function (df){
+  
+  df[["SOP"]] <- as.numeric(df[["SOP"]])
+  
+  sop_distinto_p_mue <- df %>%
+    select(COD_ID, FECHA, PUERTO, COD_BARCO, BARCO, COD_ESP_MUE, ESP_MUE,
+           COD_CATEGORIA, CATEGORIA, COD_ESP_CAT, ESP_CAT, P_MUE_VIVO, SOP)%>%
+    mutate(DIFERENCIA = P_MUE_VIVO - SOP) %>%
+    mutate(PORCENTAJE = (DIFERENCIA*100)/P_MUE_VIVO) %>%
+    filter(P_MUE_VIVO >=1 & (PORCENTAJE >= 15 | PORCENTAJE <= -15) )
+
+  # I don't know why can't include round function in mutate. If I do it, doesn't work in the right way
+  sop_distinto_p_mue$PORCENTAJE <- round(sop_distinto_p_mue$PORCENTAJE, 0) 
+  
+  addTypeOfError(sop_distinto_p_mue, "Diferencia entre P_MUE_VIVO y SOP mayor del +-15%")
+  
+  return(sop_distinto_p_mue)
+}
+
 #function to search categories with multiple weight landings
 speciesWithCategoriesWithSameWeightLanding <- function(df){
   df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
@@ -150,12 +216,60 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
   return(errors)
 }
 
-#function to combine all the erros produced
-combineErrors <- function(errors_list = ERRORS){
+# function to format the errors produced.
+# This fucntion combine all the dataframes of the errors_list (a list of dataframes)
+# and format it:
+# - combine all dataframes in one
+# - order columns
+# - separate the dataframe by influence area
+# - order every area dataframe
+# - remove empty columns in every area dataframe
+
+formatErrorsList <- function(errors_list = ERRORS){
+  
   # Combine all the dataframes of ERRORS list:
     # Reduce uses a binary function to successively combine the elements of a
     # given vector. In this case, merge the dataframes in the ERRORS list
-  errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
+  #errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
+
+  #better with join_all form plyr package because dosn't change the order of columns:
+  errors <- join_all(errors_list, type = "full")
+
+  # Add column COD_PUERTO
+  # TODO: fix it in the import function?
+  errors <- merge(x = errors, y = puerto, all.x = TRUE)
+  
+  # Order columns
+  errors <- errors %>%
+    select(COD_ID, LOCODE, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
+           COD_TIPO_MUE, TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
+    select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
+  
+
+  # Separate dataframe by influece area
+  errors <- separateDataframeByInfluenceArea(errors, "COD_PUERTO")
+  
+  # Order the errors and remove columns with only NA values
+  errors <- lapply(errors, function(x){
+    
+    # Order the errors
+    x <- x %>%
+      arrange_( "COD_PUERTO", "FECHA", "COD_ID", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+    
+    #Remove columns with only NA values
+    #Filter extracts the elements of a vector for which a predicate (logical) function gives true
+    x <- Filter(function(x){!all(is.na(x))}, x)
+    
+    # Add column Comprobado
+    x[["comprobado"]] <- ""
+    
+    return(x)
+    
+  })  
+
+      
+  return(errors)
+  
 }
 
 #function to add variable with type of error to a dataframe
@@ -165,6 +279,64 @@ addTypeOfError <- function(df, type){
   }
   return(df)
 }
+
+
+# function to export as xlsx every dataframe of a list of dataframes
+# TODO: to sapmuebase???
+exportListToXlsx <- function (list, prefix = "", suffix = "", separation = "") 
+{
+  lapply(seq_along(list), function(i) {
+    if (is.data.frame(list[[i]])) {
+      
+      list_name <- names(list)[[i]]
+      if (prefix != "") 
+        prefix <- paste0(prefix, separation)
+      if (suffix != "") 
+        suffix <- paste0(separation, suffix)
+      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, suffix, ".xlsx")
+      
+      #####
+      library(openxlsx)
+      ## openxlsx
+      
+      # ---- Create a Workbook
+      wb <- createWorkbook()
+      
+      # ---- Add worksheets
+      name_worksheet <- paste("0",MONTH,sep="")
+      addWorksheet(wb, name_worksheet)
+      
+      # ---- Add data to the workbook
+      writeData(wb, name_worksheet, list[[i]])    
+      
+      # ---- Useful variables
+      num_cols_df <- length(list[[i]])
+      
+      # ---- Stylize data
+      # ---- Create styles
+      head_style <- createStyle(fgFill = "#EEEEEE", 
+                                fontName="Calibri", 
+                                fontSize = "11",
+                                halign = "center",
+                                valign = "center")
+
+      # ---- Apply styles
+      addStyle(wb, sheet = name_worksheet, head_style, rows = 1, cols = 1:num_cols_df)
+      
+      # ---- Column widths: I don't know why, but it dosn't work in the right way
+      setColWidths(wb, name_worksheet, cols = c(1:num_cols_df), widths = "auto")
+      
+      # ---- Export to excel
+      # source: https://github.com/awalker89/openxlsx/issues/111
+      Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe") ## path to zip.exe
+      saveWorkbook(wb, filename, overwrite = TRUE)
+    }
+    else {
+      return(paste("This isn't a dataframe"))
+    }
+  })
+}
+
 
 
 # #### IMPORT DATA #############################################################
@@ -481,57 +653,40 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # REMOVE THIS BECAUSE I'VE TO CREATE THE 10% CHECK
     # ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
     # ERRORS$sop_greater_pes_mue_vivo <- addTypeOfError(ERRORS$sop_greater_pes_mue_vivo, "sop mayor que peso muestreado vivo")
-    
+
+   
+        
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
     ERRORS$pes_mue_desem_zero <- addTypeOfError(ERRORS$pes_mue_desem_zero, "peso muestreado desembarcado = 0")
-    
+  
+  # ---- errors in samples with P_DESEM <= P_MUE_DESEM
+    ERRORS$pes_mue_desem_zero <- pesDesemGreaterPesMueDesem(lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
+  
+  # errors in samples with the difference between P_MUE_VIVO and SOP greater than 15% and greater than 1kg of SOP
+    ERRORS$diferencia_15_pes_mue_vivo_sop <- differencePesMueVivoSOP(catches_in_lengths)
+  
+  # errors in samples with SOP greater than P_VIVO
+  prueba <- SopGreaterPesVivo(catches_in_lengths)
+      
   # ---- (warning) errors in species with categories with the same weight landing
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- addTypeOfError(ERRORS$especies_con_categorias_igual_peso_desembarcado, "especie con todas sus categorías con igual peso desembarcado")
 
     
 # #### COMBINE ERRORS ##########################################################
-    combined_errors <- combineErrors()
-    
-  # Remove all the columns with only NA values.
-  #Filter extracts the elements of a vector for which a predicate (logical) function gives true
-  combined_errors <- Filter(function(x){!all(is.na(x))}, combined_errors)
+  combined_errors <- formatErrorsList()
 
-    # ADD COLUMN COD_PUERTO
-    # TODO: fix it in the import function?
-    combined_errors <- merge(x = combined_errors, y = puerto, all.x = TRUE)
 
-    # ORDER COLUMNS
-    # TODO: include this in combineErrors()
-    combined_errors <- combined_errors %>%
-      select(COD_ID, LOCODE, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
-             COD_TIPO_MUE, TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
+# #### EXPORT ERRORS ###########################################################
 
-  # SEPARATE DATAFRAME IN INFLUENCE AREA
-  combined_errors <- separateDataframeByInfluenceArea(combined_errors, "COD_PUERTO")
-  
-  
-  # Order the errors
-  combined_errors <- lapply(combined_errors, function(x){
-    
-    x <- x %>%
-      arrange_("FECHA", "COD_ID", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
-    return(x)
-    
-  })
-  
-  
-    
+    #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTHASCHARACTER), separation = "_")
 
-# #### EXPORT ERRORS TO CSV ####################################################
-
-    exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTHASCHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTHASCHARACTER), separation = "_")
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
 # #### MAKE A BACKUP
 # #### usually, when the files will be send to Supervisors Area
     # backup_files_to_send()
-    
+  
