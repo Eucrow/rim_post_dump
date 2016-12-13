@@ -45,16 +45,16 @@ PATH <- getwd()
     MESSAGE_ERRORS<- list()
     
   # list with the common fields used in all tables
-  BASE_FIELDS <- c("COD_ID", "PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
+  BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
   
 
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 
 PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/julio"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_corregido.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_julio.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_julio.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_julio.TXT"
 
 
 MONTH <- 7 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
@@ -235,10 +235,6 @@ formatErrorsList <- function(errors_list = ERRORS){
   #better with join_all form plyr package because dosn't change the order of columns:
   errors <- join_all(errors_list, type = "full")
 
-  # Add column COD_PUERTO
-  # TODO: fix it in the import function?
-  errors <- merge(x = errors, y = puerto, all.x = TRUE)
-  
   # Order columns
   errors <- errors %>%
     select(COD_ID, LOCODE, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
@@ -626,7 +622,6 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     ERRORS$weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing
     ERRORS$weight_sampled_similar_weight_landing <- addTypeOfError(ERRORS$weight_sampled_similar_weight_landing, "peso muestreado igual al peso desembarcado")
     rm(weight_sampled_similar_weight_landing)
-    unique(ERRORS$weight_sampled_similar_weight_landing$PUERTO)
 
   # ---- errors sop = 0
     ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
