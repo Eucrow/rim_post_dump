@@ -57,13 +57,13 @@ PATH <- getwd()
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/agosto"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_agosto.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_agosto.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO_agosto.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/julio"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_julio.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_julio.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_julio.TXT"
 
 
-MONTH <- 8 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 7 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -227,7 +227,6 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
 # - separate the dataframe by influence area
 # - order every area dataframe
 # - remove empty columns in every area dataframe
-
 formatErrorsList <- function(errors_list = ERRORS){
   
   # Combine all the dataframes of ERRORS list:
@@ -239,10 +238,11 @@ formatErrorsList <- function(errors_list = ERRORS){
   errors <- join_all(errors_list, type = "full")
 
   # Order columns
-  errors <- errors %>%
-    select(COD_ID, LOCODE, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
-           COD_TIPO_MUE, TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-    select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
+  # errors <- errors %>%
+  #   select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
+  #          TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
+  #          P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
+  #   select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
   
 
   # Separate dataframe by influece area
@@ -250,6 +250,12 @@ formatErrorsList <- function(errors_list = ERRORS){
   
   # Order the errors and remove columns with only NA values
   errors <- lapply(errors, function(x){
+    
+    x <- x %>%
+      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
+             TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
+             P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
+      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
     
     # Order the errors
     x <- x %>%
@@ -263,9 +269,7 @@ formatErrorsList <- function(errors_list = ERRORS){
     x[["comprobado"]] <- ""
     
     return(x)
-    
   })  
-
       
   return(errors)
   
@@ -587,8 +591,8 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     rm (selected_fields, by, same_sampled_weight)
 
   # ---- errors in the weight sampled similar to the category weight?
-    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")]
-    weight_sampled_similar_weight_landing <- subset(weight_sampled_similar_weight_landing, P_DESEM==P_MUE_VIVO)
+    weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")]
+    weight_sampled_similar_weight_landing <- subset(weight_sampled_similar_weight_landing, P_DESEM==P_MUE_DESEM)
     weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", "TIPO_MUE", "FECHA", "BARCO", "ESP_MUE", "CATEGORIA"))
     weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- weight_sampled_similar_weight_landing["P_MUE_VIVO"] - weight_sampled_similar_weight_landing["SOP"]
     weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"], digits = 1)
@@ -654,11 +658,11 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    # exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
 # #### MAKE A BACKUP
 # #### usually, when the files will be send to Supervisors Area
     # backup_files_to_send()
-  
+      
