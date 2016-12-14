@@ -23,6 +23,12 @@ library(tools) #file_path_sans_ext()
 library(plyr)
 library(devtools)
 
+# ---- install googlesheets from github
+#install_github("jennybc/googlesheets")
+#library(googlesheets)
+#suppressMessages(library(dplyr)) #What is suppressMessages????
+
+
 # ---- install sapmuebase from local
 install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
@@ -51,33 +57,22 @@ PATH <- getwd()
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 
-PATH_FILENAME <- "F:/misdoc/sap/revision volcado/datos/julio"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_julio.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_julio.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO_julio.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/agosto"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_agosto.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_agosto.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_agosto.TXT"
 
 
-MONTH <- 7 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 8 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
-PATH_ERRORS <- paste(PATH_FILENAME,"/errors",sep="")
+PATH_ERRORS <- paste(PATH_FILES,"/errors",sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
-MONTHASCHARACTER <- sprintf("%02d", MONTH)
+MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
 
 # #### FUNCTIONS ###############################################################
-
-
-# ---- function to save the errors in csv files: -------------------------------
-export_errors_csv <- function(errors){
-  lapply(names(errors), function(x){
-    area <- x
-    fullpath<-paste(PATH_ERRORS, "/", area, "_", YEAR, "_", MONTH, "_errors", ".csv", sep="")
-    write.csv(errors[[x]], file=fullpath, row.names = FALSE, quote = FALSE)
-    print(x)
-  })
-}
 
 
 # ---- function to make a copy of the files previous to send to the Area Supervisors ---
@@ -98,11 +93,10 @@ backup_files_to_send <- function(){
 # Function to check the coherence between 'ESTRATO_RIM' and 'gear'
 coherenceEstratoRimGear <- function(df){
   merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-  errors <- -which(merge_estrato_rim_gear[["VALID"]])
-  errors <- merge_estrato_rim_gear[errors,c(BASE_FIELDS, "ARTE")]
-  errors <- unique(errors)
-  errors <- addTypeOfError(errors, "no hay coherencia entre estrato Rim y arte")
-  return(errors)
+  incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
+  incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
+  incoherent_data <- unique(incoherent_data)
+  return(incoherent_data)
 }
 
 # Function to search errors in number of ships (empty field, =0 or >2)
@@ -111,6 +105,7 @@ numberOfShips <- function (df){
   errors <- addTypeOfError(errors, "número de barcos igual a 0 o mayor dos")
   return (errors)
 }
+
 
 # Function to search errors in number of rejects (only empty fields)
 numberOfRejections <- function(df){
@@ -133,9 +128,15 @@ sopGreaterPesMueVivo <- function(df){
 
 #function to search samples with P_MUE_DESEM = 0 or NA
 pesMueDesemZero <- function(df){
-  errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
-  errors <- errors[,c(BASE_FIELDS, "P_MUE_DESEM")]
+  #errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+  fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
+  errors <- df %>%
+    filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
+    select(one_of(fields_to_select))
+  
   errors <- addTypeOfError(errors, "Peso muestreado desembarcado es 0")
+  
   return(errors)
 }
 
@@ -279,61 +280,6 @@ addTypeOfError <- function(df, type){
 }
 
 
-# function to export as xlsx every dataframe of a list of dataframes
-# TODO: to sapmuebase???
-exportListToXlsx <- function (list, prefix = "", suffix = "", separation = "") 
-{
-  lapply(seq_along(list), function(i) {
-    if (is.data.frame(list[[i]])) {
-      
-      list_name <- names(list)[[i]]
-      if (prefix != "") 
-        prefix <- paste0(prefix, separation)
-      if (suffix != "") 
-        suffix <- paste0(separation, suffix)
-      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, suffix, ".xlsx")
-      
-      #####
-      library(openxlsx)
-      ## openxlsx
-      
-      # ---- Create a Workbook
-      wb <- createWorkbook()
-      
-      # ---- Add worksheets
-      name_worksheet <- paste("0",MONTH,sep="")
-      addWorksheet(wb, name_worksheet)
-      
-      # ---- Add data to the workbook
-      writeData(wb, name_worksheet, list[[i]])    
-      
-      # ---- Useful variables
-      num_cols_df <- length(list[[i]])
-      
-      # ---- Stylize data
-      # ---- Create styles
-      head_style <- createStyle(fgFill = "#EEEEEE", 
-                                fontName="Calibri", 
-                                fontSize = "11",
-                                halign = "center",
-                                valign = "center")
-
-      # ---- Apply styles
-      addStyle(wb, sheet = name_worksheet, head_style, rows = 1, cols = 1:num_cols_df)
-      
-      # ---- Column widths: I don't know why, but it dosn't work in the right way
-      setColWidths(wb, name_worksheet, cols = c(1:num_cols_df), widths = "auto")
-      
-      # ---- Export to excel
-      # source: https://github.com/awalker89/openxlsx/issues/111
-      Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe") ## path to zip.exe
-      saveWorkbook(wb, filename, overwrite = TRUE)
-    }
-    else {
-      return(paste("This isn't a dataframe"))
-    }
-  })
-}
 
 
 
@@ -366,7 +312,7 @@ CFPO <- read.table(CFPO_filename, sep=";", quote = "", header = TRUE)
 
 ################################################################################  
 # #### IMPORT muestreos_UP files ###############################################  
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILENAME)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILES)
 
 
 #isolate dataframes
@@ -377,28 +323,6 @@ lengths <- muestreos_up$lengths
 
 # #### FUNCTIONS ###############################################################
 
-# Function to check the coherence between 'ESTRATO_RIM' and 'gear'
-coherenceEstratoRimGear <- function(df){
-  merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM","ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
-  incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
-  incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "ARTE")]
-  incoherent_data <- unique(incoherent_data)
-  return(incoherent_data)
-}
-
-ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
-
-# Function to search errors in number of ships (empty field, =0 or >2)
-numberOfShips <- function (df){
-  nof <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
-  return (nof)
-}
-
-# Function to search errors in number of rejects (only empty fields)
-numberOfRejections <- function(df){
-  number_of_rejections <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
-  return(number_of_rejections)
-}
 
 # Don't use: replaced by sopGreaterPesMueVivo
 # Function to search samples with SOP > P_MUE_DESEM, when P_MUE_DESEM != 0
@@ -409,41 +333,21 @@ numberOfRejections <- function(df){
 #   return (err)
 # }
 
-# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0
-sopGreaterPesMueVivo <- function(df){
-  err <- df[df["SOP"]>df["P_MUE_VIVO"] & df["P_MUE_VIVO"]!=0 & !is.na(df["P_MUE_VIVO"]),]
-  err["P_MUE_VIVO-SOP"] <- round(err["P_MUE_VIVO"] - err["SOP"],1)
-  err["POR_DIF"] <- round((err["P_MUE_VIVO-SOP"] * 100) / err["P_MUE_VIVO"])
-  return (err)
-}
-
-#function to search samples with P_MUE_DESEM = 0 or NA
-pesMueDesemZero <- function(df){
-  errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
-  return(errors)
-}
-
-#function to search categories with multiple weight landings
-speciesWithCategoriesWithSameWeightLanding <- function(df){
-  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
-  fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
-  result <- df %>% 
-    distinct() %>%
-    count_(fields_to_count) %>%
-    filter(n>1)
-  return(result)
-}
 
 #function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN
 #o ALTA PROVISIONAL POR REACTIVACIÓN
-shipsNotRegistered <- function(df){
+shipsNotRegistered <- function(df, CFPO_filename = CFPO_filename){
+  
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
   errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
   errors_ships <- errors_ships %>%
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
+  text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO_filename)
+  errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
+  
 }
 
 
@@ -478,12 +382,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
       ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, text_type_of_error )
 
       #ships with state different to "alta definitiva"
-      errors_ships_not_registered <- subset(errors_ships, ESTADO != "ALTA DEFINITIVA")
-      errors_ships_not_registered <- errors_ships_not_registered[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
-      errors_ships_not_registered <- arrange_(errors_ships_not_registered, BASE_FIELDS)
-      ERRORS$errors_ships_not_registered <- errors_ships_not_registered
-      text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO_filename)
-      ERRORS$errors_ships_not_registered <- addTypeOfError(ERRORS$errors_ships_not_registered, text_type_of_error)
+      ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
 
 
 # ---- estrato_rim, gear and division coherence ----
@@ -718,19 +617,18 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- addTypeOfError(ERRORS[["lenght_sampled_without_weight_sampled"]], "especie con tallas muestreadas pero sin peso muestra")
-  
     
   # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
   # REMOVE THIS BECAUSE I'VE TO CREATE THE 10% CHECK
     # ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
     # ERRORS$sop_greater_pes_mue_vivo <- addTypeOfError(ERRORS$sop_greater_pes_mue_vivo, "sop mayor que peso muestreado vivo")
-
-   
         
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
     ERRORS$pes_mue_desem_zero <- addTypeOfError(ERRORS$pes_mue_desem_zero, "peso muestreado desembarcado = 0")
 
+    prueba <- pesMueDesemZero(catches_in_lengths)
+    
 #IN JULY, DOSN'T USE THE NEXT ERRORS:    
   # # ---- errors in samples with P_DESEM <= P_MUE_DESEM
   #   ERRORS$pes_desem_greater_pes_mue_desem <- pesDesemGreaterPesMueDesem(lengths) #AddTypeOfError included in fucntion pesDesemGreaterPesMueDesem()
@@ -752,9 +650,11 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
 # #### EXPORT ERRORS ###########################################################
 
-    #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTHASCHARACTER), separation = "_")
+    #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTHASCHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+       
+    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
