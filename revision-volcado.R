@@ -25,7 +25,7 @@ library(devtools)
 
 # ---- install googlesheets from github
 #install_github("jennybc/googlesheets")
-library(googlesheets)
+#library(googlesheets)
 #suppressMessages(library(dplyr)) #What is suppressMessages????
 
 
@@ -280,61 +280,6 @@ addTypeOfError <- function(df, type){
 }
 
 
-# function to export as xlsx every dataframe of a list of dataframes
-# TODO: to sapmuebase???
-exportListToXlsx <- function (list, prefix = "", suffix = "", separation = "") 
-{
-  lapply(seq_along(list), function(i) {
-    if (is.data.frame(list[[i]])) {
-      
-      list_name <- names(list)[[i]]
-      if (prefix != "") 
-        prefix <- paste0(prefix, separation)
-      if (suffix != "") 
-        suffix <- paste0(separation, suffix)
-      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, suffix, ".xlsx")
-      
-      #####
-      library(openxlsx)
-      ## openxlsx
-      
-      # ---- Create a Workbook
-      wb <- createWorkbook()
-      
-      # ---- Add worksheets
-      name_worksheet <- paste("0",MONTH,sep="")
-      addWorksheet(wb, name_worksheet)
-      
-      # ---- Add data to the workbook
-      writeData(wb, name_worksheet, list[[i]])    
-      
-      # ---- Useful variables
-      num_cols_df <- length(list[[i]])
-      
-      # ---- Stylize data
-      # ---- Create styles
-      head_style <- createStyle(fgFill = "#EEEEEE", 
-                                fontName="Calibri", 
-                                fontSize = "11",
-                                halign = "center",
-                                valign = "center")
-
-      # ---- Apply styles
-      addStyle(wb, sheet = name_worksheet, head_style, rows = 1, cols = 1:num_cols_df)
-      
-      # ---- Column widths: I don't know why, but it dosn't work in the right way
-      setColWidths(wb, name_worksheet, cols = c(1:num_cols_df), widths = "auto")
-      
-      # ---- Export to excel
-      # source: https://github.com/awalker89/openxlsx/issues/111
-      Sys.setenv("R_ZIPCMD" = "C:/Rtools/bin/zip.exe") ## path to zip.exe
-      saveWorkbook(wb, filename, overwrite = TRUE)
-    }
-    else {
-      return(paste("This isn't a dataframe"))
-    }
-  })
-}
 
 
 
@@ -707,41 +652,8 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    
-
-    exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation = ""){
-      
-      # sep_along(list): generate regular sequences. With a list, generates
-      # the sequence 1, 2, ..., length(from). Return a integer vector.
-      lapply(seq_along(list), function(i){
-        
-        list[[i]][["PUERTO"]] <- iconv(list[[i]][["PUERTO"]], "windows-1252", "UTF-8")
-        list[[i]][["BARCO"]] <- iconv(list[[i]][["BARCO"]], "windows-1252", "UTF-8")
-        list[[i]][["CATEGORIA"]] <- iconv(list[[i]][["CATEGORIA"]], "windows-1252", "UTF-8")
-        list[[i]][["TIPO_ERROR"]] <- iconv(list[[i]][["TIPO_ERROR"]], "windows-1252", "UTF-8")
-        
-        if(is.data.frame(list[[i]])){
-          
-          list_name <- names(list)[[i]]
-          
-          if (prefix != "") prefix <- paste0(prefix, separation)
-          
-          if (suffix != "") suffix <- paste0(separation, suffix)
-          
-          filename <- paste0(prefix, list_name, suffix, ".csv")
-          
-          gs_new(filename, ws_title = filename, input = list[[i]],
-                 trim = TRUE, verbose = FALSE)
-          
-        } else {
-          return(paste("This isn't a dataframe"))
-        }
-        
-      })
-    }
-    
-        
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+       
     exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
