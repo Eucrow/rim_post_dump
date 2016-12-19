@@ -30,7 +30,7 @@ library(devtools)
 
 
 # ---- install sapmuebase from local
-install("F:/misdoc/sap/sapmuebase")
+#install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
 
 
@@ -57,13 +57,13 @@ PATH <- getwd()
 ################################################################################
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES:
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/agosto"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_agosto.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_agosto.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO_agosto.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/septiembre"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_septiembre.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_septiembre.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_septiembre.TXT"
 
 
-MONTH <- 8 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 9 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 ################################################################################
 
@@ -341,7 +341,7 @@ lengths <- muestreos_up$lengths
 
 #function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN
 #o ALTA PROVISIONAL POR REACTIVACIÓN
-shipsNotRegistered <- function(df, CFPO_filename = CFPO_filename){
+shipsNotRegistered <- function(df, CFPO = CFPO_filename){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
   errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
@@ -349,7 +349,7 @@ shipsNotRegistered <- function(df, CFPO_filename = CFPO_filename){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO_filename)
+  text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO)
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
   
@@ -650,20 +650,18 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
     
 # #### COMBINE ERRORS ##########################################################
-  combined_errors <- formatErrorsList()
+    combined_errors <- formatErrorsList()
 
 
 # #### EXPORT ERRORS ###########################################################
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
     exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
 # #### MAKE A BACKUP
-# #### usually, when the files will be send to Supervisors Area
     # backup_files_to_send()
-      
