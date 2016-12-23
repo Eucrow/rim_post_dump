@@ -6,8 +6,6 @@
 ####
 #### author: Marco A. Amez Fernandez
 #### email: ieo.marco.a.amez@gmail.com
-#### date of last modification: 2/12/2016
-#### version: 3.00
 ####
 #### files required: esp mezcla.csv, especies_no_mezcla.csv,
 #### estratorim_arte.csv, divisiones.csv, especies_no_permitidas.csv,
@@ -119,7 +117,7 @@ coherenceEstratoRimGear <- function(df){
 # Function to search errors in number of ships (empty field, =0 or >2) ---------
 numberOfShips <- function (df){
   errors <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
-  errors <- addTypeOfError(errors, "número de barcos igual a 0 o mayor dos")
+  errors <- addTypeOfError(errors, "n?mero de barcos igual a 0 o mayor dos")
   return (errors)
 }
 
@@ -127,7 +125,7 @@ numberOfShips <- function (df){
 # Function to search errors in number of rejects (only empty fields) -----------
 numberOfRejections <- function(df){
   errors <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
-  errors <- addTypeOfError(errors, "número de rechazos sin rellenar")
+  errors <- addTypeOfError(errors, "n?mero de rechazos sin rellenar")
   return(errors)
 }
 
@@ -231,7 +229,7 @@ differencePesMueVivoSOP <- function (df){
 }
 
 
-#function to search categories with multiple weight landings -------------------
+#function to search categories with equal species weight landings --------------
 speciesWithCategoriesWithSameWeightLanding <- function(df){
   df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
@@ -240,7 +238,7 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
     count_(fields_to_count) %>%
     filter(n>1)
   colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
-  errors <- addTypeOfError(errors, "varias categorías con igual peso desembarcado")
+  errors <- addTypeOfError(errors, "varias categor?as con igual peso desembarcado")
   return(errors)
 }
 
@@ -305,7 +303,7 @@ addTypeOfError <- function(df, type){
 
 
 # function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA
-# CONSTRUCCIÓN or ALTA PROVISIONAL POR REACTIVACIÓN in CFPO --------------------
+# CONSTRUCCI?N or ALTA PROVISIONAL POR REACTIVACI?N in CFPO --------------------
 shipsNotRegistered <- function(df, CFPO = CFPO_filename){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
@@ -314,7 +312,7 @@ shipsNotRegistered <- function(df, CFPO = CFPO_filename){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("este Barco no está dado de alta en ", CFPO)
+  text_type_of_error <- paste0("este Barco no est? dado de alta en ", CFPO)
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
 }
@@ -393,7 +391,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
       errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
       errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
       ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
-      text_type_of_error <- paste0("este Barco no está en ", CFPO_filename)
+      text_type_of_error <- paste0("este Barco no est? en ", CFPO_filename)
       ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, text_type_of_error )
 
       #ships with state different to "alta definitiva"
@@ -417,7 +415,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     #order dataframe:
     mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
     ERRORS$mixed_species_sample <- mixed_species_sample
-    ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "especie de mezcla que no está agrupada en Especies del Muestreo")
+    ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "especie de mezcla que no est? agrupada en Especies del Muestreo")
     rm(selected_fields, mixed_species_sample)
 
   # LO SIGUIENTE QUIERO COMPROBARLO ANTES DE ELIMINARLO
@@ -470,14 +468,14 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     mixed_species_category_mt2 <- mixed_species_category_mt2[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
     mixed_species_category_mt2 <- arrange_(mixed_species_category_mt2, BASE_FIELDS)
     ERRORS$mixed_species_category_mt2 <- mixed_species_category_mt2
-    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "muestreo MT2 con especie de mezcla que est? agrupada en Especies para la Categor?a")
     
     # ---- MT1
     mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
     mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
     mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
     ERRORS$mixed_species_category_mt1 <- mixed_species_category_mt1
-    ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "muestreo MT1 con especie de mezcla que está agrupada en Especies para la Categoría")
+    ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "muestreo MT1 con especie de mezcla que est? agrupada en Especies para la Categor?a")
     rm(selected_fields, mixed_species_category, mixed_species_category_mt1, mixed_species_category_mt2)
 
   # ---- not allowed species
@@ -509,7 +507,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
           #allowed genus complete
           allowed_genus <- rbind(allowed_genus_mixed_species, allowed_genus_other)
-          allowed_genus$ALLOWED <- "ok" #¡¡CHAPUCILLA!!
+          allowed_genus$ALLOWED <- "ok" #??CHAPUCILLA!!
 
         #check the genus
         checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.x = TRUE)
@@ -517,7 +515,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
         #to the ERRORS
         ERRORS$not_allowed_genus_sampled_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_sampled_species <- addTypeOfError(ERRORS$not_allowed_genus_sampled_species, "muestreo con género no permitido en Especies del muestreo")
+        ERRORS$not_allowed_genus_sampled_species <- addTypeOfError(ERRORS$not_allowed_genus_sampled_species, "muestreo con g?nero no permitido en Especies del muestreo")
 
         #remove unnecesary variables
         rm(to_check_genus, allowed_genus_mixed_species, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
@@ -531,7 +529,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
       names(not_allowed_category_species)[names(not_allowed_category_species) == 'COD_ESP_CAT'] <- 'COD_ESP_CAT_INCORRECTA'
       not_allowed_category_species <- arrange_(not_allowed_category_species, BASE_FIELDS)
       ERRORS$not_allowed_category_species <- not_allowed_category_species
-      ERRORS$not_allowed_category_species <- addTypeOfError(ERRORS$not_allowed_category_species, "muestreo con especie no permitida en Especies de la categoría")
+      ERRORS$not_allowed_category_species <- addTypeOfError(ERRORS$not_allowed_category_species, "muestreo con especie no permitida en Especies de la categor?a")
       # ---- genus not allowed
         # select all the genus to check
         to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESP_CAT)
@@ -548,7 +546,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
           #allowed genus complete
           # TO DO: arreglar esto, sobran variables
           allowed_genus <- allowed_genus_other
-          allowed_genus$ALLOWED <- "ok" #¡¡CHAPUCILLA!!
+          allowed_genus$ALLOWED <- "ok" #??CHAPUCILLA!!
 
           #check the genus
           # TO DO: arreglar esto, sobran variables
@@ -557,7 +555,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
 
         #to the ERRORS
         ERRORS$not_allowed_genus_category_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_category_species <- addTypeOfError(ERRORS$not_allowed_genus_category_species, "muestreos con géneros no permitidos en Especies de la Categoría")
+        ERRORS$not_allowed_genus_category_species <- addTypeOfError(ERRORS$not_allowed_genus_category_species, "muestreos con g?neros no permitidos en Especies de la Categor?a")
         #remove unnecesary variables
         rm(to_check_genus, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
 
@@ -597,7 +595,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     same_sampled_weight<-subset ( same_sampled_weight, NUM_OCU_MISMO_PESO_MUESTRA > 1)
     same_sampled_weight<-arrange_(same_sampled_weight, BASE_FIELDS)
     ERRORS$same_sampled_weight <- same_sampled_weight
-    ERRORS$same_sampled_weight <- addTypeOfError(ERRORS$same_sampled_weight, "todas las categorías de la especie tienen exactamente el mismo peso muestreado")
+    ERRORS$same_sampled_weight <- addTypeOfError(ERRORS$same_sampled_weight, "todas las categor?as de la especie tienen exactamente el mismo peso muestreado")
     #TO DO: check this dataframe... why return the COD_CATEGORIA and CATEGORIA fields??
     rm (selected_fields, by, same_sampled_weight)
 
@@ -624,7 +622,7 @@ ERRORS$number_of_rejections <- numberOfRejections(catches)
     
   # ---- errors p.desem = 0
     ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
-    ERRORS[["weight_landed_zero"]] <- addTypeOfError(ERRORS[["weight_landed_zero"]], "peso descargado = 0")
+    ERRORS[["weight_landed_zero"]] <- addTypeOfError(ERRORS[["weight_landed_zero"]], "peso desembarcado = 0")
     
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
     ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS"))
