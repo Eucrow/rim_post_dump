@@ -64,7 +64,7 @@ YEAR <- "2016"
 # ------------------------------------------------------------------------------
 
 # list with all errors found in dataframes:
-ERRORS <- list() 
+ERRORS <- list()
 
 # list with the errors:
 MESSAGE_ERRORS<- list()
@@ -78,7 +78,6 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # month as character with a 0 at the left if it is less than 10
 MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
-
 
 
 # ------------------------------------------------------------------------------
@@ -98,6 +97,65 @@ backup_files <- function(){
   files <- list.files(PATH_ERRORS, pattern = "*.csv", full.names = TRUE)
 
   lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
+}
+
+
+
+#function to add variable with type of error to a dataframe --------------------
+addTypeOfError <- function(df, type){
+  
+  if(nrow(df)!=0){
+    df[["TIPO_ERROR"]] <- type
+  }
+  return(df)
+}
+
+# function to format the errors produced ---------------------------------------
+# This function combine all the dataframes of the errors_list (a list of dataframes)
+# and format it:
+# - combine all dataframes in one
+# - order columns
+# - separate the dataframe by influence area
+# - order every area dataframe
+# - remove empty columns in every area dataframe
+formatErrorsList <- function(errors_list = ERRORS){
+  
+  # Combine all the dataframes of ERRORS list:
+  # Reduce uses a binary function to successively combine the elements of a
+  # given vector. In this case, merge the dataframes in the ERRORS list
+  #errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
+  
+  #better with join_all form plyr package because doesn't change the order of columns:
+  errors <- join_all(errors_list, type = "full")
+  
+  # Separate dataframe by influece area
+  errors <- separateDataframeByInfluenceArea(errors, "COD_PUERTO")
+  
+  # Order the errors and remove columns with only NA values
+  errors <- lapply(errors, function(x){
+    
+    # Order columns
+    x <- x %>%
+      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
+             TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
+             P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
+      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
+    
+    # Order the errors
+    x <- x %>%
+      arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+    
+    #Remove columns with only NA values
+    #Filter extracts the elements of a vector for which a predicate (logical) function gives true
+    x <- Filter(function(x){!all(is.na(x))}, x)
+    
+    # Add column Comprobado
+    x[["comprobado"]] <- ""
+    
+    return(x)
+  })  
+  
+  return(errors)
 }
 
 
@@ -202,6 +260,7 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
 }
 
 
+# TODO: remove (this is checked in IPDtoSIRENO.R)
 # function to check foreings ships in MT1 samples
 # df: dataframe
 check_foreing_ships_MT1 <- function(df){
@@ -226,65 +285,6 @@ check_foreing_ships_MT2 <- function(df){
   ships <- addTypeOfError(ships, "WARNING: MT2 con barco extranjero")
   
   return(ships)
-}
-
-
-# function to format the errors produced ---------------------------------------
-# This function combine all the dataframes of the errors_list (a list of dataframes)
-# and format it:
-# - combine all dataframes in one
-# - order columns
-# - separate the dataframe by influence area
-# - order every area dataframe
-# - remove empty columns in every area dataframe
-formatErrorsList <- function(errors_list = ERRORS){
-  
-  # Combine all the dataframes of ERRORS list:
-    # Reduce uses a binary function to successively combine the elements of a
-    # given vector. In this case, merge the dataframes in the ERRORS list
-  #errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
-
-  #better with join_all form plyr package because doesn't change the order of columns:
-  errors <- join_all(errors_list, type = "full")
-
-  # Separate dataframe by influece area
-  errors <- separateDataframeByInfluenceArea(errors, "COD_PUERTO")
-  
-  # Order the errors and remove columns with only NA values
-  errors <- lapply(errors, function(x){
-    
-    # Order columns
-    x <- x %>%
-      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
-             TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
-             P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
-    
-    # Order the errors
-    x <- x %>%
-      arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
-    
-    #Remove columns with only NA values
-    #Filter extracts the elements of a vector for which a predicate (logical) function gives true
-    x <- Filter(function(x){!all(is.na(x))}, x)
-    
-    # Add column Comprobado
-    x[["comprobado"]] <- ""
-    
-    return(x)
-  })  
-      
-  return(errors)
-}
-
-
-#function to add variable with type of error to a dataframe --------------------
-addTypeOfError <- function(df, type){
-  
-  if(nrow(df)!=0){
-    df[["TIPO_ERROR"]] <- type
-  }
-  return(df)
 }
 
 
@@ -325,6 +325,7 @@ differencePesMueVivoSOP <- function (df){
   return(sop_distinto_p_mue)
 }
 
+
 # function to check samples with the difference between P_MUE_VIVO and
 # SOP greater than +-10% and greater than 1kg of SOP ---------------------------
 differencePesMueVivoSOPLessThan1kg <- function (df){
@@ -351,16 +352,14 @@ differencePesMueVivoSOPLessThan1kg <- function (df){
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
 
-#read the mixed species file
-#cat_spe_mixed<-read.csv("especies_mezcla.csv", header=TRUE)
+#read the mixed species dataset
+#TODO: change the name of cat_spe_mixed
 cat_spe_mixed <- especies_mezcla
 
-#read the no mixed species file
-#sampled_spe_no_mixed2<-read.csv("especies_no_mezcla.csv", header=TRUE)
+#read the no mixed species dataset
 sampled_spe_no_mixed <- especies_no_mezcla
 
-#read the estrato-rim - arte file to obtain the correct estratorim, gear and its relation
-# CORRECT_ESTRATORIM_ARTE<-read.csv("estratorim_arte.csv", header=TRUE, sep = ";")
+#read the estrato-rim - arte dataset to obtain the correct estratorim, gear and its relation
 CORRECT_ESTRATORIM_ARTE <- estratorim_arte
 CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
 
@@ -372,7 +371,7 @@ ALLOWED_GENUS <- read.csv("generos_permitidos.csv")
 
 ### obtain the cfpo
 CFPO <- cfpo2015
-  # ignore superfluous columns
+  # ignore useless columns
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
 
@@ -388,7 +387,6 @@ muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_T
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
-
 
 
 # ------------------------------------------------------------------------------
@@ -443,39 +441,6 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "ERROR: especie de mezcla que no está agrupada en Especies del Muestreo")
     rm(selected_fields, mixed_species_sample)
 
-  # LO SIGUIENTE QUIERO COMPROBARLO ANTES DE ELIMINARLO
-    # # ---- errors in not mixed species keyed as mixed species
-  #   selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-  #   #search the errors:
-  #   no_mixed_species_sample <- merge(x=selected_fields, y=sampled_spe_no_mixed, by.x="ESP_MUE", by.y="ESP")
-  #   #order columns dataframe:
-  #   no_mixed_species_sample <- no_mixed_species_sample[c("LOCODE", "PUERTO", "TIPO_MUE", "ESTRATO_RIM", "FECHA", "COD_BARCO", "BARCO", "COD_ESP_MUE", "ESP_MUE")]
-  #   #change the name of a column in dataframe. ???OMG!!!:
-  #   names(no_mixed_species_sample)[names(no_mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUESTREO_INCORRECTA'
-  #   #order dataframe:
-  #   no_mixed_species_sample<-arrange_(no_mixed_species_sample, BASE_FIELDS)
-  #   # ---- MT1
-  #   no_mixed_species_sample_mt1<-subset(no_mixed_species_sample, TIPO_MUE == "MT1A (Encuestas IEO)")
-  #   ERRORS$no_mixed_species_sample_mt1 <- no_mixed_species_sample_mt1
-  #   # ---- MT2
-  #   no_mixed_species_sample_mt2<-subset(no_mixed_species_sample, TIPO_MUE == "MT2A (Biometrico puerto)")
-  #   ERRORS$no_mixed_species_sample_mt2 <- no_mixed_species_sample_mt2
-  #     # ---- Special format to send Ricardo: he has to change the sampled species to its category species
-  #     # byx = c(BASE_FIELDS, "ESP_MUESTREO_INCORRECTA")
-  #     # byy = c(BASE_FIELDS, "ESP_MUE")
-  #     # Ricardo_no_mixed_species_sample_mt2 <- merge(x = no_mixed_species_sample_mt2, y = catches_in_lengths, by.x = byx, by.y = byy, all.x = TRUE)
-  #     # Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c(BASE_FIELDS, "BARCOD", "ESP_MUESTREO_INCORRECTA","ESPCOD", "CATEGORIA", "ESPECIE", "ESPCOD2")]
-  #     # # ---- change column names
-  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD"] <- "COD_ESP_MUESTREO_INCORRECTA"
-  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPECIE"] <- "ESP_MUESTREO_CORRECTA"
-  #     # colnames(Ricardo_no_mixed_species_sample_mt2)[colnames(Ricardo_no_mixed_species_sample_mt2)=="ESPCOD2"] <- "COD_ESP_MUESTREO_CORRECTA"
-  #     #   # delete the species that have non-grouped specie in species category
-  #     #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[ ! Ricardo_no_mixed_species_sample_mt2$ESP_MUESTREO_CORRECTA %in% as.character(sampled_spe_no_mixed$ESPECIE),]
-  #     #   # ---- reorder columns
-  #     #   Ricardo_no_mixed_species_sample_mt2 <- Ricardo_no_mixed_species_sample_mt2[, c("PUERTO","FECHA","BARCO","BARCOD","ESTRATO_RIM","TIP_MUESTREO","ESP_MUESTREO_INCORRECTA","COD_ESP_MUESTREO_INCORRECTA","CATEGORIA","ESP_MUESTREO_CORRECTA", "COD_ESP_MUESTREO_CORRECTA")]
-  #     #   write.csv(Ricardo_no_mixed_species_sample_mt2, file=paste(PATH_ERRORS, "Ricardo_no_mixed_species_sample_mt2.csv", sep="/"), quote = FALSE, row.names = FALSE)
-  #
-  #   rm(selected_fields, no_mixed_species_sample, no_mixed_species_sample_mt1, no_mixed_species_sample_mt2)
 
   # ---- errors in mixed species of the category ----
     selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
@@ -538,7 +503,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
         checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.x = TRUE)
         not_allowed_genus <- checked_allowed_genus[is.na(checked_allowed_genus$ALLOWED),]
 
-        #to the ERRORS
+        #send to the ERRORS
         ERRORS$not_allowed_genus_sampled_species <- subset(not_allowed_genus, select = -c(ALLOWED))
         ERRORS$not_allowed_genus_sampled_species <- addTypeOfError(ERRORS$not_allowed_genus_sampled_species, "WARNING: muestreo con género no permitido en Especies del muestreo")
 
