@@ -268,6 +268,19 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
   return(errors)
 }
 
+#function to search samples with not allowed species of the category
+notAllowedCategorySpecies <- function(df){
+  selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+  not_allowed <- merge(x = df, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
+  
+  not_allowed <- not_allowed %>%
+    select(one_of(selected_fields)) %>%
+    #rename(ESP_CAT, ESP_CAT_INCORRECTA) %>%
+    dplyr::rename(COD_ESP_CAT_INCORRECTA=COD_ESP_CAT, ESP_CAT_INCORRECTA=ESP_CAT) %>%
+    arrange_(BASE_FIELDS)
+  not_allowed <- addTypeOfError(not_allowed, "WARNING: muestreo con especie no permitida en Especies de la categoría")
+}
+
 
 # TODO: remove (this is checked in IPDtoSIRENO.R)
 # function to check foreings ships in MT1 samples
@@ -477,27 +490,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 
     # ---- in category species
-      notAllowedCategorySpecies <- function(df){
-        selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
-        not_allowed <- merge(x = df, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
-        not_allowed <- not_allowed %>%
-                        #select(one_of(selected_fields)) %>%
-                        rename(ESP_CAT, ESP_CAT_INCORRECTA) %>%
-                        # rename(COD_ESP_CAT, COD_ESP_CAT_INCORRECTA) %>%
-                        # arrange_(BASE_FIELDS)
-        not_allowed <- addTypeOfError(not_allowed, "WARNING: muestreo con especie no permitida en Especies de la categoría")
-      }
-      
-      prueba <- notAllowedCategorySpecies(catches_in_lengths)
-      
-      not_allowed_category_species <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
-      not_allowed_category_species <- not_allowed_category_species[c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
-      #change the name of a column in dataframe. ???OMG!!!:
-      names(not_allowed_category_species)[names(not_allowed_category_species) == 'ESP_CAT'] <- 'ESP_CAT_INCORRECTA'
-      names(not_allowed_category_species)[names(not_allowed_category_species) == 'COD_ESP_CAT'] <- 'COD_ESP_CAT_INCORRECTA'
-      not_allowed_category_species <- arrange_(not_allowed_category_species, BASE_FIELDS)
-      ERRORS$not_allowed_category_species <- not_allowed_category_species
-      ERRORS$not_allowed_category_species <- addTypeOfError(ERRORS$not_allowed_category_species, "WARNING: muestreo con especie no permitida en Especies de la categoría")
+
+      ERRORS$not_allowed_category_species <- notAllowedCategorySpecies(catches_in_lengths)
+
       # ---- genus not allowed
         # select all the genus to check
         to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESP_CAT)
@@ -610,7 +605,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
