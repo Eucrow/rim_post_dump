@@ -196,6 +196,15 @@ sopGreaterPesMueVivo <- function(df){
   return (errors)
 }
 
+# Function to search samples with SOP = 0 --------------------------------------
+sopZero <- function(df){
+  fields_to_select <- c(BASE_FIELDS, "SOP")
+  errors <- df %>%
+    select(one_of(fields_to_select)) %>%
+    filter(SOP == 0)
+  errors <- addTypeOfError(errors, "ERROR: SOP igual a 0")
+  return (errors)
+}
 
 #function to search samples with P_MUE_DESEM = 0 or NA -------------------------
 pesMueDesemZero <- function(df){
@@ -561,8 +570,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
         
   # ---- errors in samples with sop = 0
-    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
-    ERRORS[["sop_zero"]] <- addTypeOfError(ERRORS[["sop_zero"]], "ERROR: sop = 0")
+    ERRORS$sop_zero <- sopZero(catches_in_lengths) 
      
   # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
     ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
