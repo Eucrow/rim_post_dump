@@ -46,12 +46,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/octubre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_102016.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_102016.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_102016.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/noviembre"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 10 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 11 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
@@ -426,7 +426,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
   # ---- not allowed species
     # ---- in sampled species
-      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.y = TRUE)
+      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP")
       not_allowed_sampling_species <- not_allowed_sampling_species[c(BASE_FIELDS,"COD_ESP_MUE","ESP_MUE")]
       #change the name of a column in dataframe. ???OMG!!!:
       names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
@@ -587,9 +587,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
