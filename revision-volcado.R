@@ -46,12 +46,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/octubre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_102016.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_102016.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_102016.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/noviembre"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 10 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 11 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
@@ -304,50 +304,6 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 }
 
 
-# function to check samples with the difference between P_MUE_VIVO and
-# SOP greater than +-10% and greater than 1kg of SOP ---------------------------
-differencePesMueVivoSOP <- function (df){
-  
-  df[["SOP"]] <- as.numeric(df[["SOP"]])
-  
-  sop_distinto_p_mue <- df %>%
-    select(COD_ID, FECHA, PUERTO, COD_BARCO, BARCO, COD_ESP_MUE, ESP_MUE,
-           COD_CATEGORIA, CATEGORIA, COD_ESP_CAT, ESP_CAT, P_MUE_VIVO, SOP)%>%
-    mutate(DIFERENCIA = P_MUE_VIVO - SOP) %>%
-    mutate(PORCENTAJE = (DIFERENCIA*100)/P_MUE_VIVO) %>%
-    filter(P_MUE_VIVO >=1 & (PORCENTAJE >= 10 | PORCENTAJE <= -10) )
-  
-  # I don't know why can't include round function in mutate. If I do it, doesn't work in the right way
-  sop_distinto_p_mue$PORCENTAJE <- round(sop_distinto_p_mue$PORCENTAJE, 0) 
-  
-  sop_distinto_p_mue <- addTypeOfError(sop_distinto_p_mue, "WARNING: Diferencia entre P_MUE_VIVO y SOP mayor del +-10% para P_MUE_VIVO mayor o igual a 1kg")
-  
-  return(sop_distinto_p_mue)
-}
-
-
-# function to check samples with the difference between P_MUE_VIVO and
-# SOP greater than +-10% and greater than 1kg of SOP ---------------------------
-differencePesMueVivoSOPLessThan1kg <- function (df){
-  
-  df[["SOP"]] <- as.numeric(df[["SOP"]])
-  
-  sop_distinto_p_mue <- df %>%
-    select(COD_ID, FECHA, PUERTO, COD_BARCO, BARCO, COD_ESP_MUE, ESP_MUE,
-           COD_CATEGORIA, CATEGORIA, COD_ESP_CAT, ESP_CAT, P_MUE_VIVO, SOP)%>%
-    mutate(DIFERENCIA = P_MUE_VIVO - SOP) %>%
-    mutate(PORCENTAJE = (DIFERENCIA*100)/P_MUE_VIVO) %>%
-    filter(P_MUE_VIVO <1 )
-  
-  # I don't know why can't include round function in mutate. If I do it, doesn't work in the right way
-  sop_distinto_p_mue$PORCENTAJE <- round(sop_distinto_p_mue$PORCENTAJE, 0) 
-  
-  sop_distinto_p_mue <- addTypeOfError(sop_distinto_p_mue, "WARNING: Diferencia entre P_MUE_VIVO y SOP para P_MUE_VIVO menor de 1kg")
-  
-  return(sop_distinto_p_mue)
-}
-
-
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -470,7 +426,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
   # ---- not allowed species
     # ---- in sampled species
-      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.y = TRUE)
+      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP")
       not_allowed_sampling_species <- not_allowed_sampling_species[c(BASE_FIELDS,"COD_ESP_MUE","ESP_MUE")]
       #change the name of a column in dataframe. ???OMG!!!:
       names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
@@ -581,23 +537,6 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS$same_sampled_weight <- addTypeOfError(ERRORS$same_sampled_weight, "WARNING: todas las categorías de la especie tienen exactamente el mismo peso muestreado")
     #TO DO: check this dataframe... why return the COD_CATEGORIA and CATEGORIA fields??
     rm (selected_fields, by, same_sampled_weight)
-
-  # ---- errors in the weight sampled similar to the category weight?
-  # This error is useless because we will change the P_MUE to SOP when the differente is > +-10
-    # weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")]
-    # weight_sampled_similar_weight_landing <- subset(weight_sampled_similar_weight_landing, P_DESEM==P_MUE_DESEM)
-    # weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", "TIPO_MUE", "FECHA", "BARCO", "ESP_MUE", "CATEGORIA"))
-    # weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- weight_sampled_similar_weight_landing["P_MUE_VIVO"] - weight_sampled_similar_weight_landing["SOP"]
-    # weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"], digits = 1)
-    # weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"] <- (weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P_MUE_VIVO"]
-    # weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"])
-    # ERRORS$weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing
-    # ERRORS$weight_sampled_similar_weight_landing <- addTypeOfError(ERRORS$weight_sampled_similar_weight_landing, "peso muestreado igual al peso desembarcado")
-    # rm(weight_sampled_similar_weight_landing)
-
-  # ---- errors sop = 0
-    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
-    ERRORS[["sop_zero"]] <- addTypeOfError(ERRORS[["sop_zero"]], "ERROR: sop = 0")
   
     # ---- errors
     ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
@@ -621,28 +560,25 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
   # ---- (warning) errors in species with categories with the same weight landing
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
         
-  
-  # ---- TO CHECK AFTER UPDATING 10% TOPIC  
+  # ---- errors in samples with sop = 0
+    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
+    ERRORS[["sop_zero"]] <- addTypeOfError(ERRORS[["sop_zero"]], "ERROR: sop = 0")
+     
   # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
-  #  ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+    ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+
+  # ---- errors in samples with SOP greater than P_VIVO
+    ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths)
 
   # ---- errors in samples with P_DESEM <= P_MUE_DESEM
-  #  ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths) #AddTypeOfError included in function 
-    
-  # ---- errors in samples with SOP greater than P_VIVO
-  #  ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths) #AddTypeOfError included in function 
+    ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
 
-  # IMPORTANT:
-  # TO CORRECT:
-  #  ERRORS$diferencia_pes_mue_vivo_sop_mayor_10_1_kg <- differencePesMueVivoSOP(lengths)
-  #  ERRORS$diferencia_pes_mue_vivo_sop_menor_1_kg <- differencePesMueVivoSOPLessThan1kg(lengths)
 
 # ------------------------------------------------------------------------------    
 # #### COMBINE ERRORS ##########################################################
 # ------------------------------------------------------------------------------
 
     combined_errors <- formatErrorsList()
-
 
     
 # ------------------------------------------------------------------------------
@@ -651,9 +587,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
