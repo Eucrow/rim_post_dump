@@ -477,6 +477,19 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 
     # ---- in category species
+      notAllowedCategorySpecies <- function(df){
+        selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+        not_allowed <- merge(x = df, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
+        not_allowed <- not_allowed %>%
+                        #select(one_of(selected_fields)) %>%
+                        rename(ESP_CAT, ESP_CAT_INCORRECTA) %>%
+                        # rename(COD_ESP_CAT, COD_ESP_CAT_INCORRECTA) %>%
+                        # arrange_(BASE_FIELDS)
+        not_allowed <- addTypeOfError(not_allowed, "WARNING: muestreo con especie no permitida en Especies de la categoría")
+      }
+      
+      prueba <- notAllowedCategorySpecies(catches_in_lengths)
+      
       not_allowed_category_species <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
       not_allowed_category_species <- not_allowed_category_species[c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
       #change the name of a column in dataframe. ???OMG!!!:
@@ -597,7 +610,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
