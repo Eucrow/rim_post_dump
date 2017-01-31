@@ -186,15 +186,17 @@ numberOfRejections <- function(df){
 }
 
 
-# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0 -------
+# Function to search samples with SOP > P_MUE_VIVO -----------------------------
 sopGreaterPesMueVivo <- function(df){
-  errors <- df[, c(BASE_FIELDS,"P_MUE_VIVO", "SOP")]
-  errors <- errors[errors["SOP"]>errors["P_MUE_VIVO"] & errors["P_MUE_VIVO"]!=0 & !is.na(errors["P_MUE_VIVO"]),]
-  errors["P_MUE_VIVO-SOP"] <- round(errors["P_MUE_VIVO"] - errors["SOP"],1)
-  errors["POR_DIF_P_MUE_VIVO-SOP"] <- round((errors["P_MUE_VIVO-SOP"] * 100) / errors["P_MUE_VIVO"])
-  errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo, cuando peso muestreado vivo es distinto que 0")
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")
+  errors <- df %>%
+              select(one_of(selected_fields))%>%
+              mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO )%>%
+              filter(DIF_SOP_P_MUE_VIVO > 0.01 )
+  errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo")
   return (errors)
 }
+
 
 # Function to search samples with SOP = 0 --------------------------------------
 sopZero <- function(df){
@@ -278,7 +280,7 @@ notAllowedCategorySpecies <- function(df){
     #rename(ESP_CAT, ESP_CAT_INCORRECTA) %>%
     dplyr::rename(COD_ESP_CAT_INCORRECTA=COD_ESP_CAT, ESP_CAT_INCORRECTA=ESP_CAT) %>%
     arrange_(BASE_FIELDS)
-  not_allowed <- addTypeOfError(not_allowed, "WARNING: muestreo con especie no permitida en Especies de la categoría")
+  not_allowed <- addTypeOfError(not_allowed, "ERROR: muestreo con especie no permitida en Especies de la categoría")
 }
 
 
@@ -436,9 +438,10 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     mixed_species_category_mt2 <- mixed_species_category_mt2[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
     mixed_species_category_mt2 <- arrange_(mixed_species_category_mt2, BASE_FIELDS)
     ERRORS$mixed_species_category_mt2 <- mixed_species_category_mt2
-    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "WARNING: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
     
     # ---- MT1
+    # TODO: remove this:??
     mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
     mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
     mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
@@ -455,7 +458,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
       names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'COD_ESP_MUE'] <- 'COD_ESP_MUE_INCORRECTA'
       not_allowed_sampling_species <- arrange_(not_allowed_sampling_species, BASE_FIELDS)
       ERRORS$not_allowed_sampling_species <- not_allowed_sampling_species
-      ERRORS$not_allowed_sampling_species <- addTypeOfError(ERRORS$not_allowed_sampling_species, "WARNING: Muestreo con especie no permitida en Especies del Muestreo")
+      ERRORS$not_allowed_sampling_species <- addTypeOfError(ERRORS$not_allowed_sampling_species, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
 
         # select all the genus to check
         to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESP_MUE)
@@ -518,7 +521,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
         #to the ERRORS
         ERRORS$not_allowed_genus_category_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_category_species <- addTypeOfError(ERRORS$not_allowed_genus_category_species, "WARNING: muestreos con géneros no permitidos en Especies de la Categoría")
+        ERRORS$not_allowed_genus_category_species <- addTypeOfError(ERRORS$not_allowed_genus_category_species, "ERROR: muestreos con géneros no permitidos en Especies de la Categoría")
         #remove unnecesary variables
         rm(to_check_genus, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
 
@@ -574,7 +577,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
   # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
-  # ---- (warning) errors in species with categories with the same weight landing
+  # ---- errors in species with categories with the same weight landing
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
         
   # ---- errors in samples with sop = 0
@@ -603,9 +606,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
@@ -616,3 +619,6 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
+
+    lengths %>% filter(COD_ESP_MUE=="20078")
+    
