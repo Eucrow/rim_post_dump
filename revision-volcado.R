@@ -17,9 +17,9 @@
 # #### PACKAGES ################################################################
 # ------------------------------------------------------------------------------
 
+library(plyr)
 library(dplyr) #arrange_()
 library(tools) #file_path_sans_ext()
-library(plyr)
 library(devtools)
 
 # ---- install googlesheets from github
@@ -46,10 +46,10 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/noviembre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ices_2016_3.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ices_2016_3.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_ices_2016_3.TXT"
 
 MONTH <- 11 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
@@ -192,7 +192,8 @@ sopGreaterPesMueVivo <- function(df){
   errors <- df %>%
               select(one_of(selected_fields))%>%
               mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO )%>%
-              filter(DIF_SOP_P_MUE_VIVO > 0.01 )
+              mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO,2))%>%
+              filter(DIF_SOP_P_MUE_VIVO,2 > 0.01 )
   errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo")
   return (errors)
 }
@@ -248,7 +249,8 @@ SopGreaterPesVivo <- function (df){
   
   errors <- df %>%
     mutate(DIF_SOP_P_VIVO = SOP - P_VIVO) %>%
-    filter(DIF_SOP_P_VIVO > 0) %>%
+    mutate(DIF_SOP_P_VIVO = round(DIF_SOP_P_VIVO,2)) %>%
+    filter(DIF_SOP_P_VIVO > 0.01) %>%
     select(one_of(fields_to_select))
   
   errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso vivo desembarcado")
@@ -277,7 +279,6 @@ notAllowedCategorySpecies <- function(df){
   
   not_allowed <- not_allowed %>%
     select(one_of(selected_fields)) %>%
-    #rename(ESP_CAT, ESP_CAT_INCORRECTA) %>%
     dplyr::rename(COD_ESP_CAT_INCORRECTA=COD_ESP_CAT, ESP_CAT_INCORRECTA=ESP_CAT) %>%
     arrange_(BASE_FIELDS)
   not_allowed <- addTypeOfError(not_allowed, "ERROR: muestreo con especie no permitida en Especies de la categoría")
@@ -322,7 +323,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("WARNING: este Barco está incluido en el ", cfpo, " pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
+  text_type_of_error <- paste0("WARNING: este Barco está incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
 }
@@ -360,7 +361,7 @@ CFPO <- cfpo2015
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
   
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILES)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES) #by_month = MONTH, 
 
 
 #isolate dataframes
@@ -606,9 +607,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
@@ -620,5 +621,4 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 # ------------------------------------------------------------------------------
     # backup_files()
 
-    lengths %>% filter(COD_ESP_MUE=="20078")
     
