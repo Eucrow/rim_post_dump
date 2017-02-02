@@ -286,7 +286,7 @@ notAllowedCategorySpecies <- function(df){
 
 
 # TODO: remove (this is checked in IPDtoSIRENO.R)
-# function to check foreings ships in MT1 samples
+# function to check foreings ships in MT1 samples ------------------------------
 # df: dataframe
 check_foreing_ships_MT1 <- function(df){
   ships <- df %>%
@@ -299,7 +299,7 @@ check_foreing_ships_MT1 <- function(df){
   return(ships)
 }
 
-# function to check foreings ships in MT2 samples
+# function to check foreings ships in MT2 samples ------------------------------
 # df: dataframe
 check_foreing_ships_MT2 <- function(df){
   ships <- df %>%
@@ -328,6 +328,69 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
   return (errors_ships)
 }
 
+# ------------------------------------------------------------------------------
+# #### REPEATED FUNCTIONS FROM SAVED PREVIOUS CHECK ############################
+# ------------------------------------------------------------------------------
+
+# ---- function to ckeck variables ---------------------------------------------
+#' Check variables
+#
+#' Check if the value of variables are consistents to the value in its SIRENO master.
+#' It's only available for variables with a data source (master): ESTRATO_RIM, COD_PUERTO,
+#' COD_ORIGEN, COD_ARTE, COD_PROCEDENCIA and TIPO_MUESTREO
+#' @param variable: one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
+#' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
+#' @return Return a dataframe with samples containing erroneus variables
+check_variable_with_master <- function (variable){
+  
+  if(variable != "ESTRATO_RIM" &&
+     variable != "COD_PUERTO" &&
+     variable != "COD_ORIGEN" &&
+     variable != "COD_ARTE" &&
+     variable != "PROCEDENCIA" &&
+     variable != "COD_TIPO_MUE"){
+    stop(paste("This function is not available for ", variable))
+  }
+  
+  # look if the variable begin with "COD_". In this case, the name of the data source
+  # is the name of the variable without "COD_"
+  if (grepl("^COD_", variable)){
+    variable <- strsplit(variable, "COD_")
+    variable <- variable[[1]][2]
+  }
+  name_data_set <- tolower(variable)
+  #search the errors in variable
+  errors <- merge(x = records, y = get(name_data_set), all.x = TRUE)
+  variable_to_filter <- names(errors[length(errors)])
+  errors <- subset(errors, is.na(get(variable_to_filter)))
+  #prepare to return
+  fields_to_filter <- c("COD_PUERTO", "FECHA", "COD_BARCO", "ESTRATO_RIM", "COD_ARTE", "COD_ORIGEN", "COD_TIPO_MUE", "PROCEDENCIA")
+  
+  errors <- errors[,fields_to_filter]
+  errors$FECHA <- as.POSIXct(errors$FECHA)
+  errors <- arrange_(errors, fields_to_filter)
+  errors <- unique(errors)
+  #return
+  return(errors)
+}
+
+check_estrato_rim <- check_variable_with_master("ESTRATO_RIM")
+
+
+check_puerto <- check_variable_with_master("COD_PUERTO")
+
+
+check_arte <- check_variable_with_master("COD_ARTE")
+
+
+check_origen <- check_variable_with_master("COD_ORIGEN")
+
+
+check_procedencia <- check_variable_with_master("PROCEDENCIA")
+# Two trips with 'IIM'
+
+
+check_tipo_muestreo <- check_variable_with_master("COD_TIPO_MUE")
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
