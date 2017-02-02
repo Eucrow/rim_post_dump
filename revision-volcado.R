@@ -46,12 +46,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/noviembre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/diciembre"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ices_2016_4.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ices_2016_4.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_ices_2016_4.TXT"
 
-MONTH <- 11 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 12 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
@@ -606,9 +606,9 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
@@ -619,6 +619,4 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
-
-    lengths %>% filter(COD_ESP_MUE=="20078")
     
