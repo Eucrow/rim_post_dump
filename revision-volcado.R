@@ -139,7 +139,7 @@ formatErrorsList <- function(errors_list = ERRORS){
       select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
+              select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
     
     # Order the errors
     x <- x %>%
@@ -342,9 +342,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 #' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
 #' @return Return a dataframe with samples containing erroneus variables
 check_variable_with_master <- function (df, variable){
-  
-  variable_original <- variable
-  
+
   if(variable != "ESTRATO_RIM" &&
      variable != "COD_PUERTO" &&
      variable != "COD_ORIGEN" &&
@@ -354,27 +352,24 @@ check_variable_with_master <- function (df, variable){
     stop(paste("This function is not available for ", variable))
   }
   
-  # look if the variable begin with "COD_". In this case, the name of the data source
+  # If the variable begin with "COD_", the name of the data source
   # is the name of the variable without "COD_"
+  variable_formatted <- variable
   if (grepl("^COD_", variable)){
-    variable <- strsplit(variable, "COD_")
-    variable <- variable[[1]][2]
+    variable_formatted <- strsplit(variable, "COD_")
+    variable_formatted <- variable_formatted[[1]][2]
   }
-  name_data_set <- tolower(variable)
+  name_data_set <- tolower(variable_formatted)
   #search the errors in variable
-  errors <- anti_join(df, get(name_data_set), by = variable_original)
-  
-  #errors <- merge(x = df, y = get(name_data_set), all.x = TRUE)
-  #variable_to_filter <- names(errors[length(errors)])
-  #errors <- subset(errors, is.na(get(variable_to_filter)))
-  
+  errors <- anti_join(df, get(name_data_set), by = variable)
+
   #prepare to return
-  fields_to_filter <- c("COD_PUERTO", "FECHA", "COD_BARCO", "ESTRATO_RIM", "COD_ARTE", "COD_ORIGEN", "COD_TIPO_MUE", "PROCEDENCIA")
+  fields_to_filter <- c("COD_ID", "COD_PUERTO", "FECHA", "COD_BARCO", variable)
+
+  errors <- errors %>%
+              select(one_of(fields_to_filter))%>%
+              unique()
   
-  errors <- errors[,fields_to_filter]
-  errors$FECHA <- as.POSIXct(errors$FECHA)
-  errors <- arrange_(errors, fields_to_filter)
-  errors <- unique(errors)
   
   text_type_of_error <- paste0("ERROR: ", name_data_set, " no concuerda con los maestros de SIRENO")
   errors <- addTypeOfError(errors, text_type_of_error)
@@ -432,22 +427,22 @@ lengths <- muestreos_up$lengths
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
 
-# ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
-# 
-# 
-# ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
-# 
-# 
-# ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
-# 
-# 
-# ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
-# 
-# 
-# ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
-# 
-# 
-# ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+
+
+ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+
+
+ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
+
+
+ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+
+
+ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+
+
+ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 
 
 
