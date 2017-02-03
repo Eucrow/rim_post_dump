@@ -47,7 +47,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ices_2016_3.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ices_2016_3 - copia.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ices_2016_3.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO_ices_2016_3.TXT"
 
@@ -341,7 +341,9 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 #' @param variable: one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
 #' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
 #' @return Return a dataframe with samples containing erroneus variables
-check_variable_with_master <- function (variable){
+check_variable_with_master <- function (df, variable){
+  
+  variable_original <- variable
   
   if(variable != "ESTRATO_RIM" &&
      variable != "COD_PUERTO" &&
@@ -360,9 +362,12 @@ check_variable_with_master <- function (variable){
   }
   name_data_set <- tolower(variable)
   #search the errors in variable
-  errors <- merge(x = records, y = get(name_data_set), all.x = TRUE)
-  variable_to_filter <- names(errors[length(errors)])
-  errors <- subset(errors, is.na(get(variable_to_filter)))
+  errors <- anti_join(df, get(name_data_set), by = variable_original)
+  
+  #errors <- merge(x = df, y = get(name_data_set), all.x = TRUE)
+  #variable_to_filter <- names(errors[length(errors)])
+  #errors <- subset(errors, is.na(get(variable_to_filter)))
+  
   #prepare to return
   fields_to_filter <- c("COD_PUERTO", "FECHA", "COD_BARCO", "ESTRATO_RIM", "COD_ARTE", "COD_ORIGEN", "COD_TIPO_MUE", "PROCEDENCIA")
   
@@ -370,27 +375,17 @@ check_variable_with_master <- function (variable){
   errors$FECHA <- as.POSIXct(errors$FECHA)
   errors <- arrange_(errors, fields_to_filter)
   errors <- unique(errors)
+  
+  text_type_of_error <- paste0("ERROR: ", name_data_set, " no concuerda con los maestros de SIRENO")
+  errors <- addTypeOfError(errors, text_type_of_error)
+  
   #return
   return(errors)
 }
 
-check_estrato_rim <- check_variable_with_master("ESTRATO_RIM")
 
 
-check_puerto <- check_variable_with_master("COD_PUERTO")
 
-
-check_arte <- check_variable_with_master("COD_ARTE")
-
-
-check_origen <- check_variable_with_master("COD_ORIGEN")
-
-
-check_procedencia <- check_variable_with_master("PROCEDENCIA")
-# Two trips with 'IIM'
-
-
-check_tipo_muestreo <- check_variable_with_master("COD_TIPO_MUE")
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -436,6 +431,25 @@ lengths <- muestreos_up$lengths
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
+
+# ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+# 
+# 
+# ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+# 
+# 
+# ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
+# 
+# 
+# ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+# 
+# 
+# ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+# 
+# 
+# ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+
+
 
 # ---- IN HEADER ----
 
