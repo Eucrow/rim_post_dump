@@ -405,17 +405,26 @@ check_false_mt2 <- function(){
 # lenghts
 # df: dataframe
 # return: dataframe with erroneus samples
-check_false_mt1 <- function(df){
-  dataframe <- df
-  dataframe$FECHA <- as.POSIXct(dataframe$FECHA)
-  mt1_errors <- dataframe %>%
-    filter(COD_TIPO_MUE=="1") %>%
-    group_by(COD_PUERTO, FECHA, COD_BARCO, ESTRATO_RIM) %>%
-    summarise(summatory = sum(EJEM_MEDIDOS)) %>%
-    filter(summatory != 0)
+check_false_mt1 <- function(){
   
-  return(mt1_errors)
+  #Select all the samples with COD_TIPO_MUE = MT1
+  mt1 <- catches %>%
+    filter(COD_TIPO_MUE == 1)  %>%
+    select_(.dots = BASE_FIELDS) %>%
+    unique()
+  
+  # select all the samples with lengths
+  mt1_with_lenghts <- lengths %>%
+    filter(COD_TIPO_MUE == 1)  %>%
+    group_by_(.dots = BASE_FIELDS) %>%
+    summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
+  
+  # check if all the samples keyed as MT1 hasn't lenghts
+  false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = c("FECHA","COD_BARCO"))
+  
+  return(false_mt1)  
 }
+
 
 # function to search foreing ships
 # the BAR_COD code in the foreing ships begins with an 8 and continue with 5 digits
@@ -497,9 +506,9 @@ ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
 
 ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 
-falseMT1 <- check_false_mt1(lengths)
-ERRORS$false_MT2 <- check_false_mt2()
+ERRORS$false_MT1 <- check_false_mt1()
 
+ERRORS$false_MT2 <- check_false_mt2()
 
 
 # ---- IN HEADER ----
