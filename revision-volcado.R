@@ -47,7 +47,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO - copia.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
@@ -420,26 +420,9 @@ check_false_mt1 <- function(){
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   
   # check if all the samples keyed as MT1 hasn't lenghts
-  false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = c("FECHA","COD_BARCO"))
+  false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = BASE_FIELDS)
   
   return(false_mt1)  
-}
-
-
-# function to search foreing ships
-# the BAR_COD code in the foreing ships begins with an 8 and continue with 5 digits
-# df: dataframe
-# return: dataframe with foreing ships and COD_TIPO_MUE
-check_foreing_ship <- function(df){
-  dataframe <- df
-  dataframe$FECHA <- as.POSIXct(dataframe$FECHA)
-  dataframe$COD_BARCO <- as.character(dataframe$COD_BARCO)
-  ships <- dataframe %>%
-    filter(grepl("^8\\d{5}",COD_BARCO)) %>%
-    group_by(FECHA, COD_TIPO_MUE, COD_BARCO, COD_PUERTO, COD_ARTE, COD_ORIGEN, ESTRATO_RIM) %>%
-    count(FECHA, COD_TIPO_MUE, COD_BARCO, COD_PUERTO, COD_ARTE, COD_ORIGEN, ESTRATO_RIM)
-  
-  return(ships[, c("FECHA", "COD_TIPO_MUE", "COD_BARCO", "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM")])
 }
 
 
@@ -491,18 +474,13 @@ lengths <- muestreos_up$lengths
 
 ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
 
-
 ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
-
 
 ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
 
-
 ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
 
-
 ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
-
 
 ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 
