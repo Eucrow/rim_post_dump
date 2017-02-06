@@ -277,7 +277,7 @@ notAllowedCategorySpecies <- function(df){
   
   not_allowed <- not_allowed %>%
     select(one_of(selected_fields)) %>%
-    dplyr::rename(COD_ESP_CAT_INCORRECTA=COD_ESP_CAT, ESP_CAT_INCORRECTA=ESP_CAT) %>%
+    #dplyr::rename(COD_ESP_CAT_INCORRECTA=COD_ESP_CAT, ESP_CAT_INCORRECTA=ESP_CAT) %>%
     arrange_(BASE_FIELDS)
   not_allowed <- addTypeOfError(not_allowed, "ERROR: muestreo con especie no permitida en Especies de la categoría")
 }
@@ -432,7 +432,7 @@ check_false_mt1 <- function(){
 # return a dataframe with the samples with species keyed as non mixed species
 check_mixed_as_no_mixed <- function(df){
   non_mixed <- merge(x=df, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT")
-  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agregación en Especies del Muestreo")
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo")
   return(non_mixed)
 }
 
@@ -442,7 +442,7 @@ check_mixed_as_no_mixed <- function(df){
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(df){
   non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP")
-  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla tecleada con agregación en Especies del Muestreo")
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
   return(non_mixed)
 }
 
@@ -547,18 +547,18 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 # ---- IN SPECIES ----
 
   # ---- errors in mixed species of the sample ----
-    selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-    #search the errors: species fo the sample fill like mixed species:
-    mixed_species_sample<-merge(x=selected_fields, y=cat_spe_mixed[,c("ESP_CAT","COD_ESP_CAT")], by.x="COD_ESP_MUE", by.y="COD_ESP_CAT")
-    #change the name of a column in dataframe. ???OMG!!!:
-    names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
-    #order columns dataframe:
-    mixed_species_sample <- mixed_species_sample[, c(BASE_FIELDS, "ESP_MUE_INCORRECTA")]
-    #order dataframe:
-    mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
-    ERRORS$mixed_species_sample <- mixed_species_sample
-    ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "ERROR: especie de mezcla que no está agrupada en Especies del Muestreo")
-    rm(selected_fields, mixed_species_sample)
+    # selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+    # #search the errors: species fo the sample fill like mixed species:
+    # mixed_species_sample<-merge(x=selected_fields, y=cat_spe_mixed[,c("ESP_CAT","COD_ESP_CAT")], by.x="COD_ESP_MUE", by.y="COD_ESP_CAT")
+    # #change the name of a column in dataframe. ???OMG!!!:
+    # names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
+    # #order columns dataframe:
+    # mixed_species_sample <- mixed_species_sample[, c(BASE_FIELDS, "ESP_MUE_INCORRECTA")]
+    # #order dataframe:
+    # mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
+    # ERRORS$mixed_species_sample <- mixed_species_sample
+    # ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "ERROR: especie de mezcla que no está agrupada en Especies del Muestreo")
+    # rm(selected_fields, mixed_species_sample)
 
 
   # ---- errors in mixed species of the category ----
@@ -581,12 +581,12 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     # ---- MT1
     # TODO: remove this:??
-    mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
-    mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
-    mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
-    ERRORS$mixed_species_category_mt1 <- mixed_species_category_mt1
-    ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "WARNING: muestreo MT1 con especie de mezcla que está agrupada en Especies para la Categoría")
-    rm(selected_fields, mixed_species_category, mixed_species_category_mt1, mixed_species_category_mt2)
+    # mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
+    # mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
+    # mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
+    # ERRORS$mixed_species_category_mt1 <- mixed_species_category_mt1
+    # ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "WARNING: muestreo MT1 con especie de mezcla que está agrupada en Especies para la Categoría")
+    # rm(selected_fields, mixed_species_category, mixed_species_category_mt1, mixed_species_category_mt2)
 
   # ---- not allowed species
     # ---- in sampled species
