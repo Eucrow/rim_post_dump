@@ -47,9 +47,9 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ices_2016_3 - copia.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ices_2016_3.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_ices_2016_3.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO - copia.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 MONTH <- 11 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
@@ -139,11 +139,9 @@ formatErrorsList <- function(errors_list = ERRORS){
       select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-              select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
-    
-    # Order the errors
-    x <- x %>%
-      arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+             select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
+             mutate(FECHA = as.Date(FECHA, "%d-%m-%y")) %>%
+             arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -285,7 +283,6 @@ notAllowedCategorySpecies <- function(df){
 }
 
 
-# TODO: remove (this is checked in IPDtoSIRENO.R)
 # function to check foreings ships in MT1 samples ------------------------------
 # df: dataframe
 check_foreing_ships_MT1 <- function(df){
@@ -364,7 +361,7 @@ check_variable_with_master <- function (df, variable){
   errors <- anti_join(df, get(name_data_set), by = variable)
 
   #prepare to return
-  fields_to_filter <- c("COD_ID", "COD_PUERTO", "FECHA", "COD_BARCO", variable)
+  fields_to_filter <- c("COD_ID", "COD_PUERTO", "PUERTO", "FECHA", "COD_BARCO", variable)
 
   errors <- errors %>%
               select(one_of(fields_to_filter))%>%
@@ -378,7 +375,63 @@ check_variable_with_master <- function (df, variable){
   return(errors)
 }
 
+# function to search false mt2 samples: samples with COD_TIPO_MUE as MT2A and
+# without any lenght
+# df: dataframe
+# return: dataframe with erroneus samples
+check_false_mt2 <- function(){
 
+  #Select all the samples with COD_TIPO_MUE = MT2
+  mt2 <- catches %>%
+          filter(COD_TIPO_MUE == 2)  %>%
+          select_(.dots = BASE_FIELDS) %>%
+          unique()
+  
+  # select all the samples with lengths
+  mt2_with_lenghts <- lengths %>%
+          filter(COD_TIPO_MUE == 2)  %>%
+          group_by_(.dots = BASE_FIELDS) %>%
+          summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
+  
+  # check if all the samples keyed as MT2 has lenghts
+  false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA","COD_BARCO"))
+
+  
+  return(false_mt2)  
+
+}
+
+# function to search false mt1 samples: samples with COD_TIPO_MUE as MT1A and
+# lenghts
+# df: dataframe
+# return: dataframe with erroneus samples
+check_false_mt1 <- function(df){
+  dataframe <- df
+  dataframe$FECHA <- as.POSIXct(dataframe$FECHA)
+  mt1_errors <- dataframe %>%
+    filter(COD_TIPO_MUE=="1") %>%
+    group_by(COD_PUERTO, FECHA, COD_BARCO, ESTRATO_RIM) %>%
+    summarise(summatory = sum(EJEM_MEDIDOS)) %>%
+    filter(summatory != 0)
+  
+  return(mt1_errors)
+}
+
+# function to search foreing ships
+# the BAR_COD code in the foreing ships begins with an 8 and continue with 5 digits
+# df: dataframe
+# return: dataframe with foreing ships and COD_TIPO_MUE
+check_foreing_ship <- function(df){
+  dataframe <- df
+  dataframe$FECHA <- as.POSIXct(dataframe$FECHA)
+  dataframe$COD_BARCO <- as.character(dataframe$COD_BARCO)
+  ships <- dataframe %>%
+    filter(grepl("^8\\d{5}",COD_BARCO)) %>%
+    group_by(FECHA, COD_TIPO_MUE, COD_BARCO, COD_PUERTO, COD_ARTE, COD_ORIGEN, ESTRATO_RIM) %>%
+    count(FECHA, COD_TIPO_MUE, COD_BARCO, COD_PUERTO, COD_ARTE, COD_ORIGEN, ESTRATO_RIM)
+  
+  return(ships[, c("FECHA", "COD_TIPO_MUE", "COD_BARCO", "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM")])
+}
 
 
 
@@ -443,6 +496,9 @@ ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
 
 
 ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+
+falseMT1 <- check_false_mt1(lengths)
+ERRORS$false_MT2 <- check_false_mt2()
 
 
 
@@ -636,7 +692,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS[["sampled_weight_zero"]] <- addTypeOfError(ERRORS[["sampled_weight_zero"]], "ERROR: peso muestra = 0")
     
   # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
+    ERRORS[["weight_landed_zero"]] <- subset(catches, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
     ERRORS[["weight_landed_zero"]] <- addTypeOfError(ERRORS[["weight_landed_zero"]], "ERROR: peso desembarcado = 0")
     
   # ---- errors species of the category WITHOUT length sample but WITH weight sample
