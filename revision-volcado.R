@@ -395,8 +395,8 @@ check_false_mt2 <- function(){
   
   # check if all the samples keyed as MT2 has lenghts
   false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA","COD_BARCO"))
+  false_mt2 <- addTypeOfError(false_mt2, "ERROR: MT2 sin tallas")
 
-  
   return(false_mt2)  
 
 }
@@ -421,6 +421,7 @@ check_false_mt1 <- function(){
   
   # check if all the samples keyed as MT1 hasn't lenghts
   false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = BASE_FIELDS)
+  false_mt1 <- addTypeOfError(false_mt1, "ERROR: MT1 con tallas")
   
   return(false_mt1)  
 }
