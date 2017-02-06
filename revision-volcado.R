@@ -426,7 +426,15 @@ check_false_mt1 <- function(){
   return(false_mt1)  
 }
 
-
+# function to check no mixed species keyed as mixed species: in COD_ESP_MUE
+# there are codes from mixed species
+# df: dataframe
+# return a dataframe with the samples with species keyed as non mixed species
+check_no_mixed_as_mixed <- function(df){
+  non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP")
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla tecleada como especie de mezcla es Especies del Muestreo")
+  return(non_mixed)
+}
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -488,6 +496,8 @@ ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 ERRORS$false_MT1 <- check_false_mt1()
 
 ERRORS$false_MT2 <- check_false_mt2()
+
+ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed(catches)
 
 
 # ---- IN HEADER ----
