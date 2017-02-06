@@ -47,7 +47,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO - copia.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
@@ -325,6 +325,26 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
   return (errors_ships)
 }
 
+check_mt2b <- function(){
+  
+  # select all the mt2b samples
+  mt2b <- catches %>%
+            filter(COD_TIPO_MUE == 4) %>%
+            select_(.dots = BASE_FIELDS)
+  
+  # select all the samples with lengths
+  mt2b_with_lenghts <- lengths %>%
+    filter(COD_TIPO_MUE == 4)  %>%
+    group_by_(.dots = BASE_FIELDS) %>%
+    summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
+  
+  false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
+  false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2b sin tallas")
+  
+  return(false_mt2b)
+}
+
+
 # ------------------------------------------------------------------------------
 # #### REPEATED FUNCTIONS FROM SAVED PREVIOUS CHECK ############################
 # ------------------------------------------------------------------------------
@@ -513,6 +533,8 @@ ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
 
 
 # ---- IN HEADER ----
+
+ERRORS$false_mt2b <- check_mt2b()
 
 ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
