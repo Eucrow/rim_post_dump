@@ -426,13 +426,23 @@ check_false_mt1 <- function(){
   return(false_mt1)  
 }
 
+# function to check mixed species keyed as non mixed species: in COD_ESP_MUE
+# there are codes from mixed species
+# df: dataframe
+# return a dataframe with the samples with species keyed as non mixed species
+check_mixed_as_no_mixed <- function(df){
+  non_mixed <- merge(x=df, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT")
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agregación en Especies del Muestreo")
+  return(non_mixed)
+}
+
 # function to check no mixed species keyed as mixed species: in COD_ESP_MUE
 # there are codes from mixed species
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(df){
   non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP")
-  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla tecleada como especie de mezcla es Especies del Muestreo")
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla tecleada con agregación en Especies del Muestreo")
   return(non_mixed)
 }
 
@@ -498,6 +508,8 @@ ERRORS$false_MT1 <- check_false_mt1()
 ERRORS$false_MT2 <- check_false_mt2()
 
 ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed(catches)
+
+ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
 
 
 # ---- IN HEADER ----
