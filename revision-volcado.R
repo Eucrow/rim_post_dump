@@ -47,7 +47,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO - copia.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
