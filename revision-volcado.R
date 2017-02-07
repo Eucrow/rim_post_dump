@@ -568,21 +568,6 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 # ---- IN SPECIES ----
 
-  # ---- errors in mixed species of the sample ----
-    # selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-    # #search the errors: species fo the sample fill like mixed species:
-    # mixed_species_sample<-merge(x=selected_fields, y=cat_spe_mixed[,c("ESP_CAT","COD_ESP_CAT")], by.x="COD_ESP_MUE", by.y="COD_ESP_CAT")
-    # #change the name of a column in dataframe. ???OMG!!!:
-    # names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
-    # #order columns dataframe:
-    # mixed_species_sample <- mixed_species_sample[, c(BASE_FIELDS, "ESP_MUE_INCORRECTA")]
-    # #order dataframe:
-    # mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
-    # ERRORS$mixed_species_sample <- mixed_species_sample
-    # ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "ERROR: especie de mezcla que no está agrupada en Especies del Muestreo")
-    # rm(selected_fields, mixed_species_sample)
-
-
   # ---- errors in mixed species of the category ----
     selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
     #species not allowed in category because are mixed especies:
@@ -590,33 +575,19 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     not_allowed_in_category <- unique(not_allowed_in_category)
     colnames(not_allowed_in_category)<- c("COD_ESP_MUE")
     #search the errors:
-    #mixed_species_category<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
     mixed_species_category<-merge(x=selected_fields, y=not_allowed_in_category, by.x="COD_ESP_CAT", by.y = "COD_ESP_MUE")
-    #change the name of a column in dataframe. ???OMG!!!:
-    #names(mixed_species_category)[names(mixed_species_category) == 'ESP_CAT'] <- 'ESP_CAT_INCORRECTA'
-    # ---- MT2
+
+        # ---- MT2
     mixed_species_category_mt2 <- subset(mixed_species_category, TIPO_MUE == "MT2A (Biometrico puerto)")
     mixed_species_category_mt2 <- mixed_species_category_mt2[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT")]
     mixed_species_category_mt2 <- arrange_(mixed_species_category_mt2, BASE_FIELDS)
     ERRORS$mixed_species_category_mt2 <- mixed_species_category_mt2
     ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
     
-    # ---- MT1
-    # TODO: remove this:??
-    # mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
-    # mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
-    # mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
-    # ERRORS$mixed_species_category_mt1 <- mixed_species_category_mt1
-    # ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "WARNING: muestreo MT1 con especie de mezcla que está agrupada en Especies para la Categoría")
-    # rm(selected_fields, mixed_species_category, mixed_species_category_mt1, mixed_species_category_mt2)
-
   # ---- not allowed species
     # ---- in sampled species
       not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP")
       not_allowed_sampling_species <- not_allowed_sampling_species[c(BASE_FIELDS,"COD_ESP_MUE","ESP_MUE")]
-      #change the name of a column in dataframe. ???OMG!!!:
-      # names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
-      # names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'COD_ESP_MUE'] <- 'COD_ESP_MUE_INCORRECTA'
       not_allowed_sampling_species <- arrange_(not_allowed_sampling_species, BASE_FIELDS)
       ERRORS$not_allowed_sampling_species <- not_allowed_sampling_species
       ERRORS$not_allowed_sampling_species <- addTypeOfError(ERRORS$not_allowed_sampling_species, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
