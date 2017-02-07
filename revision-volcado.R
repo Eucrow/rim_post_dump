@@ -450,7 +450,9 @@ check_false_mt1 <- function(){
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_mixed_as_no_mixed <- function(df){
-  non_mixed <- merge(x=df, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT")
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  non_mixed <- merge(x=df, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT") %>%
+                select_(.dots = selected_fields)
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo")
   return(non_mixed)
 }
@@ -460,7 +462,9 @@ check_mixed_as_no_mixed <- function(df){
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(df){
-  non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP")
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_CAT", "ESP_CAT")
+  non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+    select_(.dots = selected_fields)
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
   return(non_mixed)
 }
