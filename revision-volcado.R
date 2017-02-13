@@ -662,6 +662,24 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 
 # ---- IN WEIGHTS ----
+        
+allCategoriesWithSameSampledWeight <- function (){
+  
+  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM")
+
+  by_category <- catches_in_lengths %>%
+                  group_by_(.dots = selected_fields) %>%
+                  tally() %>% # tally() is the same that summarise(num = n())
+                  filter(n > 1)
+}
+        
+prueba <- allCategoriesWithSameSampledWeight()
+
+errores <- catches_in_lengths %>%
+  filter(FECHA == "30-01-16", COD_BARCO == "200785")
+
+errores_de_prueba <- prueba %>%
+  filter(FECHA == "30-01-16", COD_BARCO == "200785")
 
   # ---- errors in species from the categories: all of them has exactly the same sampled weight
   # the last column in the ERRORS$same_sampled_weight dataframe show the number of category species with exactly the same sampled weight in every specie of the category
@@ -741,7 +759,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
