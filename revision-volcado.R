@@ -46,7 +46,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_con_errores.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
@@ -489,6 +489,41 @@ mixedSpeciesInCategory <- function(){
   
 } 
 
+# function to check if there are not allowed species in Sampling Species
+samplingSpeciesNotAllowed <- function(){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  
+  # create a dataframe with species not allowed
+  sampling_species_not_allowed <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+    select(one_of(selected_fields))
+  
+  #create a dataframe with other species not allowed
+  # by sufixex
+  to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESP_MUE)
+  # . = any single character
+  # + = one of more of previous
+  # | = or
+  
+  genus_not_allowed <- catches[to_check_genus,]
+  
+  # remove the mixed species (allowed)
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% unique(mixed_species[["COD_ESP_MUE"]])),]
+  
+  # remove other allowed species
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+    select(one_of(selected_fields))
+  
+  errors <- rbind(sampling_species_not_allowed, genus_not_allowed)
+  
+  # remove duplicates
+  errors <- unique(errors)
+  
+  errors <- addTypeOfError(errors, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
+  
+  return(errors)
+}
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -591,47 +626,10 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 # ---- IN SPECIES ----
 
     ERRORS$mixed_species_category <- mixedSpeciesInCategory()
-    
-    
+      
   # ---- not allowed species
     # ---- in sampled species
-      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP")
-      not_allowed_sampling_species <- not_allowed_sampling_species[c(BASE_FIELDS,"COD_ESP_MUE","ESP_MUE")]
-      not_allowed_sampling_species <- arrange_(not_allowed_sampling_species, BASE_FIELDS)
-      ERRORS$not_allowed_sampling_species <- not_allowed_sampling_species
-      ERRORS$not_allowed_sampling_species <- addTypeOfError(ERRORS$not_allowed_sampling_species, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
-
-        # select all the genus to check
-        to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESP_MUE)
-          # . = any single character
-          # + = one of more of previous
-          # | = or
-        to_check_genus<-catches[to_check_genus, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-
-        # allowed genus
-          # allowed genus from mixed species
-          allowed_genus_mixed_species <- as.data.frame(unique(mixed_species$COD_ESP_MUE))
-          colnames(allowed_genus_mixed_species)<-"COD_ESP"
-
-          # other allowed genus
-          allowed_genus_other <- as.data.frame(ALLOWED_GENUS$COD_ESP)
-          colnames(allowed_genus_other)<-"COD_ESP"
-
-          #allowed genus complete
-          allowed_genus <- rbind(allowed_genus_mixed_species, allowed_genus_other)
-          allowed_genus$ALLOWED <- "ok" #??CHAPUCILLA!!
-
-        #check the genus
-        checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.x = TRUE)
-        not_allowed_genus <- checked_allowed_genus[is.na(checked_allowed_genus$ALLOWED),]
-
-        #send to the ERRORS
-        ERRORS$not_allowed_genus_sampled_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_sampled_species <- addTypeOfError(ERRORS$not_allowed_genus_sampled_species, "WARNING: muestreo con género no permitido en Especies del muestreo")
-
-        #remove unnecesary variables
-        rm(to_check_genus, allowed_genus_mixed_species, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
-
+      ERRORS$not_allowed_genus_sampled_species <- samplingSpeciesNotAllowed()
 
     # ---- in category species
 
