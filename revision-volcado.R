@@ -464,7 +464,8 @@ check_mixed_as_no_mixed <- function(df){
 check_no_mixed_as_mixed <- function(df){
   selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT")
   non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
-    select_(.dots = selected_fields)
+    select_(.dots = selected_fields) %>%
+    unique()
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
   return(non_mixed)
 }
@@ -760,6 +761,7 @@ errores_de_prueba <- prueba %>%
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
