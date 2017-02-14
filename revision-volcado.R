@@ -470,13 +470,31 @@ check_no_mixed_as_mixed <- function(df){
   return(non_mixed)
 }
 
+# function to check grouped species in Species of the Category
+# return a dataframe with the samples with grouped species in Species of the Category
+mixedSpeciesInCategory <- function(){
+  
+  selected_fields<-c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+  
+  not_allowed_in_category <- especies_mezcla %>%
+    select(COD_ESP_MUE) %>%
+    unique()
+  
+  clean_catches_in_lenghts <- catches_in_lengths %>%
+    select(one_of(selected_fields))
+  
+  errors <- merge(x=clean_catches_in_lenghts, y=not_allowed_in_category, by.x = "COD_ESP_CAT", by.y = "COD_ESP_MUE")
+  
+  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+  
+} 
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
 
 #read the mixed species dataset
-#TODO: change the name of cat_spe_mixed
-cat_spe_mixed <- especies_mezcla
+mixed_species <- especies_mezcla
 
 #read the no mixed species dataset
 sampled_spe_no_mixed <- especies_no_mezcla
@@ -572,21 +590,8 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 # ---- IN SPECIES ----
 
-  # ---- errors in mixed species of the category ----
-    selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
-    #species not allowed in category because are mixed especies:
-    not_allowed_in_category <- as.data.frame(cat_spe_mixed[,c("COD_ESP_MUE")])
-    not_allowed_in_category <- unique(not_allowed_in_category)
-    colnames(not_allowed_in_category)<- c("COD_ESP_MUE")
-    #search the errors:
-    mixed_species_category<-merge(x=selected_fields, y=not_allowed_in_category, by.x="COD_ESP_CAT", by.y = "COD_ESP_MUE")
-
-        # ---- MT2
-    mixed_species_category_mt2 <- subset(mixed_species_category, TIPO_MUE == "MT2A (Biometrico puerto)")
-    mixed_species_category_mt2 <- mixed_species_category_mt2[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT")]
-    mixed_species_category_mt2 <- arrange_(mixed_species_category_mt2, BASE_FIELDS)
-    ERRORS$mixed_species_category_mt2 <- mixed_species_category_mt2
-    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+    ERRORS$mixed_species_category <- mixedSpeciesInCategory()
+    
     
   # ---- not allowed species
     # ---- in sampled species
@@ -605,7 +610,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
         # allowed genus
           # allowed genus from mixed species
-          allowed_genus_mixed_species <- as.data.frame(unique(cat_spe_mixed$COD_ESP_MUE))
+          allowed_genus_mixed_species <- as.data.frame(unique(mixed_species$COD_ESP_MUE))
           colnames(allowed_genus_mixed_species)<-"COD_ESP"
 
           # other allowed genus
