@@ -342,8 +342,21 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("WARNING: este Barco está incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
+  text_type_of_error <- paste0("WARNING: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
+  return (errors_ships)
+}
+
+
+# function to check ships not in CFPO
+shipsNotInCFPO <- function(){
+  
+  to_ships <- unique(catches[,c(BASE_FIELDS, "CODSGPM")])
+  
+  errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+  errors_ships <- errors_ships %>%
+    filter(is.na(ESTADO))
+  errors_ships <- addTypeOfError(errors_ships, "WARNING: barco no incluido en el CFPO")
   return (errors_ships)
 }
 
@@ -378,6 +391,8 @@ allCategoriesWithSameSampledWeight <- function (){
     summarise(num_cat_igual_peso=n())%>%
     filter(num_cat_igual_peso > 1)
 }
+
+
 
 
 
@@ -641,19 +656,13 @@ ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
   # ---- search errors in ships
-  ##### TO DO: ADD CHECKING WITH SIRENO FILES
-    to_ships <- unique(catches[,c(BASE_FIELDS, "CODSGPM")])
-    errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
 
-      #ships withouth coincidences in cfpo
-      errors_ships_not_in_cfpo <- subset(errors_ships, is.na(errors_ships$ESTADO))
-      errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
-      errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
-      ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
-      ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, "WARNING: este Barco no está en el CFPO" )
+    ##### TO DO: ADD CHECKING WITH SIRENO FILES
 
-      #ships with state different to "alta definitiva"
-      ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches) #AddTypeOfError included in function
+    ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO()
+        
+    #ships with state different to "alta definitiva" and similar
+    ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches) #AddTypeOfError included in function
 
 
   # ---- estrato_rim, gear and division coherence ----
