@@ -393,12 +393,12 @@ allCategoriesWithSameSampledWeight <- function (){
 }
 
 # function to check samples with weight sampled = 0 with lenghts
-weightSampledZeroWithLengths <- function () {
+weightSampledZeroWithLengthsSampled <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0) %>%
     select(one_of(selected_fields)) %>%
-    addTypeOfError("ERROR: peso muestra 0 con tallas")
+    addTypeOfError("ERROR: peso muestra 0 con tallas muestreadas")
 }
 
 # function to check samples with weight landed = 0 or NA
@@ -412,7 +412,7 @@ weightLandedZero <- function () {
 }
 
 # function to check samples without lengths but with weight sampled
-weightSampledWithoutLengts <- function () {
+weightSampledWithoutLengthsSampled <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS")
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS))) %>%
@@ -707,15 +707,11 @@ ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
 ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
-ERRORS$sampled_weight_zero <- weightSampledZeroWithLengths()
+ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
     
 ERRORS$weight_landed_zero <- weightLandedZero()
 
-ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengts()
-    
-  # ---- errors species of the category WITH length sample but WITHOUT weight sample
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- addTypeOfError(ERRORS[["lenght_sampled_without_weight_sampled"]], "ERROR: especie con tallas muestreadas pero sin peso muestra")
+ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
     
 ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
@@ -736,7 +732,6 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
 
     combined_errors <- formatErrorsList()
 
-    
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
 # ------------------------------------------------------------------------------
@@ -751,9 +746,6 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
-    
-    
-        
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
