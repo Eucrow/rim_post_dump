@@ -392,6 +392,15 @@ allCategoriesWithSameSampledWeight <- function (){
     filter(num_cat_igual_peso > 1)
 }
 
+# function to check samples with weight sampled = 0
+weightSampledZero <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")
+  err <- catches_in_lengths %>%
+    filter(P_MUE_DESEM == 0) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: peso muestra = 0")
+}
+
 
 
 
@@ -679,8 +688,8 @@ ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
     # ---- errors
-    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
-    ERRORS[["sampled_weight_zero"]] <- addTypeOfError(ERRORS[["sampled_weight_zero"]], "ERROR: peso muestra = 0")
+
+    ERRORS$sampled_weight_zero <- weightSampledZero()
     
   # ---- errors p.desem = 0
     ERRORS[["weight_landed_zero"]] <- subset(catches, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
