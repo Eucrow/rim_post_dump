@@ -620,6 +620,8 @@ lengths <- muestreos_up$lengths
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
 
+# ---- REPEATED IN IPDTOSIRENO ----
+
 ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
 
 ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
@@ -655,33 +657,26 @@ ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
 ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
-  # ---- search errors in ships
+##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
-    ##### TO DO: ADD CHECKING WITH SIRENO FILES
-
-    ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO()
+ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO()
         
-    #ships with state different to "alta definitiva" and similar
-    ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches) #AddTypeOfError included in function
+ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
-
-  # ---- estrato_rim, gear and division coherence ----
-  # TO DO
+##### TO DO: estrato_rim, gear and division coherence
 
 
 # ---- IN SPECIES ----
 
-    ERRORS$mixed_species_category <- mixedSpeciesInCategory()
+ERRORS$mixed_species_category <- mixedSpeciesInCategory()
       
-  # ---- not allowed species
-      
-    ERRORS$not_allowed_sampled_species <- sampledSpeciesNotAllowed()
+ERRORS$not_allowed_sampled_species <- sampledSpeciesNotAllowed()
 
-    ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
+ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
 # ---- IN WEIGHTS ----
 
-    ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
+ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
     # ---- errors
     ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
@@ -699,22 +694,16 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- addTypeOfError(ERRORS[["lenght_sampled_without_weight_sampled"]], "ERROR: especie con tallas muestreadas pero sin peso muestra")
     
-  # ---- errors in samples with P_MUE_DESEM is 0 or NA
     ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
-  # ---- errors in species with categories with the same weight landing
     ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
         
-  # ---- errors in samples with sop = 0
     ERRORS$sop_zero <- sopZero(catches_in_lengths) 
      
-  # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
     ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
 
-  # ---- errors in samples with SOP greater than P_VIVO
     ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths)
 
-  # ---- errors in samples with P_DESEM <= P_MUE_DESEM
     ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
 
 
@@ -732,6 +721,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
