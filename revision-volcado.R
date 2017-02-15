@@ -392,13 +392,33 @@ allCategoriesWithSameSampledWeight <- function (){
     filter(num_cat_igual_peso > 1)
 }
 
-# function to check samples with weight sampled = 0
-weightSampledZero <- function () {
+# function to check samples with weight sampled = 0 with lenghts
+weightSampledZeroWithLengths <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0) %>%
     select(one_of(selected_fields)) %>%
-    addTypeOfError("ERROR: peso muestra = 0")
+    addTypeOfError("ERROR: peso muestra 0 con tallas")
+}
+
+# function to check samples with weight landed = 0 or NA
+weightLandedZero <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO")
+  err <- catches %>%
+    filter(P_DESEM == 0 | is.na(P_DESEM)) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: peso desembarcado = 0")
+  return(err)
+}
+
+# function to check samples without lengths but with weight sampled
+weightSampledWithoutLengts <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS")
+  err <- catches_in_lengths %>%
+    filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS))) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: especie sin tallas muestreadas pero con peso muestra")
+  return(err)
 }
 
 
@@ -687,33 +707,27 @@ ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
 ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
-    # ---- errors
+ERRORS$sampled_weight_zero <- weightSampledZeroWithLengths()
+    
+ERRORS$weight_landed_zero <- weightLandedZero()
 
-    ERRORS$sampled_weight_zero <- weightSampledZero()
-    
-  # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- subset(catches, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
-    ERRORS[["weight_landed_zero"]] <- addTypeOfError(ERRORS[["weight_landed_zero"]], "ERROR: peso desembarcado = 0")
-    
-  # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS"))
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- addTypeOfError(ERRORS[["weight_sampled_0_without_length_sampled"]], "ERROR: especie sin tallas muestreadas pero con peso muestra")
+ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengts()
     
   # ---- errors species of the category WITH length sample but WITHOUT weight sample
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
     ERRORS[["lenght_sampled_without_weight_sampled"]] <- addTypeOfError(ERRORS[["lenght_sampled_without_weight_sampled"]], "ERROR: especie con tallas muestreadas pero sin peso muestra")
     
-    ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
-    ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
+ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
         
-    ERRORS$sop_zero <- sopZero(catches_in_lengths) 
+ERRORS$sop_zero <- sopZero(catches_in_lengths) 
      
-    ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
 
-    ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths)
+ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths)
 
-    ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
+ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
 
 
 # ------------------------------------------------------------------------------    
