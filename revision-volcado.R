@@ -367,6 +367,20 @@ check_mt2b <- function(){
 }
 
 
+# function to check the samples with categories which all of this species has the same sampled weight
+allCategoriesWithSameSampledWeight <- function (){
+  
+  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
+  
+  by_category <- catches_in_lengths %>%
+    group_by_(.dots = selected_fields) %>%
+    #tally() %>% # tally() is the same that summarise(num = n())
+    summarise(num_cat_igual_peso=n())%>%
+    filter(num_cat_igual_peso > 1)
+}
+
+
+
 # ------------------------------------------------------------------------------
 # #### REPEATED FUNCTIONS FROM SAVED PREVIOUS CHECK ############################
 # ------------------------------------------------------------------------------
@@ -657,54 +671,8 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
 # ---- IN WEIGHTS ----
-        
-allCategoriesWithSameSampledWeight <- function (){
-  
-  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM")
 
-  by_category <- catches_in_lengths %>%
-                  group_by_(.dots = selected_fields) %>%
-                  tally() %>% # tally() is the same that summarise(num = n())
-                  filter(n > 1)
-}
-        
-prueba <- allCategoriesWithSameSampledWeight()
-
-errores <- catches_in_lengths %>%
-  filter(FECHA == "30-01-16", COD_BARCO == "200785")
-
-errores_de_prueba <- prueba %>%
-  filter(FECHA == "30-01-16", COD_BARCO == "200785")
-
-  # ---- errors in species from the categories: all of them has exactly the same sampled weight
-  # the last column in the ERRORS$same_sampled_weight dataframe show the number of category species with exactly the same sampled weight in every specie of the category
-    selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
-    same_sampled_weight<-catches_in_lengths[,selected_fields]
-        by <- list(same_sampled_weight$COD_ID,
-               same_sampled_weight$COD_PUERTO,
-               same_sampled_weight$PUERTO,
-               same_sampled_weight$LOCODE,
-               same_sampled_weight$FECHA,
-               same_sampled_weight$COD_BARCO,
-               same_sampled_weight$BARCO,
-               same_sampled_weight$ESTRATO_RIM,
-               same_sampled_weight$COD_TIPO_MUE,
-               same_sampled_weight$TIPO_MUE,
-               same_sampled_weight$COD_ESP_MUE,
-               same_sampled_weight$ESP_MUE,
-               same_sampled_weight$COD_CATEGORIA,
-               same_sampled_weight$CATEGORIA,
-               same_sampled_weight$P_DESEM,
-               same_sampled_weight$SEXO,
-               same_sampled_weight$P_MUE_DESEM)
-    same_sampled_weight<-aggregate(x = same_sampled_weight$P_MUE_DESEM, by = by, FUN= length)
-    colnames(same_sampled_weight) <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","SEXO","P_MUE_DESEM","NUM_OCU_MISMO_PESO_MUESTRA")
-    same_sampled_weight<-subset ( same_sampled_weight, NUM_OCU_MISMO_PESO_MUESTRA > 1)
-    same_sampled_weight<-arrange_(same_sampled_weight, BASE_FIELDS)
-    ERRORS$same_sampled_weight <- same_sampled_weight
-    ERRORS$same_sampled_weight <- addTypeOfError(ERRORS$same_sampled_weight, "WARNING: todas las categorías de la especie tienen exactamente el mismo peso muestreado")
-    #TO DO: check this dataframe... why return the COD_CATEGORIA and CATEGORIA fields??
-    rm (selected_fields, by, same_sampled_weight)
+    ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
     # ---- errors
     ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
