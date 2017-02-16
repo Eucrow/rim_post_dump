@@ -184,9 +184,9 @@ numberOfRejections <- function(){
 
 
 # Function to search samples with SOP > P_MUE_VIVO -----------------------------
-sopGreaterPesMueVivo <- function(df){
+sopGreaterPesMueVivo <- function(){
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
               select(one_of(selected_fields))%>%
               mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO )%>%
               mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO,2))%>%
@@ -197,9 +197,9 @@ sopGreaterPesMueVivo <- function(df){
 
 
 # Function to search samples with SOP = 0 --------------------------------------
-sopZero <- function(df){
+sopZero <- function(){
   fields_to_select <- c(BASE_FIELDS, "SOP")
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
     select(one_of(fields_to_select)) %>%
     filter(SOP == 0)
   errors <- addTypeOfError(errors, "ERROR: SOP igual a 0")
@@ -207,11 +207,10 @@ sopZero <- function(df){
 }
 
 #function to search samples with P_MUE_DESEM = 0 or NA -------------------------
-pesMueDesemZero <- function(df){
-  #errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+pesMueDesemZero <- function(){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
     select(one_of(fields_to_select))
   
@@ -222,12 +221,12 @@ pesMueDesemZero <- function(df){
 
 
 #function to search samples with p_desem <= p_mue_desem ------------------------
-pesMueDesemGreaterPesDesem <- function (df){
+pesMueDesemGreaterPesDesem <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_DESEM",
                         "P_MUE_DESEM", "DIF_P_MUE_DESEM_P_DESEM")
   
-  errors <- df %>%
+  errors <- lengths %>%
     mutate(DIF_P_MUE_DESEM_P_DESEM = P_MUE_DESEM - P_DESEM) %>%
     filter(DIF_P_MUE_DESEM_P_DESEM > 0) %>%
     select(one_of(fields_to_select))
@@ -239,12 +238,12 @@ pesMueDesemGreaterPesDesem <- function (df){
 
 
 # function to check samples with SOP > P_VIVO ----------------------------------
-SopGreaterPesVivo <- function (df){
+SopGreaterPesVivo <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_VIVO",
                         "DIF_SOP_P_VIVO")
   
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
     mutate(DIF_SOP_P_VIVO = SOP - P_VIVO) %>%
     mutate(DIF_SOP_P_VIVO = round(DIF_SOP_P_VIVO,2)) %>%
     filter(DIF_SOP_P_VIVO > 0.01) %>%
@@ -257,10 +256,10 @@ SopGreaterPesVivo <- function (df){
 
 
 #function to search categories with equal species weight landings --------------
-speciesWithCategoriesWithSameWeightLanding <- function(df){
-  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
+speciesWithCategoriesWithSameWeightLanding <- function(){
+  catches <- catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
-  errors <- df %>% 
+  errors <- catches %>% 
     distinct() %>%
     count_(fields_to_count) %>%
     filter(n>1)
@@ -728,21 +727,18 @@ ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
 ERRORS$weight_landed_zero <- weightLandedZero()
 
 ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
-
-
-
     
-ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+ERRORS$pes_mue_desem_zero <- pesMueDesemZero()
 
-ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
+ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding()
         
-ERRORS$sop_zero <- sopZero(catches_in_lengths) 
+ERRORS$sop_zero <- sopZero() 
      
-ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
 
-ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths)
+ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo()
 
-ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths)
+ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
 
 # ------------------------------------------------------------------------------    
