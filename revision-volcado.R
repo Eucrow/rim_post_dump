@@ -17,9 +17,9 @@
 # #### PACKAGES ################################################################
 # ------------------------------------------------------------------------------
 
+library(plyr)
 library(dplyr) #arrange_()
 library(tools) #file_path_sans_ext()
-library(plyr)
 library(devtools)
 
 # ---- install googlesheets from github
@@ -45,13 +45,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_con_errores.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/octubre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_102016.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_102016.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_102016.TXT"
-
-MONTH <- 10 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+MONTH <- 12 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
 YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
@@ -139,11 +138,9 @@ formatErrorsList <- function(errors_list = ERRORS){
       select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) #remove TIPO_ERROR, and add it to the end
-    
-    # Order the errors
-    x <- x %>%
-      arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+             select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
+             mutate(FECHA = as.Date(FECHA, "%d-%m-%y")) %>%
+             arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -171,38 +168,49 @@ coherenceEstratoRimGear <- function(df){
 
 
 # Function to search errors in number of ships (empty field, =0 or >2) ---------
-numberOfShips <- function (df){
-  errors <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
+numberOfShips <- function (){
+  errors <- catches[catches["N_BARCOS"] == 0 | catches["N_BARCOS"] > 2 | is.null(catches["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
   errors <- addTypeOfError(errors, "WARNING: número de barcos igual a 0 o mayor de 2")
   return (errors)
 }
 
 
 # Function to search errors in number of rejects (only empty fields) -----------
-numberOfRejections <- function(df){
-  errors <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
+numberOfRejections <- function(){
+  errors <- catches[is.null(catches["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
   errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
   return(errors)
 }
 
 
-# Function to search samples with SOP > P_MUE_VIVO, when P_MUE_VIVO != 0 -------
-sopGreaterPesMueVivo <- function(df){
-  errors <- df[, c(BASE_FIELDS,"P_MUE_VIVO", "SOP")]
-  errors <- errors[errors["SOP"]>errors["P_MUE_VIVO"] & errors["P_MUE_VIVO"]!=0 & !is.na(errors["P_MUE_VIVO"]),]
-  errors["P_MUE_VIVO-SOP"] <- round(errors["P_MUE_VIVO"] - errors["SOP"],1)
-  errors["POR_DIF_P_MUE_VIVO-SOP"] <- round((errors["P_MUE_VIVO-SOP"] * 100) / errors["P_MUE_VIVO"])
-  errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo, cuando peso muestreado vivo es distinto que 0")
+# Function to search samples with SOP > P_MUE_VIVO -----------------------------
+sopGreaterPesMueVivo <- function(){
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_VIVO", "SOP")
+  errors <- catches_in_lengths %>%
+              select(one_of(selected_fields))%>%
+              mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO )%>%
+              mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO,2))%>%
+              filter(DIF_SOP_P_MUE_VIVO,2 > 0.01 )
+  errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo")
   return (errors)
 }
 
 
+# Function to search samples with SOP = 0 --------------------------------------
+sopZero <- function(){
+  fields_to_select <- c(BASE_FIELDS, "SOP")
+  errors <- catches_in_lengths %>%
+    select(one_of(fields_to_select)) %>%
+    filter(SOP == 0)
+  errors <- addTypeOfError(errors, "ERROR: SOP igual a 0")
+  return (errors)
+}
+
 #function to search samples with P_MUE_DESEM = 0 or NA -------------------------
-pesMueDesemZero <- function(df){
-  #errors <- df[df["P_MUE_DESEM"] == 0 | is.na(df["P_MUE_DESEM"]),]
+pesMueDesemZero <- function(){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
     select(one_of(fields_to_select))
   
@@ -213,12 +221,12 @@ pesMueDesemZero <- function(df){
 
 
 #function to search samples with p_desem <= p_mue_desem ------------------------
-pesMueDesemGreaterPesDesem <- function (df){
+pesMueDesemGreaterPesDesem <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_DESEM",
                         "P_MUE_DESEM", "DIF_P_MUE_DESEM_P_DESEM")
   
-  errors <- df %>%
+  errors <- lengths %>%
     mutate(DIF_P_MUE_DESEM_P_DESEM = P_MUE_DESEM - P_DESEM) %>%
     filter(DIF_P_MUE_DESEM_P_DESEM > 0) %>%
     select(one_of(fields_to_select))
@@ -230,14 +238,15 @@ pesMueDesemGreaterPesDesem <- function (df){
 
 
 # function to check samples with SOP > P_VIVO ----------------------------------
-SopGreaterPesVivo <- function (df){
+SopGreaterPesVivo <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_VIVO",
                         "DIF_SOP_P_VIVO")
   
-  errors <- df %>%
+  errors <- catches_in_lengths %>%
     mutate(DIF_SOP_P_VIVO = SOP - P_VIVO) %>%
-    filter(DIF_SOP_P_VIVO > 0) %>%
+    mutate(DIF_SOP_P_VIVO = round(DIF_SOP_P_VIVO,2)) %>%
+    filter(DIF_SOP_P_VIVO > 0.01) %>%
     select(one_of(fields_to_select))
   
   errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso vivo desembarcado")
@@ -247,10 +256,10 @@ SopGreaterPesVivo <- function (df){
 
 
 #function to search categories with equal species weight landings --------------
-speciesWithCategoriesWithSameWeightLanding <- function(df){
-  df <- df[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
+speciesWithCategoriesWithSameWeightLanding <- function(){
+  catches <- catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
-  errors <- df %>% 
+  errors <- catches %>% 
     distinct() %>%
     count_(fields_to_count) %>%
     filter(n>1)
@@ -259,9 +268,43 @@ speciesWithCategoriesWithSameWeightLanding <- function(df){
   return(errors)
 }
 
+# function to search samples with not allowed species of the category. This function
+# use the not allowed species and the allowed genus dataframes of SAPMUEBASE.
+# Search, too, the genus finished in -formes, -dae, - spp and - sp.
+categorySpeciesNotAllowed <- function(){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+  
+  # create a dataframe with species not allowed
+  not_allowed <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP") %>%
+    select(one_of(selected_fields))
+  
+  #create a dataframe with other species not allowed
+  # by sufixes
+  to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESP_CAT)
+  # . = any single character
+  # + = one of more of previous
+  # | = or
+  
+  genus_not_allowed <- catches_in_lengths[to_check_genus,]
+  
+  # remove other allowed species from the dataframe with not allowed species
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_CAT"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+    select(one_of(selected_fields))
+  
+  errors <- rbind(not_allowed, genus_not_allowed)
+  
+  # remove duplicates
+  errors <- unique(errors)  %>%
+    arrange_(BASE_FIELDS)
+  
+  errors <- addTypeOfError(errors, "ERROR: muestreos con especies no permitidos en Especies de la Categoría")
+  
+  return(errors)
+}
 
-# TODO: remove (this is checked in IPDtoSIRENO.R)
-# function to check foreings ships in MT1 samples
+
+# function to check foreings ships in MT1 samples ------------------------------
 # df: dataframe
 check_foreing_ships_MT1 <- function(df){
   ships <- df %>%
@@ -274,7 +317,7 @@ check_foreing_ships_MT1 <- function(df){
   return(ships)
 }
 
-# function to check foreings ships in MT2 samples
+# function to check foreings ships in MT2 samples ------------------------------
 # df: dataframe
 check_foreing_ships_MT2 <- function(df){
   ships <- df %>%
@@ -298,63 +341,289 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("WARNING: este Barco está incluido en el ", cfpo, " pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
+  text_type_of_error <- paste0("WARNING: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
 }
 
 
-# function to check samples with the difference between P_MUE_VIVO and
-# SOP greater than +-10% and greater than 1kg of SOP ---------------------------
-differencePesMueVivoSOP <- function (df){
+# function to check ships not in CFPO
+shipsNotInCFPO <- function(df){
   
-  df[["SOP"]] <- as.numeric(df[["SOP"]])
+  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
   
-  sop_distinto_p_mue <- df %>%
-    select(COD_ID, FECHA, PUERTO, COD_BARCO, BARCO, COD_ESP_MUE, ESP_MUE,
-           COD_CATEGORIA, CATEGORIA, COD_ESP_CAT, ESP_CAT, P_MUE_VIVO, SOP)%>%
-    mutate(DIFERENCIA = P_MUE_VIVO - SOP) %>%
-    mutate(PORCENTAJE = (DIFERENCIA*100)/P_MUE_VIVO) %>%
-    filter(P_MUE_VIVO >=1 & (PORCENTAJE >= 10 | PORCENTAJE <= -10) )
+  errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+  errors_ships <- errors_ships %>%
+    filter(is.na(ESTADO))
+  errors_ships <- addTypeOfError(errors_ships, "WARNING: barco no incluido en el CFPO")
+  return (errors_ships)
+}
+
+# function to check if all the mt2b has lengths
+checkMt2b <- function(){
   
-  # I don't know why can't include round function in mutate. If I do it, doesn't work in the right way
-  sop_distinto_p_mue$PORCENTAJE <- round(sop_distinto_p_mue$PORCENTAJE, 0) 
+  # select all the mt2b samples
+  mt2b <- catches %>%
+            filter(COD_TIPO_MUE == 4) %>%
+            select_(.dots = BASE_FIELDS)
   
-  sop_distinto_p_mue <- addTypeOfError(sop_distinto_p_mue, "WARNING: Diferencia entre P_MUE_VIVO y SOP mayor del +-10% para P_MUE_VIVO mayor o igual a 1kg")
+  # select all the samples with lengths
+  mt2b_with_lenghts <- lengths %>%
+    filter(COD_TIPO_MUE == 4)  %>%
+    group_by_(.dots = BASE_FIELDS) %>%
+    summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   
-  return(sop_distinto_p_mue)
+  false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
+  false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2b sin tallas")
+  
+  return(false_mt2b)
+}
+
+#function to check if all mt2b has CERCO_GC or BACA_GC stratums
+checkMt2bRimStratum <- function () {
+  
+  # select all the mt2b samples
+  mt2b <- catches %>%
+    filter(COD_TIPO_MUE == 4) %>%
+    select_(.dots = BASE_FIELDS)
+  
+  err_stratum <- mt2b[!(mt2b[["ESTRATO_RIM"]] %in% c("CERCO_GC")),]
+  
+  err_stratum <- addTypeOfError(err_stratum, "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC")
+
+}
+
+# function to check the samples with categories which all of this species has the same sampled weight
+allCategoriesWithSameSampledWeight <- function (){
+  
+  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
+  
+  by_category <- catches_in_lengths %>%
+    group_by_(.dots = selected_fields) %>%
+    #tally() %>% # tally() is the same that summarise(num = n())
+    summarise(num_cat_igual_peso=n())%>%
+    filter(num_cat_igual_peso > 1)
+}
+
+# function to check samples with weight sampled = 0 with lenghts
+weightSampledZeroWithLengthsSampled <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")
+  err <- catches_in_lengths %>%
+    filter(P_MUE_DESEM == 0) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: peso muestra 0 con tallas muestreadas")
+}
+
+# function to check samples with weight landed = 0 or NA
+weightLandedZero <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO")
+  err <- catches %>%
+    filter(P_DESEM == 0 | is.na(P_DESEM)) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: peso desembarcado = 0")
+  return(err)
+}
+
+# function to check samples without lengths but with weight sampled
+weightSampledWithoutLengthsSampled <- function () {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS")
+  err <- catches_in_lengths %>%
+    filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS))) %>%
+    select(one_of(selected_fields)) %>%
+    addTypeOfError("ERROR: especie sin tallas muestreadas pero con peso muestra")
+  return(err)
 }
 
 
-# function to check samples with the difference between P_MUE_VIVO and
-# SOP greater than +-10% and greater than 1kg of SOP ---------------------------
-differencePesMueVivoSOPLessThan1kg <- function (df){
+
+
+
+# ------------------------------------------------------------------------------
+# #### REPEATED FUNCTIONS FROM SAVED PREVIOUS CHECK ############################
+# ------------------------------------------------------------------------------
+
+# ---- function to ckeck variables ---------------------------------------------
+#' Check variables
+#
+#' Check if the value of variables are consistents to the value in its SIRENO master.
+#' It's only available for variables with a data source (master): ESTRATO_RIM, COD_PUERTO,
+#' COD_ORIGEN, COD_ARTE, COD_PROCEDENCIA and TIPO_MUESTREO
+#' @param variable: one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
+#' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
+#' @return Return a dataframe with samples containing erroneus variables
+check_variable_with_master <- function (df, variable){
+
+  if(variable != "ESTRATO_RIM" &&
+     variable != "COD_PUERTO" &&
+     variable != "COD_ORIGEN" &&
+     variable != "COD_ARTE" &&
+     variable != "PROCEDENCIA" &&
+     variable != "COD_TIPO_MUE"){
+    stop(paste("This function is not available for ", variable))
+  }
   
-  df[["SOP"]] <- as.numeric(df[["SOP"]])
+  # If the variable begin with "COD_", the name of the data source
+  # is the name of the variable without "COD_"
+  variable_formatted <- variable
+  if (grepl("^COD_", variable)){
+    variable_formatted <- strsplit(variable, "COD_")
+    variable_formatted <- variable_formatted[[1]][2]
+  }
+  name_data_set <- tolower(variable_formatted)
+  #search the errors in variable
+  errors <- anti_join(df, get(name_data_set), by = variable)
+
+  #prepare to return
+  fields_to_filter <- c("COD_ID", "COD_PUERTO", "PUERTO", "FECHA", "COD_BARCO", variable)
+
+  errors <- errors %>%
+              select(one_of(fields_to_filter))%>%
+              unique()
   
-  sop_distinto_p_mue <- df %>%
-    select(COD_ID, FECHA, PUERTO, COD_BARCO, BARCO, COD_ESP_MUE, ESP_MUE,
-           COD_CATEGORIA, CATEGORIA, COD_ESP_CAT, ESP_CAT, P_MUE_VIVO, SOP)%>%
-    mutate(DIFERENCIA = P_MUE_VIVO - SOP) %>%
-    mutate(PORCENTAJE = (DIFERENCIA*100)/P_MUE_VIVO) %>%
-    filter(P_MUE_VIVO <1 )
   
-  # I don't know why can't include round function in mutate. If I do it, doesn't work in the right way
-  sop_distinto_p_mue$PORCENTAJE <- round(sop_distinto_p_mue$PORCENTAJE, 0) 
+  text_type_of_error <- paste0("ERROR: ", name_data_set, " no concuerda con los maestros de SIRENO")
+  errors <- addTypeOfError(errors, text_type_of_error)
   
-  sop_distinto_p_mue <- addTypeOfError(sop_distinto_p_mue, "WARNING: Diferencia entre P_MUE_VIVO y SOP para P_MUE_VIVO menor de 1kg")
-  
-  return(sop_distinto_p_mue)
+  #return
+  return(errors)
 }
 
+# function to search false mt2 samples: samples with COD_TIPO_MUE as MT2A and
+# without any lenght
+# df: dataframe
+# return: dataframe with erroneus samples
+check_false_mt2 <- function(){
+
+  #Select all the samples with COD_TIPO_MUE = MT2
+  mt2 <- catches %>%
+          filter(COD_TIPO_MUE == 2)  %>%
+          select_(.dots = BASE_FIELDS) %>%
+          unique()
+  
+  # select all the samples with lengths
+  mt2_with_lenghts <- lengths %>%
+          filter(COD_TIPO_MUE == 2)  %>%
+          group_by_(.dots = BASE_FIELDS) %>%
+          summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
+  
+  # check if all the samples keyed as MT2 has lenghts
+  false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
+  false_mt2 <- addTypeOfError(false_mt2, "ERROR: MT2 sin tallas")
+
+  return(false_mt2)  
+
+}
+
+# function to search false mt1 samples: samples with COD_TIPO_MUE as MT1A and
+# lenghts
+# df: dataframe
+# return: dataframe with erroneus samples
+check_false_mt1 <- function(){
+  
+  #Select all the samples with COD_TIPO_MUE = MT1
+  mt1 <- catches %>%
+    filter(COD_TIPO_MUE == 1)  %>%
+    select_(.dots = BASE_FIELDS) %>%
+    unique()
+  
+  # select all the samples with lengths
+  mt1_with_lenghts <- lengths %>%
+    filter(COD_TIPO_MUE == 1)  %>%
+    group_by_(.dots = BASE_FIELDS) %>%
+    summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
+  
+  # check if all the samples keyed as MT1 hasn't lenghts
+  false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = BASE_FIELDS) %>% unique()
+  false_mt1 <- addTypeOfError(false_mt1, "ERROR: MT1 con tallas")
+  
+  return(false_mt1)  
+}
+
+# function to check mixed species keyed as non mixed species: in COD_ESP_MUE
+# there are codes from non mixed species
+# df: dataframe
+# return a dataframe with the samples with species keyed as non mixed species
+check_mixed_as_no_mixed <- function(){
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  non_mixed <- merge(x=catches, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT") %>%
+                select_(.dots = selected_fields)
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo")
+  return(non_mixed)
+}
+
+# function to check no mixed species keyed as mixed species: in COD_ESP_MUE
+# there are codes from mixed species
+# df: dataframe
+# return a dataframe with the samples with species keyed as non mixed species
+check_no_mixed_as_mixed <- function(){
+  selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT")
+  non_mixed <- merge(x=lengths, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+    select_(.dots = selected_fields) %>%
+    unique()
+  non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
+  return(non_mixed)
+}
+
+# function to check grouped species in Species of the Category
+# return a dataframe with the samples with grouped species in Species of the Category
+mixedSpeciesInCategory <- function(){
+  
+  selected_fields<-c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+  
+  not_allowed_in_category <- especies_mezcla %>%
+    select(COD_ESP_MUE) %>%
+    unique()
+  
+  clean_catches_in_lenghts <- catches_in_lengths %>%
+    select(one_of(selected_fields))
+  
+  errors <- merge(x=clean_catches_in_lenghts, y=not_allowed_in_category, by.x = "COD_ESP_CAT", by.y = "COD_ESP_MUE")
+  
+  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+  
+} 
+
+# function to check if there are not allowed species in Sampling Species
+sampledSpeciesNotAllowed <- function(){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  
+  # create a dataframe with species not allowed
+  sampling_species_not_allowed <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+    select(one_of(selected_fields))
+  
+  #create a dataframe with other species not allowed
+  # by sufixex
+  to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESP_MUE)
+  # . = any single character
+  # + = one of more of previous
+  # | = or
+  
+  genus_not_allowed <- catches[to_check_genus,]
+  
+  # remove the mixed species (allowed)
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% unique(mixed_species[["COD_ESP_MUE"]])),]
+  
+  # remove other allowed species
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+    select(one_of(selected_fields))
+  
+  errors <- rbind(sampling_species_not_allowed, genus_not_allowed)
+  
+  # remove duplicates
+  errors <- unique(errors)
+  
+  errors <- addTypeOfError(errors, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
+  
+  return(errors)
+}
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
 
 #read the mixed species dataset
-#TODO: change the name of cat_spe_mixed
-cat_spe_mixed <- especies_mezcla
+mixed_species <- especies_mezcla
 
 #read the no mixed species dataset
 sampled_spe_no_mixed <- especies_no_mezcla
@@ -380,7 +649,7 @@ CFPO <- cfpo2015
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
   
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, by_month = MONTH, path = PATH_FILES)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES) #by_month = MONTH, 
 
 
 #isolate dataframes
@@ -393,249 +662,84 @@ lengths <- muestreos_up$lengths
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
 
+# ---- REPEATED IN IPDTOSIRENO ----
+
+ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+
+ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+
+ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
+
+ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+
+ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+
+ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+
+ERRORS$false_MT1 <- check_false_mt1()
+
+ERRORS$false_MT2 <- check_false_mt2()
+
+ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed()
+
+ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed()
+
+
 # ---- IN HEADER ----
+
+ERRORS$false_mt2b <- checkMt2b()
+
+ERRORS$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
 
 ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
-ERRORS$number_of_ships <- numberOfShips(catches)
+ERRORS$number_of_ships <- numberOfShips()
 
-ERRORS$number_of_rejections <- numberOfRejections(catches)
+ERRORS$number_of_rejections <- numberOfRejections()
 
 ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
 ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
-  # ---- search errors in ships
-  ##### TO DO: ADD CHECKING WITH SIRENO FILES
-    to_ships <- unique(catches[,c(BASE_FIELDS, "CODSGPM")])
-    errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
-      #ships withouth coincidences in cfpo
-      errors_ships_not_in_cfpo <- subset(errors_ships, is.na(errors_ships$ESTADO))
-      errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo[, c(BASE_FIELDS, "CODSGPM", "ESTADO")]
-      errors_ships_not_in_cfpo <- arrange_(errors_ships_not_in_cfpo, BASE_FIELDS)
-      ERRORS$errors_ships_not_in_cfpo <- errors_ships_not_in_cfpo
-      ERRORS$errors_ships_not_in_cfpo <- addTypeOfError(ERRORS$errors_ships_not_in_cfpo, "WARNING: este Barco no está en el CFPO" )
+ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
+        
+ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
-      #ships with state different to "alta definitiva"
-      ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches) #AddTypeOfError included in function
-
-
-  # ---- estrato_rim, gear and division coherence ----
-  # TO DO
+##### TO DO: estrato_rim, gear and division coherence
 
 
 # ---- IN SPECIES ----
 
-  # ---- errors in mixed species of the sample ----
-    selected_fields<-catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-    #search the errors: species fo the sample fill like mixed species:
-    mixed_species_sample<-merge(x=selected_fields, y=cat_spe_mixed[,c("ESP_CAT","COD_ESP_CAT")], by.x="COD_ESP_MUE", by.y="COD_ESP_CAT")
-    #change the name of a column in dataframe. ???OMG!!!:
-    names(mixed_species_sample)[names(mixed_species_sample) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
-    #order columns dataframe:
-    mixed_species_sample <- mixed_species_sample[, c(BASE_FIELDS, "ESP_MUE_INCORRECTA")]
-    #order dataframe:
-    mixed_species_sample<-arrange_(mixed_species_sample, BASE_FIELDS)
-    ERRORS$mixed_species_sample <- mixed_species_sample
-    ERRORS$mixed_species_sample <- addTypeOfError(ERRORS$mixed_species_sample, "ERROR: especie de mezcla que no está agrupada en Especies del Muestreo")
-    rm(selected_fields, mixed_species_sample)
+ERRORS$mixed_species_category <- mixedSpeciesInCategory()
+      
+ERRORS$not_allowed_sampled_species <- sampledSpeciesNotAllowed()
 
-
-  # ---- errors in mixed species of the category ----
-    selected_fields<-catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
-    #species not allowed in category because are mixed especies:
-    not_allowed_in_category <- as.data.frame(cat_spe_mixed[,c("COD_ESP_MUE")])
-    not_allowed_in_category <- unique(not_allowed_in_category)
-    colnames(not_allowed_in_category)<- c("COD_ESP_MUE")
-    #search the errors:
-    #mixed_species_category<-merge(x=selected_fields, y=cat_spe_mixed["ESP_MUESTREO"], by.x="ESPECIE", by.y = "ESP_MUESTREO")
-    mixed_species_category<-merge(x=selected_fields, y=not_allowed_in_category, by.x="COD_ESP_CAT", by.y = "COD_ESP_MUE")
-    #change the name of a column in dataframe. ???OMG!!!:
-    names(mixed_species_category)[names(mixed_species_category) == 'ESP_CAT'] <- 'ESP_CAT_INCORRECTA'
-    # ---- MT2
-    mixed_species_category_mt2 <- subset(mixed_species_category, TIPO_MUE == "MT2A (Biometrico puerto)")
-    mixed_species_category_mt2 <- mixed_species_category_mt2[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
-    mixed_species_category_mt2 <- arrange_(mixed_species_category_mt2, BASE_FIELDS)
-    ERRORS$mixed_species_category_mt2 <- mixed_species_category_mt2
-    ERRORS$mixed_species_category_mt2 <- addTypeOfError(ERRORS$mixed_species_category_mt2, "WARNING: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
-    
-    # ---- MT1
-    mixed_species_category_mt1 <- subset(mixed_species_category, TIPO_MUE == "MT1A (Encuestas IEO)")
-    mixed_species_category_mt1 <- mixed_species_category_mt1[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "CATEGORIA", "ESP_CAT_INCORRECTA")]
-    mixed_species_category_mt1 <- arrange_(mixed_species_category_mt1, BASE_FIELDS)
-    ERRORS$mixed_species_category_mt1 <- mixed_species_category_mt1
-    ERRORS$mixed_species_category_mt1 <- addTypeOfError(ERRORS$mixed_species_category_mt1, "WARNING: muestreo MT1 con especie de mezcla que está agrupada en Especies para la Categoría")
-    rm(selected_fields, mixed_species_category, mixed_species_category_mt1, mixed_species_category_mt2)
-
-  # ---- not allowed species
-    # ---- in sampled species
-      not_allowed_sampling_species <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.y = TRUE)
-      not_allowed_sampling_species <- not_allowed_sampling_species[c(BASE_FIELDS,"COD_ESP_MUE","ESP_MUE")]
-      #change the name of a column in dataframe. ???OMG!!!:
-      names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'ESP_MUE'] <- 'ESP_MUE_INCORRECTA'
-      names(not_allowed_sampling_species)[names(not_allowed_sampling_species) == 'COD_ESP_MUE'] <- 'COD_ESP_MUE_INCORRECTA'
-      not_allowed_sampling_species <- arrange_(not_allowed_sampling_species, BASE_FIELDS)
-      ERRORS$not_allowed_sampling_species <- not_allowed_sampling_species
-      ERRORS$not_allowed_sampling_species <- addTypeOfError(ERRORS$not_allowed_sampling_species, "WARNING: Muestreo con especie no permitida en Especies del Muestreo")
-
-        # select all the genus to check
-        to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches$ESP_MUE)
-          # . = any single character
-          # + = one of more of previous
-          # | = or
-        to_check_genus<-catches[to_check_genus, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-
-        # allowed genus
-          # allowed genus from mixed species
-          allowed_genus_mixed_species <- as.data.frame(unique(cat_spe_mixed$COD_ESP_MUE))
-          colnames(allowed_genus_mixed_species)<-"COD_ESP"
-
-          # other allowed genus
-          allowed_genus_other <- as.data.frame(ALLOWED_GENUS$COD_ESP)
-          colnames(allowed_genus_other)<-"COD_ESP"
-
-          #allowed genus complete
-          allowed_genus <- rbind(allowed_genus_mixed_species, allowed_genus_other)
-          allowed_genus$ALLOWED <- "ok" #??CHAPUCILLA!!
-
-        #check the genus
-        checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_MUE", by.y = "COD_ESP", all.x = TRUE)
-        not_allowed_genus <- checked_allowed_genus[is.na(checked_allowed_genus$ALLOWED),]
-
-        #send to the ERRORS
-        ERRORS$not_allowed_genus_sampled_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_sampled_species <- addTypeOfError(ERRORS$not_allowed_genus_sampled_species, "WARNING: muestreo con género no permitido en Especies del muestreo")
-
-        #remove unnecesary variables
-        rm(to_check_genus, allowed_genus_mixed_species, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
-
-
-    # ---- in category species
-      not_allowed_category_species <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP")
-      not_allowed_category_species <- not_allowed_category_species[c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE","COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", "ESP_CAT")]
-      #change the name of a column in dataframe. ???OMG!!!:
-      names(not_allowed_category_species)[names(not_allowed_category_species) == 'ESP_CAT'] <- 'ESP_CAT_INCORRECTA'
-      names(not_allowed_category_species)[names(not_allowed_category_species) == 'COD_ESP_CAT'] <- 'COD_ESP_CAT_INCORRECTA'
-      not_allowed_category_species <- arrange_(not_allowed_category_species, BASE_FIELDS)
-      ERRORS$not_allowed_category_species <- not_allowed_category_species
-      ERRORS$not_allowed_category_species <- addTypeOfError(ERRORS$not_allowed_category_species, "WARNING: muestreo con especie no permitida en Especies de la categoría")
-      # ---- genus not allowed
-        # select all the genus to check
-        to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESP_CAT)
-        # . = any single character
-        # + = one of more of previous
-        # | = or
-        to_check_genus<-catches_in_lengths[to_check_genus, c(BASE_FIELDS, "COD_ESP_CAT", "ESP_CAT")]
-
-        # allowed genus
-          # other allowed genus
-          allowed_genus_other <- as.data.frame(ALLOWED_GENUS$COD_ESP)
-          colnames(allowed_genus_other)<-"COD_ESP"
-
-          #allowed genus complete
-          # TO DO: arreglar esto, sobran variables
-          allowed_genus <- allowed_genus_other
-          allowed_genus$ALLOWED <- "ok" #??CHAPUCILLA!!
-
-          #check the genus
-          # TO DO: arreglar esto, sobran variables
-          checked_allowed_genus <- merge(x = to_check_genus, y =allowed_genus, by.x = "COD_ESP_CAT", by.y = "COD_ESP", all.x = TRUE)
-          not_allowed_genus <- checked_allowed_genus[is.na(checked_allowed_genus$ALLOWED),]
-
-        #to the ERRORS
-        ERRORS$not_allowed_genus_category_species <- subset(not_allowed_genus, select = -c(ALLOWED))
-        ERRORS$not_allowed_genus_category_species <- addTypeOfError(ERRORS$not_allowed_genus_category_species, "WARNING: muestreos con géneros no permitidos en Especies de la Categoría")
-        #remove unnecesary variables
-        rm(to_check_genus, allowed_genus_other, allowed_genus, checked_allowed_genus, not_allowed_genus)
-
+ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
 # ---- IN WEIGHTS ----
 
-  # ---- errors in species from the categories: all of them has exactly the same sampled weight
-  # the last column in the ERRORS$same_sampled_weight dataframe show the number of category species with exactly the same sampled weight in every specie of the category
-    selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","COD_ESP_CAT", "ESP_CAT","SEXO","P_MUE_DESEM")
-    same_sampled_weight<-catches_in_lengths[,selected_fields]
-        by <- list(same_sampled_weight$COD_ID,
-               same_sampled_weight$COD_PUERTO,
-               same_sampled_weight$PUERTO,
-               same_sampled_weight$LOCODE,
-               same_sampled_weight$FECHA,
-               same_sampled_weight$COD_BARCO,
-               same_sampled_weight$BARCO,
-               same_sampled_weight$ESTRATO_RIM,
-               same_sampled_weight$COD_TIPO_MUE,
-               same_sampled_weight$TIPO_MUE,
-               same_sampled_weight$COD_ESP_MUE,
-               same_sampled_weight$ESP_MUE,
-               same_sampled_weight$COD_CATEGORIA,
-               same_sampled_weight$CATEGORIA,
-               same_sampled_weight$P_DESEM,
-               same_sampled_weight$SEXO,
-               same_sampled_weight$P_MUE_DESEM)
-    same_sampled_weight<-aggregate(x = same_sampled_weight$P_MUE_DESEM, by = by, FUN= length)
-    colnames(same_sampled_weight) <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA","P_DESEM","SEXO","P_MUE_DESEM","NUM_OCU_MISMO_PESO_MUESTRA")
-    same_sampled_weight<-subset ( same_sampled_weight, NUM_OCU_MISMO_PESO_MUESTRA > 1)
-    same_sampled_weight<-arrange_(same_sampled_weight, BASE_FIELDS)
-    ERRORS$same_sampled_weight <- same_sampled_weight
-    ERRORS$same_sampled_weight <- addTypeOfError(ERRORS$same_sampled_weight, "WARNING: todas las categorías de la especie tienen exactamente el mismo peso muestreado")
-    #TO DO: check this dataframe... why return the COD_CATEGORIA and CATEGORIA fields??
-    rm (selected_fields, by, same_sampled_weight)
-
-  # ---- errors in the weight sampled similar to the category weight?
-  # This error is useless because we will change the P_MUE to SOP when the differente is > +-10
-    # weight_sampled_similar_weight_landing <- catches_in_lengths[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")]
-    # weight_sampled_similar_weight_landing <- subset(weight_sampled_similar_weight_landing, P_DESEM==P_MUE_DESEM)
-    # weight_sampled_similar_weight_landing <- arrange_(weight_sampled_similar_weight_landing, c("PUERTO", "TIPO_MUE", "FECHA", "BARCO", "ESP_MUE", "CATEGORIA"))
-    # weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- weight_sampled_similar_weight_landing["P_MUE_VIVO"] - weight_sampled_similar_weight_landing["SOP"]
-    # weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"], digits = 1)
-    # weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"] <- (weight_sampled_similar_weight_landing["P_MUE_VIVO-SOP"] * 100) / weight_sampled_similar_weight_landing["P_MUE_VIVO"]
-    # weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"] <- round(weight_sampled_similar_weight_landing["POR_DIF_P_MUE_VIVO-SOP"])
-    # ERRORS$weight_sampled_similar_weight_landing <- weight_sampled_similar_weight_landing
-    # ERRORS$weight_sampled_similar_weight_landing <- addTypeOfError(ERRORS$weight_sampled_similar_weight_landing, "peso muestreado igual al peso desembarcado")
-    # rm(weight_sampled_similar_weight_landing)
-
-  # ---- errors sop = 0
-    ERRORS[["sop_zero"]] <- subset(catches_in_lengths, SOP == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
-    ERRORS[["sop_zero"]] <- addTypeOfError(ERRORS[["sop_zero"]], "ERROR: sop = 0")
+ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
   
-    # ---- errors
-    ERRORS[["sampled_weight_zero"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP"))
-    ERRORS[["sampled_weight_zero"]] <- addTypeOfError(ERRORS[["sampled_weight_zero"]], "ERROR: peso muestra = 0")
+ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
     
-  # ---- errors p.desem = 0
-    ERRORS[["weight_landed_zero"]] <- subset(catches_in_lengths, P_DESEM == 0 | is.na( P_DESEM),select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO"))
-    ERRORS[["weight_landed_zero"]] <- addTypeOfError(ERRORS[["weight_landed_zero"]], "ERROR: peso desembarcado = 0")
-    
-  # ---- errors species of the category WITHOUT length sample but WITH weight sample
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS == 0, select = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS"))
-    ERRORS[["weight_sampled_0_without_length_sampled"]] <- addTypeOfError(ERRORS[["weight_sampled_0_without_length_sampled"]], "ERROR: especie sin tallas muestreadas pero con peso muestra")
-    
-  # ---- errors species of the category WITH length sample but WITHOUT weight sample
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- subset(catches_in_lengths, P_MUE_DESEM == 0 & EJEM_MEDIDOS != 0, select = c(BASE_FIELDS, "P_DESEM", "P_MUE_DESEM", "EJEM_MEDIDOS"))
-    ERRORS[["lenght_sampled_without_weight_sampled"]] <- addTypeOfError(ERRORS[["lenght_sampled_without_weight_sampled"]], "ERROR: especie con tallas muestreadas pero sin peso muestra")
-    
-  # ---- errors in samples with P_MUE_DESEM is 0 or NA
-    ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+ERRORS$weight_landed_zero <- weightLandedZero()
 
-  # ---- (warning) errors in species with categories with the same weight landing
-    ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
+ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
+    
+ERRORS$pes_mue_desem_zero <- pesMueDesemZero()
+
+ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding()
         
-  
-  # ---- TO CHECK AFTER UPDATING 10% TOPIC  
-  # ---- errors in samples with SOP greater than P_MUE_VIVO when P_MUE_VIVO != 0
-  #  ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+ERRORS$sop_zero <- sopZero() 
+     
+ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
 
-  # ---- errors in samples with P_DESEM <= P_MUE_DESEM
-  #  ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem (lengths) #AddTypeOfError included in function 
-    
-  # ---- errors in samples with SOP greater than P_VIVO
-  #  ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo(catches_in_lengths) #AddTypeOfError included in function 
+ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo()
 
-  # IMPORTANT:
-  # TO CORRECT:
-  #  ERRORS$diferencia_pes_mue_vivo_sop_mayor_10_1_kg <- differencePesMueVivoSOP(lengths)
-  #  ERRORS$diferencia_pes_mue_vivo_sop_menor_1_kg <- differencePesMueVivoSOPLessThan1kg(lengths)
+ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
+
 
 # ------------------------------------------------------------------------------    
 # #### COMBINE ERRORS ##########################################################
@@ -643,8 +747,6 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
     combined_errors <- formatErrorsList()
 
-
-    
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
 # ------------------------------------------------------------------------------
@@ -652,15 +754,15 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
-    exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
-    
-    
-        
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
+    
