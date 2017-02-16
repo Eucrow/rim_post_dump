@@ -360,7 +360,8 @@ shipsNotInCFPO <- function(df){
   return (errors_ships)
 }
 
-check_mt2b <- function(){
+# function to check if all the mt2b has lengths
+checkMt2b <- function(){
   
   # select all the mt2b samples
   mt2b <- catches %>%
@@ -379,6 +380,19 @@ check_mt2b <- function(){
   return(false_mt2b)
 }
 
+#function to check if all mt2b has CERCO_GC or BACA_GC stratums
+checkMt2bRimStratum <- function () {
+  
+  # select all the mt2b samples
+  mt2b <- catches %>%
+    filter(COD_TIPO_MUE == 4) %>%
+    select_(.dots = BASE_FIELDS)
+  
+  err_stratum <- mt2b[!(mt2b[["ESTRATO_RIM"]] %in% c("CERCO_GC")),]
+  
+  err_stratum <- addTypeOfError(err_stratum, "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC")
+
+}
 
 # function to check the samples with categories which all of this species has the same sampled weight
 allCategoriesWithSameSampledWeight <- function (){
@@ -674,7 +688,9 @@ ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed()
 
 # ---- IN HEADER ----
 
-ERRORS$false_mt2b <- check_mt2b()
+ERRORS$false_mt2b <- checkMt2b()
+
+ERRORS$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
 
 ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
@@ -714,7 +730,7 @@ ERRORS$weight_landed_zero <- weightLandedZero()
 ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
 
 
-REMOVE USELESS ARGUMENTS!!!!
+
     
 ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
