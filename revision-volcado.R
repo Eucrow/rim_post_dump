@@ -168,16 +168,16 @@ coherenceEstratoRimGear <- function(df){
 
 
 # Function to search errors in number of ships (empty field, =0 or >2) ---------
-numberOfShips <- function (df){
-  errors <- df[df["N_BARCOS"] == 0 | df["N_BARCOS"] > 2 | is.null(df["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
+numberOfShips <- function (){
+  errors <- catches[catches["N_BARCOS"] == 0 | catches["N_BARCOS"] > 2 | is.null(catches["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
   errors <- addTypeOfError(errors, "WARNING: número de barcos igual a 0 o mayor de 2")
   return (errors)
 }
 
 
 # Function to search errors in number of rejects (only empty fields) -----------
-numberOfRejections <- function(df){
-  errors <- df[is.null(df["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
+numberOfRejections <- function(){
+  errors <- catches[is.null(catches["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
   errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
   return(errors)
 }
@@ -349,9 +349,9 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 
 
 # function to check ships not in CFPO
-shipsNotInCFPO <- function(){
+shipsNotInCFPO <- function(df){
   
-  to_ships <- unique(catches[,c(BASE_FIELDS, "CODSGPM")])
+  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
   
   errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
   errors_ships <- errors_ships %>%
@@ -530,9 +530,9 @@ check_false_mt1 <- function(){
 # there are codes from non mixed species
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
-check_mixed_as_no_mixed <- function(df){
+check_mixed_as_no_mixed <- function(){
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
-  non_mixed <- merge(x=df, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT") %>%
+  non_mixed <- merge(x=catches, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT") %>%
                 select_(.dots = selected_fields)
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo")
   return(non_mixed)
@@ -542,9 +542,9 @@ check_mixed_as_no_mixed <- function(df){
 # there are codes from mixed species
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
-check_no_mixed_as_mixed <- function(df){
+check_no_mixed_as_mixed <- function(){
   selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT")
-  non_mixed <- merge(x=df, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+  non_mixed <- merge(x=lengths, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
     select_(.dots = selected_fields) %>%
     unique()
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
@@ -667,9 +667,9 @@ ERRORS$false_MT1 <- check_false_mt1()
 
 ERRORS$false_MT2 <- check_false_mt2()
 
-ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed(lengths)
+ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed()
 
-ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
+ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed()
 
 
 # ---- IN HEADER ----
@@ -678,9 +678,9 @@ ERRORS$false_mt2b <- check_mt2b()
 
 ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
-ERRORS$number_of_ships <- numberOfShips(catches)
+ERRORS$number_of_ships <- numberOfShips()
 
-ERRORS$number_of_rejections <- numberOfRejections(catches)
+ERRORS$number_of_rejections <- numberOfRejections()
 
 ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
@@ -688,7 +688,7 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
-ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO()
+ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
         
 ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
@@ -712,6 +712,9 @@ ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
 ERRORS$weight_landed_zero <- weightLandedZero()
 
 ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
+
+
+REMOVE USELESS ARGUMENTS!!!!
     
 ERRORS$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
