@@ -50,7 +50,8 @@ FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_con_errores.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
-MONTH <- 12 #only if a filter by month is necesary. It's imperative use the atributte 'by_month' in import_muestreos_up() function
+
+MONTH <- FALSE # Select month in digits or FALSE for a complete year 
 YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
@@ -75,9 +76,27 @@ BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO
 PATH_ERRORS <- paste(PATH_FILES,"/errors",sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
-# month as character with a 0 at the left if it is less than 10
-MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
-
+# check the month is correct
+# can be 1 to 12, or "annual" to check all the gear
+# tryCatch(
+#   {
+#     if (grepl("^\\d{1}$", MONTH)) {
+#       MONTH <- paste0("0",MONTH)
+#     } else if (grepl("^\\d{2}$", MONTH)) {
+#       if (as.integer(MONTH) < 0  | as.numeric(MONTH) > 13){
+#         error_text <- paste0("MONTH = ", MONTH, "??? How many months has your planet?")
+#         stop(error_text)
+#       }
+#     } else if (MONTH != "FALSE") {
+#       error_text <- paste("You have to select a month in digits or FALSE for a complete year")
+#       stop(error_text)
+#     }
+#   },
+#   error = function(err) {
+#     error_text <- paste0("C'mon boy... ", err)
+#     message(error_text)
+#   }
+# )
 
 # ------------------------------------------------------------------------------
 # #### FUNCTIONS ###############################################################
@@ -97,8 +116,6 @@ backup_files <- function(){
 
   lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
 }
-
-
 
 #function to add variable with type of error to a dataframe --------------------
 addTypeOfError <- function(df, type){
@@ -649,14 +666,17 @@ CFPO <- cfpo2015
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
   
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES) #by_month = MONTH, 
-
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
 
 #isolate dataframes
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 
+catches_fecha <- catches
+catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
+catches_fecha$month <- catches_fecha$FECHA$mon+1
+catches_fecha$FECHA <- as.POSIXct(catches_fecha$FECHA)
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -755,7 +775,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
