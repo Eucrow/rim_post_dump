@@ -46,7 +46,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_con_errores.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
 FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
@@ -404,7 +404,7 @@ checkMt2bRimStratum <- function () {
     filter(COD_TIPO_MUE == 4) %>%
     select_(.dots = BASE_FIELDS)
   
-  err_stratum <- mt2b[!(mt2b[["ESTRATO_RIM"]] %in% c("CERCO_GC")),]
+  err_stratum <- mt2b[!(mt2b[["ESTRATO_RIM"]] %in% c("CERCO_GC", "BACA_GC")),]
   
   err_stratum <- addTypeOfError(err_stratum, "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC")
 
@@ -600,14 +600,10 @@ mixedSpeciesInCategory <- function(){
   
 } 
 
-# function to check if there are not allowed species in Sampling Species
-sampledSpeciesNotAllowed <- function(){
+# function to check doubtful species in Sampling Species
+sampledSpeciesDoubtful <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
-  
-  # create a dataframe with species not allowed
-  sampling_species_not_allowed <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
-    select(one_of(selected_fields))
   
   #create a dataframe with other species not allowed
   # by sufixex
@@ -624,13 +620,28 @@ sampledSpeciesNotAllowed <- function(){
   # remove other allowed species
   genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
     select(one_of(selected_fields))
-  
-  errors <- rbind(sampling_species_not_allowed, genus_not_allowed)
-  
+
   # remove duplicates
-  errors <- unique(errors)
+  errors <- unique(genus_not_allowed)
   
-  errors <- addTypeOfError(errors, "ERROR: Muestreo con especie no permitida en Especies del Muestreo")
+  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Especies del Muestreo?")
+  
+  return(errors)
+}
+
+# function to check if there are not allowed species in Sampling Species
+sampledSpeciesNotAllowed <- function(){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  
+  # create a dataframe with species not allowed
+  sampling_species_not_allowed <- merge(x = catches, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
+    select(one_of(selected_fields))
+
+  # remove duplicates
+  errors <- unique(sampling_species_not_allowed)
+  
+  errors <- addTypeOfError(errors, "ERROR: muestreo con especie no permitida en Especies del Muestreo")
   
   return(errors)
 }
@@ -735,6 +746,7 @@ ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 ERRORS$mixed_species_category <- mixedSpeciesInCategory()
       
 ERRORS$not_allowed_sampled_species <- sampledSpeciesNotAllowed()
+ERRORS$sampled_species_doubtful <- sampledSpeciesDoubtful()
 
 ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
 
@@ -775,7 +787,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
