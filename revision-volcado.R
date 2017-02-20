@@ -504,7 +504,7 @@ check_variable_with_master <- function (df, variable){
   errors <- anti_join(df, get(name_data_set), by = variable)
 
   #prepare to return
-  fields_to_filter <- c("COD_ID", "COD_PUERTO", "PUERTO", "FECHA", "COD_BARCO", variable)
+  fields_to_filter <- c(BASE_FIELDS, variable, variable_formatted)
 
   errors <- errors %>%
               select(one_of(fields_to_filter))%>%
