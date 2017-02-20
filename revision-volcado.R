@@ -392,11 +392,11 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 
 
 # function to check ships not in CFPO
-shipsNotInCFPO <- function(df){
+shipsNotInCFPO <- function(df, cfpo = CFPO){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
   
-  errors_ships <- merge(x=to_ships, y=CFPO, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
+  errors_ships <- merge(x=to_ships, y=cfpo, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
   errors_ships <- errors_ships %>%
     filter(is.na(ESTADO))
   errors_ships <- addTypeOfError(errors_ships, "WARNING: barco no incluido en el CFPO")
@@ -682,7 +682,7 @@ NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UT
 ALLOWED_GENUS <- read.csv("generos_permitidos.csv")
 
 ### obtain the cfpo
-CFPO <- cfpo2015
+CFPO <- cfpo2016
   # ignore useless columns
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
