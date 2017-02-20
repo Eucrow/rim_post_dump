@@ -215,7 +215,8 @@ sopGreaterPesMueVivo <- function(){
 
 # Function to search samples with SOP = 0 --------------------------------------
 sopZero <- function(){
-  fields_to_select <- c(BASE_FIELDS, "SOP")
+  fields_to_select <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "SOP")
   errors <- catches_in_lengths %>%
     select(one_of(fields_to_select)) %>%
     filter(SOP == 0)
