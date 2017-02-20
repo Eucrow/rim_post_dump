@@ -286,6 +286,19 @@ speciesWithCategoriesWithSameWeightLanding <- function(){
   return(errors)
 }
 
+# function to check the samples with categories which all of this species has the same sampled weight
+allCategoriesWithSameSampledWeights <- function (){
+  
+  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
+  
+  by_category <- catches_in_lengths %>%
+    group_by_(.dots = selected_fields) %>%
+    #tally() %>% # tally() is the same that summarise(num = n())
+    summarise(NUM_ESP_CAT_MISMO_PESO_MUE=n())%>%
+    filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
+    addTypeOfError("WARNING: varias especies de la categoría con igual peso muestreado")
+}
+
 # function to search samples with doubtfull species of the category. This function
 # use the allowed genus dataframe of SAPMUEBASE.
 # Search, too, the genus finished in -formes, -dae, - spp and - sp.
@@ -422,18 +435,6 @@ checkMt2bRimStratum <- function () {
   
   err_stratum <- addTypeOfError(err_stratum, "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC")
 
-}
-
-# function to check the samples with categories which all of this species has the same sampled weight
-allCategoriesWithSameSampledWeight <- function (){
-  
-  selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
-  
-  by_category <- catches_in_lengths %>%
-    group_by_(.dots = selected_fields) %>%
-    #tally() %>% # tally() is the same that summarise(num = n())
-    summarise(num_cat_igual_peso=n())%>%
-    filter(num_cat_igual_peso > 1)
 }
 
 # function to check samples with weight sampled = 0 with lenghts
@@ -769,7 +770,7 @@ ERRORS$doubtful_category_species <- doubtfulCategorySpecies()
 
 # ---- IN WEIGHTS ----
 
-ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeight()
+ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeights()
   
 ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
     
