@@ -285,17 +285,13 @@ speciesWithCategoriesWithSameWeightLanding <- function(){
   return(errors)
 }
 
-# function to search samples with not allowed species of the category. This function
-# use the not allowed species and the allowed genus dataframes of SAPMUEBASE.
+# function to search samples with doubtfull species of the category. This function
+# use the allowed genus dataframe of SAPMUEBASE.
 # Search, too, the genus finished in -formes, -dae, - spp and - sp.
-categorySpeciesNotAllowed <- function(){
+doubtfulCategorySpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
-  
-  # create a dataframe with species not allowed
-  not_allowed <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP") %>%
-    select(one_of(selected_fields))
-  
+
   #create a dataframe with other species not allowed
   # by sufixes
   to_check_genus <- grep("(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",catches_in_lengths$ESP_CAT)
@@ -309,10 +305,27 @@ categorySpeciesNotAllowed <- function(){
   genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_CAT"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
     select(one_of(selected_fields))
   
-  errors <- rbind(not_allowed, genus_not_allowed)
+  # remove duplicates
+  errors <- unique(genus_not_allowed)  %>%
+    arrange_(BASE_FIELDS)
+  
+  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Espcies de la Categoría?")
+  
+  return(errors)
+}
+
+# function to search samples with not allowed species of the category. This function
+# use the not allowed species dataframe of SAPMUEBASE.
+notAllowedCategorySpecies <- function(){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
+  
+  # create a dataframe with species not allowed
+  not_allowed <- merge(x = catches_in_lengths, y = NOT_ALLOWED_SPECIES, by.x = "COD_ESP_CAT", by.y = "COD_ESP") %>%
+    select(one_of(selected_fields))
   
   # remove duplicates
-  errors <- unique(errors)  %>%
+  errors <- unique(not_allowed)  %>%
     arrange_(BASE_FIELDS)
   
   errors <- addTypeOfError(errors, "ERROR: muestreos con especies no permitidos en Especies de la Categoría")
@@ -601,7 +614,7 @@ mixedSpeciesInCategory <- function(){
 } 
 
 # function to check doubtful species in Sampling Species
-sampledSpeciesDoubtful <- function(){
+doubtfulSampledSpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
   
@@ -630,7 +643,7 @@ sampledSpeciesDoubtful <- function(){
 }
 
 # function to check if there are not allowed species in Sampling Species
-sampledSpeciesNotAllowed <- function(){
+notAllowedSampledSpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
   
@@ -745,10 +758,13 @@ ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
 ERRORS$mixed_species_category <- mixedSpeciesInCategory()
       
-ERRORS$not_allowed_sampled_species <- sampledSpeciesNotAllowed()
-ERRORS$sampled_species_doubtful <- sampledSpeciesDoubtful()
+ERRORS$not_allowed_sampled_species <- notAllowedSampledSpecies()
 
-ERRORS$not_allowed_category_species <- categorySpeciesNotAllowed()
+ERRORS$sampled_species_doubtful <- doubtfulSampledSpecies()
+
+ERRORS$not_allowed_category_species <- notAllowedCategorySpecies()
+
+ERRORS$doubtful_category_species <- doubtfulCategorySpecies()
 
 # ---- IN WEIGHTS ----
 
