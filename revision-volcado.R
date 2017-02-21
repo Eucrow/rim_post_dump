@@ -899,7 +899,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
-    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    #exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
