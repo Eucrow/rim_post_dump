@@ -385,7 +385,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("WARNING: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
+  text_type_of_error <- paste0("ERROR: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
 }
@@ -399,7 +399,7 @@ shipsNotInCFPO <- function(df, cfpo = CFPO){
   errors_ships <- merge(x=to_ships, y=cfpo, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
   errors_ships <- errors_ships %>%
     filter(is.na(ESTADO))
-  errors_ships <- addTypeOfError(errors_ships, "WARNING: barco no incluido en el CFPO")
+  errors_ships <- addTypeOfError(errors_ships, "ERROR: barco no incluido en el CFPO")
   return (errors_ships)
 }
 
@@ -666,7 +666,7 @@ sexesWithSameSampledWeight <- function (){
               group_by_(.dots=selected_fields)%>%
               summarise(NUM_SEXOS_MISMO_P_MUE_DESEM = n())%>%
               filter(NUM_SEXOS_MISMO_P_MUE_DESEM > 1) %>%
-              addTypeOfError("Sexos de una misma especie tienen exactamente el mismo peso muestra")
+              addTypeOfError("WARNING: Sexos de una misma especie tienen exactamente el mismo peso muestra")
               
 }
 
@@ -898,6 +898,8 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    
+    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
