@@ -207,7 +207,7 @@ sopGreaterPesMueVivo <- function(){
               select(one_of(selected_fields))%>%
               mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO )%>%
               mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO,2))%>%
-              filter(DIF_SOP_P_MUE_VIVO,2 > 0.01 )
+              filter(DIF_SOP_P_MUE_VIVO > 0.01 )
   errors <- addTypeOfError(errors, "ERROR: SOP mayor que peso muestreado vivo")
   return (errors)
 }
@@ -750,6 +750,11 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
 ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
+
+no_en_cfpo <- ERRORS$errors_ships_not_in_cfpo %>%
+                filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
+                select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
+                unique()
         
 ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
