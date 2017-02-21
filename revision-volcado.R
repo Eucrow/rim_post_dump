@@ -467,11 +467,7 @@ weightSampledWithoutLengthsSampled <- function () {
 }
 
 
-
-
-
-
-# function to ckeck variables
+# function to check variables
 #' Check variables
 #
 #' Check if the value of variables are consistents to the value in its SIRENO master.
@@ -689,6 +685,63 @@ categoriesWithRepeatedSexes <- function() {
 
 }
 
+# function to check if the cod_id are correctly created
+#' Check cod_id
+#
+#' Check if the cod_id are correctly variables.
+#' Check the length of the code, the type of sample, and the port.
+#' @return Return a dataframe with the erroneus codes.
+checkCodId <- function() {
+  
+  # prepare dataframe
+  cod_id <- catches %>%
+    select(COD_ID, COD_PUERTO, TIPO_MUE)%>%
+    unique()%>%
+    addInfluenceAreaVariable("COD_PUERTO")
+  
+  #TODO: CHECK YEAR
+  
+  errors_cod_id <- list()
+  # check number of characters of cod_id
+  errors_cod_id[["lenght_cod_id"]] <- cod_id %>% 
+    mutate(length_cod_id = nchar(as.character(COD_ID))) %>%
+    filter(length_cod_id != 13)%>%
+    addTypeOfError("code with less than 13 characteres")
+  
+  # check sample type
+  errors_cod_id[["sample_type_cod_id"]] <- cod_id %>%
+    mutate(
+      type_id = substr(COD_ID, 8, 9),
+      type_mue_cod = substr(TIPO_MUE, 3, 4),
+      check_tipo_mue = ifelse (type_id == type_mue_cod, "correct", "incorrect")
+    ) %>%
+    filter(check_tipo_mue == "incorrect") %>%
+    addTypeOfError("incoherent sample type")
+  
+  # check the field port
+  errors_cod_id[["field_port_cod_id"]] <- cod_id %>%
+    mutate(puerto_id = substr(COD_ID, 5, 7 )) %>%
+    mutate(
+      check_puerto = ifelse ( puerto_id == "CAD" & AREA_INF == "GC", "correcto",
+                              ifelse ( puerto_id == "LCG" & AREA_INF == "GN", "correcto",
+                                       ifelse (puerto_id == "SDR" & AREA_INF == "AC", "correcto",
+                                               ifelse(puerto_id == "VGO" & AREA_INF == "GS", "correcto", "incorrect")
+                                       )
+                              )
+      )
+    ) %>%
+    filter(check_puerto == "incorrect") %>%
+    addTypeOfError("incoherent port")
+  
+  # combine list errors_cod_id
+  errors <- Reduce(function(x, y) { merge(x, y, all = TRUE)} , errors_cod_id) %>%
+    select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>%
+    arrange(COD_ID, TIPO_ERROR)
+  
+  return(errors)
+  
+}
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -847,6 +900,15 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
     #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
+
+# ------------------------------------------------------------------------------    
+# #### CHECK CODE_ID
+# This check is not for send to the sups, so it's out the ERRORS dataframe
+# ------------------------------------------------------------------------------
+
+errors_cod_id <- checkCodId()
+
+
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
