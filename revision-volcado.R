@@ -102,7 +102,7 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 # #### FUNCTIONS ###############################################################
 # ------------------------------------------------------------------------------
 
-# ---- function to make a backkup of the errors files --------------------------
+# ---- function to make a backup of the errors files --------------------------
 backup_files <- function(){
   date <- Sys.time();
   date <- as.POSIXlt(date);
@@ -117,7 +117,7 @@ backup_files <- function(){
   lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
 }
 
-#function to add variable with type of error to a dataframe --------------------
+# function to add variable with type of error to a dataframe --------------------
 addTypeOfError <- function(df, type){
   
   if(nrow(df)!=0){
@@ -224,7 +224,7 @@ sopZero <- function(){
   return (errors)
 }
 
-#function to search samples with P_MUE_DESEM = 0 or NA -------------------------
+# function to search samples with P_MUE_DESEM = 0 or NA -------------------------
 pesMueDesemZero <- function(){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
@@ -238,7 +238,7 @@ pesMueDesemZero <- function(){
 }
 
 
-#function to search samples with p_desem <= p_mue_desem ------------------------
+# function to search samples with p_desem <= p_mue_desem ------------------------
 pesMueDesemGreaterPesDesem <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_DESEM",
@@ -273,7 +273,7 @@ SopGreaterPesVivo <- function (){
 }
 
 
-#function to search categories with equal species weight landings --------------
+# function to search categories with equal species weight landings --------------
 speciesWithCategoriesWithSameWeightLanding <- function(){
   catches <- catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
@@ -470,11 +470,8 @@ weightSampledWithoutLengthsSampled <- function () {
 
 
 
-# ------------------------------------------------------------------------------
-# #### REPEATED FUNCTIONS FROM SAVED PREVIOUS CHECK ############################
-# ------------------------------------------------------------------------------
 
-# ---- function to ckeck variables ---------------------------------------------
+# function to ckeck variables
 #' Check variables
 #
 #' Check if the value of variables are consistents to the value in its SIRENO master.
@@ -519,6 +516,7 @@ check_variable_with_master <- function (df, variable){
   #return
   return(errors)
 }
+
 
 # function to search false mt2 samples: samples with COD_TIPO_MUE as MT2A and
 # without any lenght
@@ -644,6 +642,7 @@ doubtfulSampledSpecies <- function(){
   return(errors)
 }
 
+
 # function to check if there are not allowed species in Sampling Species
 notAllowedSampledSpecies <- function(){
   
@@ -659,6 +658,35 @@ notAllowedSampledSpecies <- function(){
   errors <- addTypeOfError(errors, "ERROR: muestreo con especie no permitida en Especies del Muestreo")
   
   return(errors)
+}
+
+# function to check sexes with exactly the same sampled weight
+sexesWithSameSampledWeight <- function (){
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", 
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
+                        
+  errors <- catches_in_lengths %>%
+              group_by_(.dots=selected_fields)%>%
+              summarise(NUM_SEXOS_MISMO_P_MUE_DESEM = n())%>%
+              filter(NUM_SEXOS_MISMO_P_MUE_DESEM > 1) %>%
+              addTypeOfError("Sexos de una misma especie tienen exactamente el mismo peso muestra")
+              
+}
+
+
+# function to check categories with varios equal sexes (both of them male or female)
+categoriesWithRepeatedSexes <- function() {
+  
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", 
+                       "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO")
+  errors <- catches_in_lengths %>%
+              filter(SEXO != "U") %>%
+              group_by_(.dots = selected_fields) %>%
+              summarise(NUM_MISMOS_SEXOS = n()) %>%
+              filter(NUM_MISMOS_SEXOS != 1) %>%
+              addTypeOfError("Categorías con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
+
 }
 
 # ------------------------------------------------------------------------------
@@ -751,10 +779,10 @@ ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
 ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
 
-no_en_cfpo <- ERRORS$errors_ships_not_in_cfpo %>%
-                filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
-                select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
-                unique()
+# no_en_cfpo <- ERRORS$errors_ships_not_in_cfpo %>%
+#                 filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
+#                 select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
+#                 unique()
         
 ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
@@ -772,6 +800,10 @@ ERRORS$sampled_species_doubtful <- doubtfulSampledSpecies()
 ERRORS$not_allowed_category_species <- notAllowedCategorySpecies()
 
 ERRORS$doubtful_category_species <- doubtfulCategorySpecies()
+
+ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
+
+ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
 # ---- IN WEIGHTS ----
 
