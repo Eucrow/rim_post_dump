@@ -29,6 +29,7 @@ library(devtools)
 
 
 # ---- install sapmuebase from local
+#install_github("Eucrow/sapmuebase")
 #install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
 
@@ -45,10 +46,10 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016_2"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_0203.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_0203.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_0203.TXT"
 
 
 MONTH <- FALSE # Select month in digits or FALSE for a complete year 
@@ -353,7 +354,7 @@ notAllowedCategorySpecies <- function(){
 check_foreing_ships_MT1 <- function(df){
   ships <- df %>%
     select(one_of(BASE_FIELDS))%>%
-    filter(grepl("^8\\d{5}",COD_BARCO)) %>%
+    filter(grepl("^8\\d{5}",COD_BARCO), COD_TIPO_MUE == "1") %>%
     unique()
   
   ships <- addTypeOfError(ships, "ERROR: MT1 con barco extranjero")
@@ -418,7 +419,7 @@ checkMt2b <- function(){
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   
   false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
-  false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2b sin tallas")
+  false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2B sin tallas")
   
   return(false_mt2b)
 }
