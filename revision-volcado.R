@@ -242,13 +242,14 @@ pesMueDesemZero <- function(){
 # function to search samples with p_desem <= p_mue_desem ------------------------
 pesMueDesemGreaterPesDesem <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
-                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_DESEM",
+                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_DESEM",
                         "P_MUE_DESEM", "DIF_P_MUE_DESEM_P_DESEM")
   
-  errors <- lengths %>%
+  errors <- catches_in_lengths %>%
     mutate(DIF_P_MUE_DESEM_P_DESEM = P_MUE_DESEM - P_DESEM) %>%
     filter(DIF_P_MUE_DESEM_P_DESEM > 0) %>%
-    select(one_of(fields_to_select))
+    select(one_of(fields_to_select)) %>%
+    unique()
   
   errors <- addTypeOfError(errors, "ERROR: Peso muestreado mayor al peso desembarcado")
   
