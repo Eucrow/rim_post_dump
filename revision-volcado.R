@@ -46,10 +46,10 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016_2"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_0203.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_0203.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_0203.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016_3"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_0303.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_0303.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_0303.TXT"
 
 
 MONTH <- FALSE # Select month in digits or FALSE for a complete year 
