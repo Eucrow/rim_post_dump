@@ -46,14 +46,14 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/anual2016_3"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_0303.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_0303.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_0303.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 
 MONTH <- FALSE # Select month in digits or FALSE for a complete year 
-YEAR <- "2016"
+YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -744,6 +744,50 @@ checkCodId <- function() {
   
 }
 
+# ---- function to fix TALL.PESO variable --------------------------------------
+#
+#' Change the content of variable TALL.PESO to TRUE.
+#' 
+#' This logical variable is TRUE for lenghts samples and false to weight samples.
+#' We allways work with lengths samples so all of them must be TRUE. 
+#
+#' @param df: dataframe to modify
+#' @return Return a dataframe with the TALL.PESO variable fixed
+#'
+fixTALL.PESOVariable <- function (df) {
+  
+  if ("TALL.PESO" %in% colnames(df)){
+    df[["TALL.PESO"]] <- TRUE
+    return(df)
+  } else {
+    stop(paste0("TALL.PESO doesn't exists in ", substitute(df)))
+  }
+  
+}
+
+# ---- function to check TALL.PESO variable ------------------------------------
+#
+#' Check if the content of variable TALL.PESO is allways TRUE.
+#' 
+#' This logical variable is TRUE for lenghts samples and false to weight samples.
+#' We allways work with lengths samples so all of them must be TRUE. 
+#
+#' @param df: dataframe to check
+#' @return dataframe with erroneus samples
+#'
+checkTALL.PESO <- function() {
+  
+  if ("TALL.PESO" %in% colnames(catches)){
+    errors <- catches %>%
+                select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
+                filter(TALL.PESO != T)
+    return(errors)
+  } else {
+    stop("TALL.PESO doesn't exists in catches")
+  }
+}
+
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -781,6 +825,16 @@ muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_T
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
+
+# ????
+  colnames(lengths)
+  sin_sop_mue <- lengths [lengths$COD_ESP_MUE == 10540 | lengths$COD_ESP_MUE == 10864,]
+  sin_sop_esp_cat <- lengths [lengths$COD_ESP_CAT == 10540 | lengths$COD_ESP_CAT == 10864,]
+  
+  sin_sop_ <- catches_in_lengths [catches_in_lengths$COD_ESP_MUE == 10540 | catches_in_lengths$COD_ESP_MUE == 10864,]
+  sin_sop_esp_cat <- catches_in_lengths [catches_in_lengths$COD_ESP_CAT == 10540 | catches_in_lengths$COD_ESP_CAT == 10864,]
+# ????
+
 
 catches_fecha <- catches
 catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
@@ -860,6 +914,8 @@ ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
 
 ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
+ERRORS$lenghts_weights_sample <- checkTALL.PESO()
+
 # ---- IN WEIGHTS ----
 
 ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeights()
@@ -881,7 +937,6 @@ ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
 ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo()
 
 ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
-
 
 # ------------------------------------------------------------------------------    
 # #### COMBINE ERRORS ##########################################################
