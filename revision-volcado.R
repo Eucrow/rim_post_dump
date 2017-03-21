@@ -748,8 +748,8 @@ checkCodId <- function() {
 #
 #' Change the content of variable TALL.PESO to TRUE.
 #' 
-#' This logical variable is TRUE for lenghts samples and false to weight samples.
-#' We allways work with lengths samples so all of them must be TRUE. 
+#' This variable is T for lenghts samples and P for weight samples.
+#' We allways work with lengths samples so all of them must be T. 
 #
 #' @param df: dataframe to modify
 #' @return Return a dataframe with the TALL.PESO variable fixed
@@ -757,7 +757,7 @@ checkCodId <- function() {
 fixTALL.PESOVariable <- function (df) {
   
   if ("TALL.PESO" %in% colnames(df)){
-    df[["TALL.PESO"]] <- TRUE
+    df[["TALL.PESO"]] <- "T"
     return(df)
   } else {
     stop(paste0("TALL.PESO doesn't exists in ", substitute(df)))
@@ -780,7 +780,8 @@ checkTALL.PESO <- function() {
   if ("TALL.PESO" %in% colnames(catches)){
     errors <- catches %>%
                 select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
-                filter(TALL.PESO != T)
+                filter(TALL.PESO != "T") %>%
+                addTypeOfError("ERROR: Muestreo no metido como muestreo de talla")
     return(errors)
   } else {
     stop("TALL.PESO doesn't exists in catches")
