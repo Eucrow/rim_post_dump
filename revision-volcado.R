@@ -771,8 +771,7 @@ fixTALL.PESOVariable <- function (df) {
 #' 
 #' This logical variable is TRUE for lenghts samples and false to weight samples.
 #' We allways work with lengths samples so all of them must be TRUE. 
-#
-#' @param df: dataframe to check
+#'
 #' @return dataframe with erroneus samples
 #'
 checkTALL.PESO <- function() {
@@ -786,6 +785,44 @@ checkTALL.PESO <- function() {
   } else {
     stop("TALL.PESO doesn't exists in catches")
   }
+}
+
+# ---- function to check sexed species -----------------------------------------
+#
+#' Check if the sexed species are saved as sexed species.
+#' 
+#' Sexed species must have the variable SEXO as M (male) or H (female).
+#'
+#' @return dataframe with erroneus samples
+#'
+checkSexedSpecies <- function() {
+  
+  sexed_especies <- especies_sexadas[["COD_ESP"]]
+  errors <- lengths %>%
+    filter( (COD_ESP_MUE %in% sexed_especies | COD_ESP_CAT %in% sexed_especies)) %>%
+    filter( (SEXO != "M" & SEXO != "H") ) %>%
+    addTypeOfError("ERROR: especie que debería ser sexada")
+  
+  return(errors)
+}
+
+# ---- function to check no sexed species -----------------------------------------
+#
+#' Check if the no sexed species are saved as no sexed species.
+#' 
+#'No sexed species must have the variable SEXO as U.
+#'
+#' @return dataframe with erroneus samples
+#'
+checkNoSexedSpecies <- function() {
+  
+  sexed_especies <- especies_sexadas[["COD_ESP"]]
+  errors <- lengths %>%
+    filter( !(COD_ESP_MUE %in% sexed_especies) & !(COD_ESP_CAT %in% sexed_especies) ) %>%
+    filter( (SEXO == "M" | SEXO == "H") ) %>%
+    addTypeOfError("ERROR: especie que NO debería ser sexada")
+  
+  return(errors)
 }
 
 
@@ -826,6 +863,7 @@ muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_T
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
+
 
 # ????
   colnames(lengths)
@@ -917,6 +955,10 @@ ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
 ERRORS$lenghts_weights_sample <- checkTALL.PESO()
 
+ERRORS$no_sexed_species <- checkNoSexedSpecies();
+
+ERRORS$sexed_species <- checkSexedSpecies();
+
 # ---- IN WEIGHTS ----
 
 ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeights()
@@ -968,7 +1010,14 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
 errors_cod_id <- checkCodId()
 
+sexed_species <- catches_in_lengths %>%
+  filter(SEXO!="U") %>%
+  select(one_of(c("COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
+  unique() %>%
+  select(COD_ESP_CAT, ESP_CAT) %>%
+  unique
 
+catches_in_lengths[catches_in_lengths$COD_ESP_CAT]
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
