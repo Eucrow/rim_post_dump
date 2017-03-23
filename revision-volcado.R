@@ -46,10 +46,10 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2016/anual2016_despues_cruce"
+FILENAME_DES_TOT <- "muestreos_2016_2303_3.TXT"
+FILENAME_DES_TAL <- "muestreos_2016_2303_2.TXT"
+FILENAME_TAL <- "muestreos_2016_2303_1.TXT"
 
 
 MONTH <- FALSE # Select month in digits or FALSE for a complete year 
@@ -737,9 +737,10 @@ checkCodId <- function() {
   
   # combine list errors_cod_id
   errors <- Reduce(function(x, y) { merge(x, y, all = TRUE)} , errors_cod_id) %>%
-    select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>%
-    arrange(COD_ID, TIPO_ERROR)
-  
+    # NOSE QUE ES ESE CAMPO TIPO_ERROR... 
+    # select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>%
+    # arrange(COD_ID, TIPO_ERROR)
+    arrange(COD_ID)
   return(errors)
   
 }
@@ -799,8 +800,10 @@ checkSexedSpecies <- function() {
   
   sexed_especies <- especies_sexadas[["COD_ESP"]]
   errors <- lengths %>%
+    select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     filter( (COD_ESP_MUE %in% sexed_especies | COD_ESP_CAT %in% sexed_especies)) %>%
     filter( (SEXO != "M" & SEXO != "H") ) %>%
+    unique()%>%
     addTypeOfError("ERROR: especie que debería ser sexada")
   
   return(errors)
@@ -818,8 +821,10 @@ checkNoSexedSpecies <- function() {
   
   sexed_especies <- especies_sexadas[["COD_ESP"]]
   errors <- lengths %>%
+    select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     filter( !(COD_ESP_MUE %in% sexed_especies) & !(COD_ESP_CAT %in% sexed_especies) ) %>%
     filter( (SEXO == "M" | SEXO == "H") ) %>%
+    unique()%>%
     addTypeOfError("ERROR: especie que NO debería ser sexada")
   
   return(errors)
@@ -865,14 +870,14 @@ catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 
 
-# ????
-  colnames(lengths)
-  sin_sop_mue <- lengths [lengths$COD_ESP_MUE == 10540 | lengths$COD_ESP_MUE == 10864,]
-  sin_sop_esp_cat <- lengths [lengths$COD_ESP_CAT == 10540 | lengths$COD_ESP_CAT == 10864,]
-  
-  sin_sop_ <- catches_in_lengths [catches_in_lengths$COD_ESP_MUE == 10540 | catches_in_lengths$COD_ESP_MUE == 10864,]
-  sin_sop_esp_cat <- catches_in_lengths [catches_in_lengths$COD_ESP_CAT == 10540 | catches_in_lengths$COD_ESP_CAT == 10864,]
-# ????
+# # ????
+#   colnames(lengths)
+#   sin_sop_mue <- lengths [lengths$COD_ESP_MUE == 10540 | lengths$COD_ESP_MUE == 10864,]
+#   sin_sop_esp_cat <- lengths [lengths$COD_ESP_CAT == 10540 | lengths$COD_ESP_CAT == 10864,]
+#   
+#   sin_sop_ <- catches_in_lengths [catches_in_lengths$COD_ESP_MUE == 10540 | catches_in_lengths$COD_ESP_MUE == 10864,]
+#   sin_sop_esp_cat <- catches_in_lengths [catches_in_lengths$COD_ESP_CAT == 10540 | catches_in_lengths$COD_ESP_CAT == 10864,]
+# # ????
 
 
 catches_fecha <- catches
@@ -953,7 +958,7 @@ ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
 
 ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
-ERRORS$lenghts_weights_sample <- checkTALL.PESO()
+# ERRORS$lenghts_weights_sample <- checkTALL.PESO()
 
 ERRORS$no_sexed_species <- checkNoSexedSpecies();
 
@@ -1010,14 +1015,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
 errors_cod_id <- checkCodId()
 
-sexed_species <- catches_in_lengths %>%
-  filter(SEXO!="U") %>%
-  select(one_of(c("COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
-  unique() %>%
-  select(COD_ESP_CAT, ESP_CAT) %>%
-  unique
 
-catches_in_lengths[catches_in_lengths$COD_ESP_CAT]
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
