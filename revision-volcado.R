@@ -51,14 +51,11 @@ FILENAME_DES_TOT <- "muestreos_2016_2303_3.TXT"
 FILENAME_DES_TAL <- "muestreos_2016_2303_2.TXT"
 FILENAME_TAL <- "muestreos_2016_2303_1.TXT"
 
-
 MONTH <- FALSE # Select month in digits or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-
-
 
 # ------------------------------------------------------------------------------
 # #### GLOBAL VARIABLES ########################################################
@@ -869,17 +866,6 @@ catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 
-
-# # ????
-#   colnames(lengths)
-#   sin_sop_mue <- lengths [lengths$COD_ESP_MUE == 10540 | lengths$COD_ESP_MUE == 10864,]
-#   sin_sop_esp_cat <- lengths [lengths$COD_ESP_CAT == 10540 | lengths$COD_ESP_CAT == 10864,]
-#   
-#   sin_sop_ <- catches_in_lengths [catches_in_lengths$COD_ESP_MUE == 10540 | catches_in_lengths$COD_ESP_MUE == 10864,]
-#   sin_sop_esp_cat <- catches_in_lengths [catches_in_lengths$COD_ESP_CAT == 10540 | catches_in_lengths$COD_ESP_CAT == 10864,]
-# # ????
-
-
 catches_fecha <- catches
 catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
 catches_fecha$month <- catches_fecha$FECHA$mon+1
@@ -1014,8 +1000,6 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 # ------------------------------------------------------------------------------
 
 errors_cod_id <- checkCodId()
-
-
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
