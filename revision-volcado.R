@@ -46,12 +46,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2016/anual2016_despues_cruce"
-FILENAME_DES_TOT <- "muestreos_2016_2303_3.TXT"
-FILENAME_DES_TAL <- "muestreos_2016_2303_2.TXT"
-FILENAME_TAL <- "muestreos_2016_2303_1.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- FALSE # Select month in digits or FALSE for a complete year 
+MONTH <- 1 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -73,6 +73,9 @@ BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO
 # useful paths
 PATH_ERRORS <- paste(PATH_FILES,"/errors",sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
+
+# month as character
+MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
 
 # check the month is correct
 # can be 1 to 12, or "annual" to check all the gear
@@ -858,8 +861,9 @@ CFPO <- cfpo2016
 # ------------------------------------------------------------------------------ 
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
+
+  muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
   
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
 
 #isolate dataframes
 catches <- muestreos_up$catches
@@ -944,11 +948,11 @@ ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
 
 ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
-# ERRORS$lenghts_weights_sample <- checkTALL.PESO()
+#ERRORS$lenghts_weights_sample <- checkTALL.PESO()
 
-ERRORS$no_sexed_species <- checkNoSexedSpecies();
+ERRORS$no_sexed_species <- checkNoSexedSpecies()
 
-ERRORS$sexed_species <- checkSexedSpecies();
+ERRORS$sexed_species <- checkSexedSpecies()
 
 # ---- IN WEIGHTS ----
 
@@ -984,9 +988,9 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+
+    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
     #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     
@@ -999,7 +1003,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # ------------------------------------------------------------------------------
 
-errors_cod_id <- checkCodId()
+#errors_cod_id <- checkCodId()
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
