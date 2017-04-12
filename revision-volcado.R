@@ -193,9 +193,10 @@ numberOfShips <- function (){
 }
 
 
-# Function to search errors in number of rejects (only empty fields) -----------
+# Function to search errors in number of rejects (only empty, nas or null) -----
 numberOfRejections <- function(){
-  errors <- catches[is.null(catches["N_RECHAZOS"]), c(BASE_FIELDS, "N_RECHAZOS")]
+  errors <- catches %>%
+    filter(N_RECHAZOS == ""|is.na(N_RECHAZOS)|is.null(N_RECHAZOS))
   errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
   return(errors)
 }
@@ -913,6 +914,8 @@ ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 ERRORS$number_of_ships <- numberOfShips()
 
 ERRORS$number_of_rejections <- numberOfRejections()
+
+ERRORS$number_of_rejections
 
 ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
