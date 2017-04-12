@@ -781,7 +781,7 @@ checkTALL.PESO <- function() {
   if ("TALL.PESO" %in% colnames(catches)){
     errors <- catches %>%
                 select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
-                filter(TALL.PESO != "T") %>%
+                filter(TALL.PESO != "T"|is.na(TALL.PESO)|is.null(TALL.PESO)) %>%
                 addTypeOfError("ERROR: Muestreo no metido como muestreo de talla")
     return(errors)
   } else {
@@ -915,8 +915,6 @@ ERRORS$number_of_ships <- numberOfShips()
 
 ERRORS$number_of_rejections <- numberOfRejections()
 
-ERRORS$number_of_rejections
-
 ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
 ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
@@ -951,7 +949,7 @@ ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
 
 ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
 
-#ERRORS$lenghts_weights_sample <- checkTALL.PESO()
+ERRORS$lenghts_weights_sample <- checkTALL.PESO()
 
 ERRORS$no_sexed_species <- checkNoSexedSpecies()
 
