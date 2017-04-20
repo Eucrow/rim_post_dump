@@ -46,13 +46,21 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
+# FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+# FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+# FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+# 
+# MONTH <- 1 # month in numeric or FALSE for a complete year 
+# YEAR <- "2017"
+
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2016/diciembre"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_NEW5.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_NEW5.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_NEW5.TXT"
 
 MONTH <- 1 # month in numeric or FALSE for a complete year 
-YEAR <- "2017"
+YEAR <- "2016"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -791,7 +799,7 @@ checkTALL.PESO <- function() {
 
 # ---- function to check sexed species -----------------------------------------
 #
-#' Check if the sexed species are saved as sexed species.
+#' Check samples with no sexed species that must be sexed
 #' 
 #' Sexed species must have the variable SEXO as M (male) or H (female).
 #'
@@ -800,10 +808,16 @@ checkTALL.PESO <- function() {
 checkSexedSpecies <- function() {
   
   sexed_especies <- especies_sexadas[["COD_ESP"]]
+  
   errors <- lengths %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
-    filter( (COD_ESP_MUE %in% sexed_especies | COD_ESP_CAT %in% sexed_especies)) %>%
+    filter( (COD_ESP_MUE %in% sexed_species[["COD_ESP"]]))  %>% #only the sexed species
+    merge(y=sexed_species, by.x=c("COD_ESP_CAT"), by.y=c("COD_ESP"), all.x = T)%>% #merge with sexed species
+    filter(COD_PUERTO.y == "ALL" | COD_PUERTO.x == COD_PUERTO.y)%>% # sexed species 
+    #must be only with port field "ALL" or a port similiar between lengths and sexed_species dataframe
     filter( (SEXO != "M" & SEXO != "H") ) %>%
+    rename("COD_PUERTO" = COD_PUERTO.x) %>%
+    select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     unique()%>%
     addTypeOfError("ERROR: especie que debería ser sexada")
   
@@ -812,20 +826,37 @@ checkSexedSpecies <- function() {
 
 # ---- function to check no sexed species -----------------------------------------
 #
-#' Check if the no sexed species are saved as no sexed species.
+#' Check samples with sexed species that must not be sexed
 #' 
-#'No sexed species must have the variable SEXO as U.
+#' No sexed species must have the variable SEXO as U.
 #'
 #' @return dataframe with erroneus samples
 #'
 checkNoSexedSpecies <- function() {
   
-  sexed_especies <- especies_sexadas[["COD_ESP"]]
-  errors <- lengths %>%
+  # Subset especies_sexadas dataframe only with required?? variables:
+  sexed_species <- especies_sexadas[,c("COD_ESP", "COD_PUERTO")]
+  
+  # Subset sexed especies sampled 
+  sexed_species_sampled <- lengths %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
-    filter( !(COD_ESP_MUE %in% sexed_especies) & !(COD_ESP_CAT %in% sexed_especies) ) %>%
-    filter( (SEXO == "M" | SEXO == "H") ) %>%
-    unique()%>%
+    filter( SEXO == "M" | SEXO == "H" )
+  
+  # Check if all the species sampled must be sexed:
+  errors_species_must_not_be_sexed <- sexed_species_sampled %>%
+    filter(!(COD_ESP_CAT %in% sexed_species$COD_ESP)) %>%
+    unique()
+  
+  # Check if all the species sampled must be sexed in some ports:
+  sexed_species_by_port <- sexed_species[sexed_species[["COD_PUERTO"]]!="ALL",]
+  
+  errors_species_must_be_sexed_only_in_some_ports <- sexed_species_sampled %>%
+    filter(COD_ESP_CAT %in% sexed_species_by_port[["COD_ESP"]]) %>% # filter only species wich must be sampled in some ports
+    merge(, y=sexed_species_by_port, by.x = c("COD_ESP_CAT", "COD_PUERTO"), by.y = c("COD_ESP", "COD_PUERTO"), all.x = T)%>%
+    unique()
+  
+  # merge errors
+  errors <- rbind(errors_species_must_not_be_sexed, errors_species_must_be_sexed_only_in_some_ports) %>%
     addTypeOfError("ERROR: especie que NO debería ser sexada")
   
   return(errors)
@@ -857,7 +888,6 @@ CFPO <- cfpo2016
   # ignore useless columns
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
   
-
   
 # ------------------------------------------------------------------------------ 
 # #### IMPORT muestreos_UP files ###############################################
@@ -954,6 +984,7 @@ ERRORS$lenghts_weights_sample <- checkTALL.PESO()
 ERRORS$no_sexed_species <- checkNoSexedSpecies()
 
 ERRORS$sexed_species <- checkSexedSpecies()
+
 
 # ---- IN WEIGHTS ----
 
