@@ -54,13 +54,13 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # MONTH <- 1 # month in numeric or FALSE for a complete year 
 # YEAR <- "2017"
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2016/diciembre"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_2016_NEW5.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_2016_NEW5.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_2016_NEW5.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-02"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 1 # month in numeric or FALSE for a complete year 
-YEAR <- "2016"
+MONTH <- 2 # month in numeric or FALSE for a complete year 
+YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -806,17 +806,15 @@ checkTALL.PESO <- function() {
 #' @return dataframe with erroneus samples
 #'
 checkSexedSpecies <- function() {
-  
-  sexed_especies <- especies_sexadas[["COD_ESP"]]
-  
+
   errors <- lengths %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
-    filter( (COD_ESP_MUE %in% sexed_species[["COD_ESP"]]))  %>% #only the sexed species
-    merge(y=sexed_species, by.x=c("COD_ESP_CAT"), by.y=c("COD_ESP"), all.x = T)%>% #merge with sexed species
+    filter( (COD_ESP_MUE %in% especies_sexadas[["COD_ESP"]]))  %>% #only the sexed species
+    merge(y=especies_sexadas, by.x=c("COD_ESP_CAT"), by.y=c("COD_ESP"), all.x = T)%>% #merge with sexed species
     filter(COD_PUERTO.y == "ALL" | COD_PUERTO.x == COD_PUERTO.y)%>% # sexed species 
-    #must be only with port field "ALL" or a port similiar between lengths and sexed_species dataframe
+    #must be only with port field "ALL" or a port similiar between lengths and especies_sexadas dataframe
     filter( (SEXO != "M" & SEXO != "H") ) %>%
-    rename("COD_PUERTO" = COD_PUERTO.x) %>%
+    rename("COD_PUERTO" = COD_PUERTO.x, "PUERTO" = PUERTO.x, "LOCODE" = LOCODE.x, "ESP_MUE" = ESP_MUE.x) %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     unique()%>%
     addTypeOfError("ERROR: especie que debería ser sexada")
