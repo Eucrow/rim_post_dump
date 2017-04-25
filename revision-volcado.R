@@ -55,7 +55,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YEAR <- "2017"
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-02"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_with_errors.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
@@ -860,6 +860,52 @@ checkNoSexedSpecies <- function() {
   return(errors)
 }
 
+# ---- function to check multiple ESTRATO_RIM in the same trip -----------------
+#
+#' Check samples with same date, vessel, gear, and port but with different 
+#' ESTRATO_RIM variable.
+#'
+#' @return dataframe with erroneus samples
+#'
+CheckMultipleEstratoRIM <- function(){
+  
+  errors <- catches %>%
+    select(one_of(BASE_FIELDS)) %>%
+    unique() %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, COD_TIPO_MUE, TIPO_MUE) %>%
+    mutate(num_estrato_rim = n_distinct(ESTRATO_RIM))%>%
+    ungroup()%>%
+    # summarise(num_estrato_rim = n_distinct(ESTRATO_RIM)) %>%
+    filter(num_estrato_rim != 1) %>%
+    addTypeOfError("ERROR: misma marea con distinto ESTRATO_RIM")
+    
+  return(errors)
+ 
+}
+
+# ---- function to check multiple ESTRATO_RIM in the same trip -----------------
+#
+#' Check samples with same date, vessel, gear, and port but with different 
+#' ESTRATO_RIM variable.
+#'
+#' @return dataframe with erroneus samples
+#'
+CheckMultipleGear <- function(){
+  
+  errors <- catches %>%
+    select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+    unique() %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+    mutate(num_arte = n_distinct(COD_ARTE))%>%
+    ungroup()%>%
+    # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
+    filter(num_arte != 1) %>%
+    addTypeOfError("ERROR: misma marea con distinto ARTE")
+  
+  return(errors)
+  
+}
+
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -960,6 +1006,9 @@ ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
 ##### TO DO: estrato_rim, gear and division coherence
 
+ERRORS$errors_multiple_estrato_rim <- CheckMultipleEstratoRIM()
+
+ERRORS$errors_multiple_arte <- CheckMultipleGear()
 
 # ---- IN SPECIES ----
 
@@ -1018,7 +1067,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errorsggg", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
