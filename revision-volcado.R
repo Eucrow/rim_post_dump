@@ -1067,7 +1067,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errorsggg", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
