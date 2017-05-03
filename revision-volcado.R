@@ -259,7 +259,7 @@ pesMueDesemGreaterPesDesem <- function (){
 
 
 # function to check samples with SOP > P_VIVO ----------------------------------
-SopGreaterPesVivo <- function (){
+sopGreaterPesVivo <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SOP", "P_VIVO",
                         "DIF_SOP_P_VIVO")
@@ -379,7 +379,7 @@ check_foreing_ships_MT2 <- function(df){
 
 
 # function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA
-# CONSTRUCCI?N or ALTA PROVISIONAL POR REACTIVACI?N in CFPO --------------------
+# CONSTRUCCIÓN or ALTA PROVISIONAL POR REACTIVACIÓN in CFPO --------------------
 shipsNotRegistered <- function(df, cfpo = CFPO){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
@@ -698,13 +698,18 @@ checkCodId <- function() {
   
   # prepare dataframe
   cod_id <- catches %>%
-    select(COD_ID, COD_PUERTO, TIPO_MUE)%>%
+    select(COD_ID, COD_PUERTO, TIPO_MUE, AÑO)%>%
     unique()%>%
     addInfluenceAreaVariable("COD_PUERTO")
   
-  #TODO: CHECK YEAR
-  
   errors_cod_id <- list()
+  
+  # check year
+  errors_cod_id[["year_cod_id"]] <- cod_id %>%
+    mutate(year_id = substr(COD_ID, 1, 4)) %>%
+    filter(year_id != AÑO)%>%
+    addTypeOfError("incorrect year")
+    
   # check number of characters of cod_id
   errors_cod_id[["lenght_cod_id"]] <- cod_id %>% 
     mutate(length_cod_id = nchar(as.character(COD_ID))) %>%
@@ -739,9 +744,9 @@ checkCodId <- function() {
   # combine list errors_cod_id
   errors <- Reduce(function(x, y) { merge(x, y, all = TRUE)} , errors_cod_id) %>%
     # NOSE QUE ES ESE CAMPO TIPO_ERROR... 
-    # select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>%
-    # arrange(COD_ID, TIPO_ERROR)
-    arrange(COD_ID)
+    select(COD_PUERTO, COD_ID, TIPO_MUE, AÑO, TIPO_ERROR, AREA_INF)%>%
+    arrange(COD_ID, TIPO_ERROR)
+    # arrange(COD_ID)
   return(errors)
   
 }
@@ -938,11 +943,6 @@ catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 
-# catches_fecha <- catches
-# catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
-# catches_fecha$month <- catches_fecha$FECHA$mon+1
-# catches_fecha$FECHA <- as.POSIXct(catches_fecha$FECHA)
-
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
@@ -1043,7 +1043,7 @@ ERRORS$sop_zero <- sopZero()
      
 ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
 
-ERRORS$sop_mayor_peso_vivo <- SopGreaterPesVivo()
+ERRORS$sop_mayor_peso_vivo <- sopGreaterPesVivo()
 
 ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 
@@ -1074,7 +1074,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # ------------------------------------------------------------------------------
 
-#errors_cod_id <- checkCodId()
+# errors_cod_id <- checkCodId()
 
 
 # ------------------------------------------------------------------------------    
