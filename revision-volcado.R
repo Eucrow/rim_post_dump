@@ -55,9 +55,9 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YEAR <- "2017"
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-02"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_with_errors.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2).TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO (2).TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO (2).TXT"
 
 MONTH <- 2 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
@@ -938,17 +938,18 @@ CFPO <- cfpo2016
 # ------------------------------------------------------------------------------
 
   muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
-  
 
+  
+  
 #isolate dataframes
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
 
-catches_fecha <- catches
-catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
-catches_fecha$month <- catches_fecha$FECHA$mon+1
-catches_fecha$FECHA <- as.POSIXct(catches_fecha$FECHA)
+# catches_fecha <- catches
+# catches_fecha$FECHA <- as.POSIXlt(catches_fecha$FECHA, format="%d-%m-%y")
+# catches_fecha$month <- catches_fecha$FECHA$mon+1
+# catches_fecha$FECHA <- as.POSIXct(catches_fecha$FECHA)
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -975,7 +976,6 @@ ERRORS$false_MT2 <- check_false_mt2()
 ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed()
 
 ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed()
-
 
 # ---- IN HEADER ----
 
@@ -1067,7 +1067,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errorspp", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
@@ -1083,6 +1083,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 # ------------------------------------------------------------------------------
 
 #errors_cod_id <- checkCodId()
+
 
 # ------------------------------------------------------------------------------    
 # #### MAKE A BACKUP
