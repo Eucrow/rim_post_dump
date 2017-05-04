@@ -47,7 +47,7 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-02"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2).TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2) con errores.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO (2).TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO (2).TXT"
 
@@ -864,7 +864,7 @@ checkNoSexedSpecies <- function() {
 #'
 #' @return dataframe with erroneus samples
 #'
-CheckMultipleEstratoRIM <- function(){
+checkMultipleEstratoRIM <- function(){
   
   errors <- catches %>%
     select(one_of(BASE_FIELDS)) %>%
@@ -885,9 +885,9 @@ CheckMultipleEstratoRIM <- function(){
 #' Check samples with same date, vessel, gear, and port but with different 
 #' ESTRATO_RIM variable.
 #'
-#' @return dataframe with erroneus samples
+#' @return dataframe with erroneous samples
 #'
-CheckMultipleGear <- function(){
+checkMultipleGear <- function(){
   
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
@@ -898,6 +898,24 @@ CheckMultipleGear <- function(){
     # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
     filter(num_arte != 1) %>%
     addTypeOfError("ERROR: misma marea con distinto ARTE")
+  
+  return(errors)
+  
+}
+
+# ---- function to check coherence between ESTRATO_RIM and origin --------------
+#
+#' Check coherence between ESTRATO_RIM and origin.
+#' 
+#'  @return dataframe with wrong coherence.
+#'  
+checkCoherenceEstratoRimOrigin <- function(){
+  
+  errors <- catches %>%
+    select(one_of(BASE_FIELDS), COD_ORIGEN) %>%
+    unique() %>%
+    anti_join(y=estratorim_origen, by=c("ESTRATO_RIM", "COD_ORIGEN")) %>%
+    addTypeOfError("ERROR: no concuerda el estrato_rim con el origen")
   
   return(errors)
   
@@ -977,6 +995,8 @@ ERRORS$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
 
 ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
+ERRORS$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin()
+
 ERRORS$number_of_ships <- numberOfShips()
 
 ERRORS$number_of_rejections <- numberOfRejections()
@@ -998,9 +1018,9 @@ ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
 ##### TO DO: estrato_rim, gear and division coherence
 
-ERRORS$errors_multiple_estrato_rim <- CheckMultipleEstratoRIM()
+ERRORS$errors_multiple_estrato_rim <- checkMultipleEstratoRIM()
 
-ERRORS$errors_multiple_arte <- CheckMultipleGear()
+ERRORS$errors_multiple_arte <- checkMultipleGear()
 
 # ---- IN SPECIES ----
 
@@ -1059,7 +1079,7 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errorspp", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
        
