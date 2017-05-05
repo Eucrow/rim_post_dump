@@ -46,12 +46,12 @@ setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-02"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2) con errores.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2).TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO (2).TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO (2).TXT"
 
-MONTH <- 2 # month in numeric or FALSE for a complete year 
+MONTH <- 1 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -71,7 +71,7 @@ MESSAGE_ERRORS<- list()
 BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
 
 # useful paths
-PATH_ERRORS <- paste(PATH_FILES,"/errors",sep="")
+PATH_ERRORS <- paste(PATH_FILES,"/errors", sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # month as character
@@ -921,6 +921,29 @@ checkCoherenceEstratoRimOrigin <- function(){
   
 }
 
+# ---- function to check ESTRATO_RIM and gear of trips with 2 or more ships. 
+# Exception with Santa Eugenia de Ribeira port, that usually only one ship is
+# sampled
+#
+#' Check ESTRATO_RIM and gear of trips with 2 ships
+#' 
+#' @return dataframe with erroneous trips
+#' 
+checkShipsPairBottomTrawl <- function(){
+  errors <- catches %>%
+    select(one_of(BASE_FIELDS), N_BARCOS) %>%
+    unique()%>%
+    filter(COD_PUERTO != "0917")%>% #This is an execption: only one ship is sampled in Ribeira pair bottom trails
+    filter(
+      ((N_BARCOS == 2 | N_BARCOS == 3 | N_BARCOS == 4) & ESTRATO_RIM != "PAREJA_CN") |
+      (N_BARCOS != 2 & N_BARCOS != 3 & N_BARCOS != 4 & ESTRATO_RIM == "PAREJA_CN")
+    ) %>%
+    addTypeOfError("ERROR: número de barcos no coherente con el estrato rim")
+  return (errors)
+#errors <- addInfluenceAreaVariable(errors, "COD_PUERTO")
+#write.csv(errors, file = "parejas_num_barcos_1.csv")
+}
+
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -1016,11 +1039,11 @@ ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
         
 ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
 
-##### TO DO: estrato_rim, gear and division coherence
-
 ERRORS$errors_multiple_estrato_rim <- checkMultipleEstratoRIM()
 
 ERRORS$errors_multiple_arte <- checkMultipleGear()
+
+ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
 # ---- IN SPECIES ----
 
