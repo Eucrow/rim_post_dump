@@ -9,8 +9,38 @@
 ####
 #### files required: especies_no_permitidas.csv,
 #### generos_permitidos.csv, report 'tallas por UP' from SIRENO
+####
+#### To install (with devtools library loaded):
+#### install_github("Eucrow/revision-volcado.R")
 # ------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# #### INSTRUCTIONS ############################################################
+# ------------------------------------------------------------------------------
+
+# To use this scritp:
+# - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
+# script.
+# - Choose the way to export in the "EXPORT ERRORS" section of this script.
+# Uncomment the interested way. It's available in xlsx file or upload directly
+# to google drive. In this case an accout and password is required, and a token
+# is automaticaly generated.
+# - Run all the script
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# YOU HAVE ONLY TO CHANGE THIS VARIABLES 
+
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-03"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+
+MONTH <- 3 # month in numeric or FALSE for a complete year 
+YEAR <- "2017"
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------
@@ -42,20 +72,6 @@ library(sapmuebase)
 setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# YOU HAVE ONLY TO CHANGE THIS VARIABLES 
-
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2).TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO (2).TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO (2).TXT"
-
-MONTH <- 1 # month in numeric or FALSE for a complete year 
-YEAR <- "2017"
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # #### GLOBAL VARIABLES ########################################################
@@ -64,8 +80,6 @@ YEAR <- "2017"
 # list with all errors found in dataframes:
 ERRORS <- list()
 
-# list with the errors:
-MESSAGE_ERRORS<- list()
 
 # list with the common fields used in all tables
 BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
@@ -103,7 +117,7 @@ MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
 # #### FUNCTIONS ###############################################################
 # ------------------------------------------------------------------------------
 
-# ---- function to make a backup of the errors files --------------------------
+# ---- function to make a backup of the errors files ---------------------------
 backup_files <- function(){
   date <- Sys.time();
   date <- as.POSIXlt(date);
@@ -118,7 +132,7 @@ backup_files <- function(){
   lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
 }
 
-# function to add variable with type of error to a dataframe --------------------
+# function to add variable with type of error to a dataframe -------------------
 addTypeOfError <- function(df, type){
   
   if(nrow(df)!=0){
@@ -276,7 +290,7 @@ sopGreaterPesVivo <- function (){
 }
 
 
-# function to search categories with equal species weight landings --------------
+# function to search categories with equal species weight landings -------------
 speciesWithCategoriesWithSameWeightLanding <- function(){
   catches <- catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
@@ -949,7 +963,9 @@ checkShipsPairBottomTrawl <- function(){
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
 
+#PONER EN CASTELLANO
 #read the mixed species dataset
+
 mixed_species <- especies_mezcla
 
 #read the no mixed species dataset
@@ -975,14 +991,14 @@ CFPO <- cfpo2016
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
 
-  muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
+muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
 
-  
-  
+
 #isolate dataframes
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
+
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -1099,21 +1115,25 @@ ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
 # ------------------------------------------------------------------------------
-    
+
+# Uncomment the way to export errors:
+
+    # one month
+
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
+    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+
+    # a complete year 
+
     #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
-       
-    #exportListToGoogleSheet( combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
-    
+
     #exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
-    
-    #lapply(names(ERRORS), export_errors_lapply, ERRORS) #The 'ERRORS' argument is an argument to the export_errors_lapply function
 
 # ------------------------------------------------------------------------------    
-# #### CHECK CODE_ID
+# #### CHECK CODE_ID ###########################################################
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # ------------------------------------------------------------------------------
 
