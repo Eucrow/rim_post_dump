@@ -12,7 +12,7 @@
 ####
 #### To install (with devtools library loaded):
 #### install_github("Eucrow/revision-volcado.R")
-# ------------------------------------------------------------------------------
+#### ---------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # #### INSTRUCTIONS ############################################################
@@ -21,11 +21,15 @@
 # To use this scritp:
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
 # script.
+# - Make sure report files tallas_x_up from SIRENO are in PATH_FILES.
 # - Choose the way to export in the "EXPORT ERRORS" section of this script.
 # Uncomment the interested way. It's available in xlsx file or upload directly
-# to google drive. In this case an accout and password is required, and a token
-# is automaticaly generated.
+# to google drive. In this case an account and password is required, and a token
+# is automatically generated.
+# - If xlsx option is choosen to export files, make sure a directory "errors" is
+# in PATH_FILENAME path
 # - Run all the script
+# - A file by influence area is generated in "errors" directory.
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
