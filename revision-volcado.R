@@ -9,9 +9,42 @@
 ####
 #### files required: especies_no_permitidas.csv,
 #### generos_permitidos.csv, report 'tallas por UP' from SIRENO
+####
+#### To install (with devtools library loaded):
+#### install_github("Eucrow/revision-volcado.R")
+#### ---------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# #### INSTRUCTIONS ############################################################
 # ------------------------------------------------------------------------------
 
+# To use this script:
+# - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
+# script.
+# - Make sure report files tallas_x_up from SIRENO are in PATH_FILES.
+# - Choose the way to export in the "EXPORT ERRORS" section of this script.
+# Uncomment the interested way. It's available in xlsx file or upload directly
+# to google drive. In this case an account and password is required, and a token
+# is automatically generated.
+# - If xlsx option is choosen to export files, make sure a directory "errors" is
+# in PATH_FILENAME path
+# - Run all the script
+# - A file by influence area is generated in "errors" directory.
 
+# ------------------------------------------------------------------------------
+# YOU HAVE ONLY TO CHANGE THIS VARIABLES
+# ------------------------------------------------------------------------------
+
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-04"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+
+MONTH <- 4 # month in numeric or FALSE for a complete year 
+YEAR <- "2017"
+
+# ------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # #### PACKAGES ################################################################
@@ -41,21 +74,6 @@ library(sapmuebase)
 
 setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
 
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# YOU HAVE ONLY TO CHANGE THIS VARIABLES 
-
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO (2).TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO (2).TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO (2).TXT"
-
-MONTH <- 1 # month in numeric or FALSE for a complete year 
-YEAR <- "2017"
-
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 # #### GLOBAL VARIABLES ########################################################
@@ -122,7 +140,8 @@ backup_files <- function(){
 addTypeOfError <- function(df, type){
   
   if(nrow(df)!=0){
-    df[["TIPO_ERROR"]] <- type
+    # df[["TIPO_ERROR"]] <- type
+    df <- df %>% mutate(TIPO_ERROR = type)
   }
   return(df)
 }
@@ -803,11 +822,13 @@ checkTALL.PESO <- function() {
 #' @return dataframe with erroneus samples
 #'
 checkSexedSpecies <- function() {
-
+  
   errors <- lengths %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     filter( (COD_ESP_MUE %in% especies_sexadas[["COD_ESP"]]))  %>% #only the sexed species
     merge(y=especies_sexadas, by.x=c("COD_ESP_CAT"), by.y=c("COD_ESP"), all.x = T)%>% #merge with sexed species
+    mutate(COD_PUERTO.y=as.character(COD_PUERTO.y))%>% # <--- THIS IS IMPERATIVE BECAUSE
+    #THE sexed_species DATAFRAME HAS DIFFERENT LEVELS THAN THE lengths DATAFRAME.
     filter(COD_PUERTO.y == "ALL" | COD_PUERTO.x == COD_PUERTO.y)%>% # sexed species 
     #must be only with port field "ALL" or a port similiar between lengths and especies_sexadas dataframe
     filter( (SEXO != "M" & SEXO != "H") ) %>%
@@ -880,10 +901,10 @@ checkMultipleEstratoRIM <- function(){
  
 }
 
-# ---- function to check multiple ESTRATO_RIM in the same trip -----------------
+# ---- function to check multiple gear in the same trip -----------------
 #
-#' Check samples with same date, vessel, gear, and port but with different 
-#' ESTRATO_RIM variable.
+#' Check samples with same date, vessel, ESTRATO_RIM, TIPO_MUE, and port but with different 
+#' gear variable.
 #'
 #' @return dataframe with erroneous samples
 #'
@@ -898,6 +919,28 @@ checkMultipleGear <- function(){
     # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
     filter(num_arte != 1) %>%
     addTypeOfError("ERROR: misma marea con distinto ARTE")
+  
+  return(errors)
+  
+}
+
+# ---- function to check multiple COD_PUERTO in the same trip ------------------
+#
+#' Check samples with same date and vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different 
+#' gear variable.
+#'
+#' @return dataframe with erroneous samples
+#'
+checkMultiplePort <- function(){
+  
+  errors <- catches %>%
+    select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+    unique() %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+    mutate(num_puerto = n_distinct(COD_PUERTO))%>%
+    ungroup()%>%
+    filter(num_puerto != 1) %>%
+    addTypeOfError("ERROR: misma marea con distinto PUERTO")
   
   return(errors)
   
@@ -944,6 +987,35 @@ checkShipsPairBottomTrawl <- function(){
 #write.csv(errors, file = "parejas_num_barcos_1.csv")
 }
 
+# ---- function to warning the out of size of the species lengths
+#
+#' Check the size range of species. And if the species exists in 
+#' the rango_tallas_historico dataset
+#' 
+#' @return dataframe with warnings lengths
+#' 
+checkSizeRange <- function (){
+  
+  warningsIsRanged <- lengths%>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO, TALLA)%>%
+    merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
+    filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
+    addTypeOfError("WARNING: esta especie no se encuentra en el maestro histórico de tallas mínimas y máximas")%>%
+    select(-c(TALLA_MIN, TALLA_MAX))
+  
+  warningsOutOfRange <- lengths %>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO, TALLA)%>%
+    merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
+    filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
+    # it's not possible use addTypeOfError here, I don't know why
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas:", TALLA_MIN, "-", TALLA_MAX))%>%
+    select(-c(TALLA_MIN, TALLA_MAX))
+  
+  warnings <- rbind(warningsIsRanged, warningsOutOfRange)
+  
+  return(warnings)
+
+}
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -1043,6 +1115,8 @@ ERRORS$errors_multiple_estrato_rim <- checkMultipleEstratoRIM()
 
 ERRORS$errors_multiple_arte <- checkMultipleGear()
 
+ERRORS$errors_multiple_puerto <- checkMultiplePort()
+
 ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
 # ---- IN SPECIES ----
@@ -1089,6 +1163,10 @@ ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
 ERRORS$sop_mayor_peso_vivo <- sopGreaterPesVivo()
 
 ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
+
+# ---- IN LENGTHS ----
+
+ERRORS$rango_tallas <- checkSizeRange()
 
 # ------------------------------------------------------------------------------    
 # #### COMBINE ERRORS ##########################################################
