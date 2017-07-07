@@ -36,12 +36,12 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-04"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-03"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 4 # month in numeric or FALSE for a complete year 
+MONTH <- 3 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -1015,6 +1015,20 @@ checkSizeRange <- function (){
 
 }
 
+# function to check estrategia
+# TODO: rellenar esto para document()
+
+checkStrategy <- function(){
+  
+  error_strategy <- catches %>% 
+    select(one_of(c(BASE_FIELDS, "ESTRATEGIA")))%>%
+    anti_join(y=tipo_mue, by = c("COD_TIPO_MUE", "ESTRATEGIA"))%>%
+    addTypeOfError("ERROR: No concuerda el campo ESTRATEGIA con el campo TIPO DE MUESTREO")
+  
+  return(error_strategy)
+  
+}
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -1119,6 +1133,8 @@ ERRORS$errors_multiple_puerto <- checkMultiplePort()
 
 ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
+ERRORS$estrategia <- checkStrategy()
+
 # ---- IN SPECIES ----
 
 ERRORS$mixed_species_category <- mixedSpeciesInCategory()
@@ -1184,7 +1200,7 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
