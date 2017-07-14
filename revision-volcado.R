@@ -36,12 +36,12 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-03"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-05"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 3 # month in numeric or FALSE for a complete year 
+MONTH <- 5 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -998,7 +998,8 @@ checkSizeRange <- function (){
     select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO, TALLA)%>%
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
-    addTypeOfError("WARNING: esta especie no se encuentra en el maestro histórico de tallas mínimas y máximas")%>%
+    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas")%>%
+    humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
   warningsOutOfRange <- lengths %>%
@@ -1006,7 +1007,8 @@ checkSizeRange <- function (){
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
-    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas:", TALLA_MIN, "-", TALLA_MAX))%>%
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
+    humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
   warnings <- rbind(warningsIsRanged, warningsOutOfRange)
@@ -1200,9 +1202,9 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    # exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
     # a complete year 
 
