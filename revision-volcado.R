@@ -992,12 +992,13 @@ checkShipsPairBottomTrawl <- function(){
 #' 
 #' @return dataframe with warnings lengths
 #' 
-checkSizeRange <- function (){
+  <- function (){
   
   warningsIsRanged <- lengths%>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO, TALLA)%>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO)%>%
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
+    unique()%>%
     addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas")%>%
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
@@ -1011,7 +1012,8 @@ checkSizeRange <- function (){
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
-  warnings <- rbind(warningsIsRanged, warningsOutOfRange)
+  # warnings <- rbind(warningsIsRanged, warningsOutOfRange)
+  warnings <- merge(warningsIsRanged, warningsOutOfRange, all = T)
   
   return(warnings)
 
@@ -1204,7 +1206,7 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    # exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
     # a complete year 
 
