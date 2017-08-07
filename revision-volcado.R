@@ -36,12 +36,12 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-05"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-06"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_con_errores.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 5 # month in numeric or FALSE for a complete year 
+MONTH <- 6 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ library(devtools)
 
 # ---- install sapmuebase from local
 #install_github("Eucrow/sapmuebase")
-#install("F:/misdoc/sap/sapmuebase")
+ # install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
 
 
@@ -84,7 +84,7 @@ ERRORS <- list()
 
 
 # list with the common fields used in all tables
-BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
+BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE", "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
 
 # useful paths
 PATH_ERRORS <- paste(PATH_FILES,"/errors", sep="")
@@ -170,12 +170,12 @@ formatErrorsList <- function(errors_list = ERRORS){
     
     # Order columns
     x <- x %>%
-      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA, COD_BARCO, BARCO, ESTRATO_RIM,
+      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM,
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
              select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
-             mutate(FECHA = as.Date(FECHA, "%d-%m-%y")) %>%
-             arrange_( "COD_PUERTO", "FECHA", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+             mutate(FECHA_MUE = as.Date(FECHA_MUE, "%d-%m-%y")) %>%
+             arrange_( "COD_PUERTO", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -437,7 +437,7 @@ checkMt2b <- function(){
     group_by_(.dots = BASE_FIELDS) %>%
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   
-  false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
+  false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA_MUE","COD_BARCO")) %>% unique()
   false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2B sin tallas")
   
   return(false_mt2b)
@@ -553,7 +553,7 @@ check_false_mt2 <- function(){
           summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   
   # check if all the samples keyed as MT2 has lenghts
-  false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA","COD_BARCO")) %>% unique()
+  false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA_MUE","COD_BARCO")) %>% unique()
   false_mt2 <- addTypeOfError(false_mt2, "ERROR: MT2 sin tallas")
 
   return(false_mt2)  
@@ -888,7 +888,7 @@ checkMultipleEstratoRIM <- function(){
   errors <- catches %>%
     select(one_of(BASE_FIELDS)) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, COD_TIPO_MUE, TIPO_MUE) %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, COD_TIPO_MUE, TIPO_MUE) %>%
     mutate(num_estrato_rim = n_distinct(ESTRATO_RIM))%>%
     ungroup()%>%
     # summarise(num_estrato_rim = n_distinct(ESTRATO_RIM)) %>%
@@ -911,7 +911,7 @@ checkMultipleGear <- function(){
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
     mutate(num_arte = n_distinct(COD_ARTE))%>%
     ungroup()%>%
     # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
@@ -934,7 +934,7 @@ checkMultiplePort <- function(){
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
     mutate(num_puerto = n_distinct(COD_PUERTO))%>%
     ungroup()%>%
     filter(num_puerto != 1) %>%
@@ -992,7 +992,7 @@ checkShipsPairBottomTrawl <- function(){
 #' 
 #' @return dataframe with warnings lengths
 #' 
-  <- function (){
+checkSizeRange<- function (){
   
   warningsIsRanged <- lengths%>%
     select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO)%>%
@@ -1033,6 +1033,21 @@ checkStrategy <- function(){
   
 }
 
+# check same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
+checkSameTripDifferentTypeSamle <- function(){
+  
+  error <- catches %>%
+    select(COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
+    unique()%>%
+    group_by(COD_BARCO, FECHA_MUE)%>%
+    mutate(number_type_sample = n()) %>%
+    filter(number_type_sample >1) %>%
+    addTypeOfError("ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos")
+  
+  return(error)
+    
+}
+
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -1065,14 +1080,22 @@ CFPO <- cfpo2016
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
 
-muestreos_up <- importMuestreosUP(FILENAME_DES_TOT, FILENAME_DES_TAL, FILENAME_TAL, path = PATH_FILES, by_month = MONTH)
-
+muestreos_up <- importRIMFiles(
+  des_tot = FILENAME_DES_TOT,
+  des_tal = FILENAME_DES_TAL,
+  tal = FILENAME_TAL,
+  path = PATH_FILES,
+  by_month = MONTH)
+  
+# prueba <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
+# prueba <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
+# prueba_LENGTHS <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
+ 
 
 #isolate dataframes
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
-
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -1139,6 +1162,8 @@ ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
 ERRORS$estrategia <- checkStrategy()
 
+ERRORS$multiple_tipo_muestreo <- checkSameTripDifferentTypeSamle()
+
 # ---- IN SPECIES ----
 
 ERRORS$mixed_species_category <- mixedSpeciesInCategory()
@@ -1204,9 +1229,9 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-
-    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    # exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    #  
+    # exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
     # a complete year 
 
