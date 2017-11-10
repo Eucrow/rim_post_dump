@@ -36,12 +36,12 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-06"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_con_errores.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-09"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 6 # month in numeric or FALSE for a complete year 
+MONTH <- 9 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -888,12 +888,12 @@ checkMultipleEstratoRIM <- function(){
   errors <- catches %>%
     select(one_of(BASE_FIELDS)) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, COD_TIPO_MUE, TIPO_MUE) %>%
+    group_by(COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, COD_TIPO_MUE, TIPO_MUE) %>%
     mutate(num_estrato_rim = n_distinct(ESTRATO_RIM))%>%
     ungroup()%>%
     # summarise(num_estrato_rim = n_distinct(ESTRATO_RIM)) %>%
     filter(num_estrato_rim != 1) %>%
-    addTypeOfError("ERROR: misma marea con distinto ESTRATO_RIM")
+    addTypeOfError("ERROR: mismo puerto/fecha/barco/tipo_muestreo con distinto ESTRATO_RIM")
     
   return(errors)
  
@@ -911,12 +911,12 @@ checkMultipleGear <- function(){
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+    group_by(COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
     mutate(num_arte = n_distinct(COD_ARTE))%>%
     ungroup()%>%
     # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
     filter(num_arte != 1) %>%
-    addTypeOfError("ERROR: misma marea con distinto ARTE")
+    addTypeOfError("ERROR: mismo puerto/fecha/barco/estrato_rim con distinto ARTE")
   
   return(errors)
   
@@ -938,7 +938,7 @@ checkMultiplePort <- function(){
     mutate(num_puerto = n_distinct(COD_PUERTO))%>%
     ungroup()%>%
     filter(num_puerto != 1) %>%
-    addTypeOfError("ERROR: misma marea con distinto PUERTO")
+    addTypeOfError("ERROR: mismo fecha/barco/estrato_rim/tipo_muestre con distinto PUERTO")
   
   return(errors)
   
@@ -1034,18 +1034,59 @@ checkStrategy <- function(){
 }
 
 # check same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
-checkSameTripDifferentTypeSamle <- function(){
+multipleTypeSamle <- function(){
   
   error <- catches %>%
-    select(COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
+    select(COD_BARCO, COD_PUERTO, LOCODE, FECHA_MUE, COD_TIPO_MUE) %>%
     unique()%>%
     group_by(COD_BARCO, FECHA_MUE)%>%
     mutate(number_type_sample = n()) %>%
     filter(number_type_sample >1) %>%
     addTypeOfError("ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos")
   
+  error <- humanize(error)
+  
   return(error)
     
+}
+
+# ---- function to check elapsed days between landing date and sampling date ---
+#' Check elapsed days between landing date and sampling date
+#' 
+#' A warning is generated if the elepsaed days are minor than 0 or greater than
+#' 2
+#' 
+#' @return dataframe with erroneous trips
+#' 
+check_elapsed_days <- function(){
+  
+  catches$FECHA_MUE <- as.POSIXlt(catches$FECHA_MUE, format = "%d-%m-%y")
+  
+  # change the column "FECHA_DESEM" to a date format
+  # to avoid some problems with Spanish_Spain.1252 (or if you are using another
+  # locale), change locale to Spanish_United States.1252:
+  lct <- Sys.getlocale("LC_TIME")
+  Sys.setlocale("LC_TIME","Spanish_United States.1252")
+  
+  catches[["FECHA_DESEM"]] <- as.POSIXlt(catches[["FECHA_DESEM"]], format = "%d-%b-%y")
+  
+  # and now the come back to the initial configuration of locale:
+  Sys.setlocale("LC_TIME", lct)
+  
+  catches[["elapsed_days"]] <- difftime(catches[["FECHA_MUE"]], catches[["FECHA_DESEM"]], units = "days")
+  
+  catches[["FECHA_MUE"]] <- as.POSIXct(catches[["FECHA_MUE"]])
+  catches[["FECHA_DESEM"]] <- as.POSIXct(catches[["FECHA_DESEM"]])
+  
+  errors <- catches %>%
+    select(one_of(c(BASE_FIELDS), "FECHA_DESEM", "elapsed_days")) %>%
+    filter(elapsed_days>3 | elapsed_days<(-1)) %>%
+    unique() %>%
+    addTypeOfError("WARNING: tiempo transcurrido entre la fecha de desembarco y
+                   la de muestreo mayor que 3 días o menor que 0 días")
+  
+  return(errors)
+  
 }
 
 # ------------------------------------------------------------------------------
@@ -1162,7 +1203,9 @@ ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
 ERRORS$estrategia <- checkStrategy()
 
-ERRORS$multiple_tipo_muestreo <- checkSameTripDifferentTypeSamle()
+ERRORS$multiple_tipo_muestreo <- multipleTypeSamle()
+
+ERRORS$tiempo_transcurrido <- check_elapsed_days()
 
 # ---- IN SPECIES ----
 
@@ -1229,9 +1272,9 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    # exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     #  
-    # exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
     # a complete year 
 
@@ -1251,4 +1294,4 @@ ERRORS$rango_tallas <- checkSizeRange()
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
-    
+
