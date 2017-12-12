@@ -36,12 +36,13 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-09"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-10"
+# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01-to-06"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 9 # month in numeric or FALSE for a complete year 
+MONTH <- 10 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -135,7 +136,11 @@ backup_files <- function(){
 }
 
 # function to add variable with type of error to a dataframe -------------------
-addTypeOfError <- function(df, type){
+addTypeOfError <- function(df, ...){
+  
+  arguments <- list(...)
+  
+  type <- paste(arguments, collapse = '', sep = " ")
   
   if(nrow(df)!=0){
     # df[["TIPO_ERROR"]] <- type
@@ -152,7 +157,9 @@ addTypeOfError <- function(df, type){
 # - separate the dataframe by influence area
 # - order every area dataframe
 # - remove empty columns in every area dataframe
-formatErrorsList <- function(errors_list = ERRORS){
+# the separate_by_ia = FALSE generate one dataframe without separate by influence
+# area, but with the AREA_INF variable
+formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
   
   # Combine all the dataframes of ERRORS list:
   # Reduce uses a binary function to successively combine the elements of a
@@ -162,8 +169,16 @@ formatErrorsList <- function(errors_list = ERRORS){
   #better with join_all form plyr package because doesn't change the order of columns:
   errors <- join_all(errors_list, type = "full")
   
-  # Separate dataframe by influece area
-  errors <- separateDataframeByInfluenceArea(errors, "COD_PUERTO")
+  if(separate_by_ia == FALSE){
+    areas_influencia <- areas_influencia[, c("COD_PUERTO", "AREA_INF")]
+    errors <- merge(errors, areas_influencia, by = "COD_PUERTO", all.x = TRUE)
+    errors <- list(total = errors)
+  } else if (separate_by_ia == TRUE) {
+    # Separate dataframe by influece area
+    errors <- separateDataframeByInfluenceArea(errors, "COD_PUERTO")
+  } else {
+    stop("separete_by_ia must be TRUE or FALSE")
+  }
   
   # Order the errors and remove columns with only NA values
   errors <- lapply(errors, function(x){
@@ -173,9 +188,9 @@ formatErrorsList <- function(errors_list = ERRORS){
       select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM,
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
-             select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
-             mutate(FECHA_MUE = as.Date(FECHA_MUE, "%d-%m-%y")) %>%
-             arrange_( "COD_PUERTO", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+      select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
+      mutate(FECHA_MUE = as.Date(FECHA_MUE, "%d-%m-%y")) %>%
+      arrange_( "COD_PUERTO", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -183,6 +198,7 @@ formatErrorsList <- function(errors_list = ERRORS){
     
     # Add column Comprobado
     x[["comprobado"]] <- ""
+    
     
     return(x)
   })  
@@ -205,7 +221,7 @@ coherenceEstratoRimGear <- function(df){
 # Function to search errors in number of ships (empty field, =0 or >2) ---------
 numberOfShips <- function (){
   errors <- catches[catches["N_BARCOS"] == 0 | catches["N_BARCOS"] > 2 | is.null(catches["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
-  errors <- addTypeOfError(errors, "WARNING: número de barcos igual a 0 o mayor de 2")
+  errors <- addTypeOfError(errors, "WARNING: n?mero de barcos igual a 0 o mayor de 2")
   return (errors)
 }
 
@@ -214,7 +230,7 @@ numberOfShips <- function (){
 numberOfRejections <- function(){
   errors <- catches %>%
     filter(N_RECHAZOS == ""|is.na(N_RECHAZOS)|is.null(N_RECHAZOS))
-  errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
+  errors <- addTypeOfError(errors, "ERROR: n?mero de rechazos sin rellenar")
   return(errors)
 }
 
@@ -302,7 +318,7 @@ speciesWithCategoriesWithSameWeightLanding <- function(){
     count_(fields_to_count) %>%
     filter(n>1)
   colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
-  errors <- addTypeOfError(errors, "WARNING: varias categorías con igual peso desembarcado")
+  errors <- addTypeOfError(errors, "WARNING: varias categor?as con igual peso desembarcado")
   return(errors)
 }
 
@@ -316,7 +332,7 @@ allCategoriesWithSameSampledWeights <- function (){
     #tally() %>% # tally() is the same that summarise(num = n())
     summarise(NUM_ESP_CAT_MISMO_PESO_MUE=n())%>%
     filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
-    addTypeOfError("WARNING: varias especies de la categoría con igual peso muestreado")
+    addTypeOfError("WARNING: varias especies de la categor?a con igual peso muestreado")
 }
 
 # function to search samples with doubtfull species of the category. This function
@@ -343,7 +359,7 @@ doubtfulCategorySpecies <- function(){
   errors <- unique(genus_not_allowed)  %>%
     arrange_(BASE_FIELDS)
   
-  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Espcies de la Categoría?")
+  errors <- addTypeOfError(errors, "WARNING: ?seguro que es esa especie en Espcies de la Categor?a?")
   
   return(errors)
 }
@@ -362,7 +378,7 @@ notAllowedCategorySpecies <- function(){
   errors <- unique(not_allowed)  %>%
     arrange_(BASE_FIELDS)
   
-  errors <- addTypeOfError(errors, "ERROR: muestreos con especies no permitidos en Especies de la Categoría")
+  errors <- addTypeOfError(errors, "ERROR: muestreos con especies no permitidos en Especies de la Categor?a")
   
   return(errors)
 }
@@ -396,7 +412,7 @@ check_foreing_ships_MT2 <- function(df){
 
 
 # function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA
-# CONSTRUCCIÓN or ALTA PROVISIONAL POR REACTIVACIÓN in CFPO --------------------
+# CONSTRUCCI?N or ALTA PROVISIONAL POR REACTIVACI?N in CFPO --------------------
 shipsNotRegistered <- function(df, cfpo = CFPO){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
@@ -405,7 +421,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
     filter( ESTADO != "ALTA DEFINITIVA" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("ERROR: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivación, o A.P Por Nueva Construcción")
+  text_type_of_error <- paste0("ERROR: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivaci?n, o A.P Por Nueva Construcci?n")
   errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
   return (errors_ships)
 }
@@ -625,7 +641,7 @@ mixedSpeciesInCategory <- function(){
   
   errors <- merge(x=clean_catches_in_lenghts, y=not_allowed_in_category, by.x = "COD_ESP_CAT", by.y = "COD_ESP_MUE")
   
-  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
+  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que est? agrupada en Especies para la Categor?a")
   
 } 
 
@@ -653,7 +669,7 @@ doubtfulSampledSpecies <- function(){
   # remove duplicates
   errors <- unique(genus_not_allowed)
   
-  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Especies del Muestreo?")
+  errors <- addTypeOfError(errors, "WARNING: ?seguro que es esa especie en Especies del Muestreo?")
   
   return(errors)
 }
@@ -701,7 +717,7 @@ categoriesWithRepeatedSexes <- function() {
               group_by_(.dots = selected_fields) %>%
               summarise(NUM_MISMOS_SEXOS = n()) %>%
               filter(NUM_MISMOS_SEXOS != 1) %>%
-              addTypeOfError("Categorías con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
+              addTypeOfError("Categor?as con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
 
 }
 
@@ -715,7 +731,7 @@ checkCodId <- function() {
   
   # prepare dataframe
   cod_id <- catches %>%
-    select(COD_ID, COD_PUERTO, TIPO_MUE, AÑO)%>%
+    select(COD_ID, COD_PUERTO, TIPO_MUE, A?O)%>%
     unique()%>%
     addInfluenceAreaVariable("COD_PUERTO")
   
@@ -724,7 +740,7 @@ checkCodId <- function() {
   # check year
   errors_cod_id[["year_cod_id"]] <- cod_id %>%
     mutate(year_id = substr(COD_ID, 1, 4)) %>%
-    filter(year_id != AÑO)%>%
+    filter(year_id != A?O)%>%
     addTypeOfError("incorrect year")
     
   # check number of characters of cod_id
@@ -761,7 +777,7 @@ checkCodId <- function() {
   # combine list errors_cod_id
   errors <- Reduce(function(x, y) { merge(x, y, all = TRUE)} , errors_cod_id) %>%
     # NOSE QUE ES ESE CAMPO TIPO_ERROR... 
-    select(COD_PUERTO, COD_ID, TIPO_MUE, AÑO, TIPO_ERROR, AREA_INF)%>%
+    select(COD_PUERTO, COD_ID, TIPO_MUE, A?O, TIPO_ERROR, AREA_INF)%>%
     arrange(COD_ID, TIPO_ERROR)
     # arrange(COD_ID)
   return(errors)
@@ -833,7 +849,7 @@ checkSexedSpecies <- function() {
     rename("COD_PUERTO" = COD_PUERTO.x, "PUERTO" = PUERTO.x, "LOCODE" = LOCODE.x, "ESP_MUE" = ESP_MUE.x) %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     unique()%>%
-    addTypeOfError("ERROR: especie que debería ser sexada")
+    addTypeOfError("ERROR: especie que deber?a ser sexada")
   
   return(errors)
 }
@@ -871,7 +887,7 @@ checkNoSexedSpecies <- function() {
   
   # merge errors
   errors <- rbind(errors_species_must_not_be_sexed, errors_species_must_be_sexed_only_in_some_ports) %>%
-    addTypeOfError("ERROR: especie que NO debería ser sexada")
+    addTypeOfError("ERROR: especie que NO deber?a ser sexada")
   
   return(errors)
 }
@@ -931,14 +947,21 @@ checkMultipleGear <- function(){
 #'
 checkMultiplePort <- function(){
   
+  # errors <- catches %>%
+  #   select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+  #   unique() %>%
+  #   group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
+  #   mutate(num_puerto = n_distinct(COD_PUERTO))%>%
+  #   ungroup()%>%
+  #   filter(num_puerto != 1) %>%
+  #   addTypeOfError("ERROR: mismo fecha/barco/estrato_rim/tipo_muestre con distinto PUERTO")
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
-    group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
-    mutate(num_puerto = n_distinct(COD_PUERTO))%>%
-    ungroup()%>%
+    group_by(FECHA_MUE, COD_BARCO, ESTRATO_RIM, COD_TIPO_MUE) %>%
+    mutate(num_puerto = n()) %>%
     filter(num_puerto != 1) %>%
-    addTypeOfError("ERROR: mismo fecha/barco/estrato_rim/tipo_muestre con distinto PUERTO")
+    addTypeOfError("ERROR: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO")
   
   return(errors)
   
@@ -956,6 +979,7 @@ checkCoherenceEstratoRimOrigin <- function(){
     select(one_of(BASE_FIELDS), COD_ORIGEN) %>%
     unique() %>%
     anti_join(y=estratorim_origen, by=c("ESTRATO_RIM", "COD_ORIGEN")) %>%
+    humanize()%>%
     addTypeOfError("ERROR: no concuerda el estrato_rim con el origen")
   
   return(errors)
@@ -979,7 +1003,7 @@ checkShipsPairBottomTrawl <- function(){
       ((N_BARCOS == 2 | N_BARCOS == 3 | N_BARCOS == 4) & ESTRATO_RIM != "PAREJA_CN") |
       (N_BARCOS != 2 & N_BARCOS != 3 & N_BARCOS != 4 & ESTRATO_RIM == "PAREJA_CN")
     ) %>%
-    addTypeOfError("ERROR: número de barcos no coherente con el estrato rim")
+    addTypeOfError("ERROR: n?mero de barcos no coherente con el estrato rim")
   return (errors)
 #errors <- addInfluenceAreaVariable(errors, "COD_PUERTO")
 #write.csv(errors, file = "parejas_num_barcos_1.csv")
@@ -999,7 +1023,7 @@ checkSizeRange<- function (){
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
     unique()%>%
-    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas")%>%
+    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro hist?rico de tallas m?nimas y m?ximas")%>%
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
@@ -1008,7 +1032,7 @@ checkSizeRange<- function (){
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
-    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango hist?rico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
@@ -1018,6 +1042,22 @@ checkSizeRange<- function (){
   return(warnings)
 
 }
+
+checkCatchesP90 <- function(){
+  
+  warnings <- catches %>%
+    select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, P_DESEM) %>%
+    merge(., p90_capturas_historico,
+          by.x = c("ESTRATO_RIM", "COD_ESP_MUE"),
+          by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
+    filter(P_DESEM > P90) %>%
+    mutate('%dif' = format((P90 * 100 / P_DESEM), digits=0))
+  
+  return(warnings)
+  
+}
+
+ppp <- checkCatchesP90()
 
 # function to check estrategia
 # TODO: rellenar esto para document()
@@ -1034,20 +1074,36 @@ checkStrategy <- function(){
 }
 
 # check same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
-multipleTypeSamle <- function(){
+multipleTypeSample <- function(){
+  
+  # error <- catches %>%
+  #   select(COD_BARCO, COD_PUERTO, LOCODE, FECHA_MUE, COD_TIPO_MUE) %>%
+  #   unique()%>%
+  #   group_by(COD_BARCO, FECHA_MUE)%>%
+  #   mutate(number_type_sample = n()) %>%
+  #   filter(number_type_sample >1) %>%
+  #   addTypeOfError("ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos")
+  
+  # error <- catches %>%
+  #   select(COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
+  #   unique()%>%
+  #   group_by(COD_BARCO, FECHA_MUE)%>%
+  #   mutate(number_type_sample = n()) %>%
+  #   filter(number_type_sample >1) %>%
+  #   addTypeOfError("ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos")
   
   error <- catches %>%
-    select(COD_BARCO, COD_PUERTO, LOCODE, FECHA_MUE, COD_TIPO_MUE) %>%
+    select(COD_ID, COD_PUERTO, COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
     unique()%>%
     group_by(COD_BARCO, FECHA_MUE)%>%
-    mutate(number_type_sample = n()) %>%
+    mutate(number_type_sample = n_distinct(COD_TIPO_MUE, COD_BARCO)) %>%
     filter(number_type_sample >1) %>%
     addTypeOfError("ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos")
   
   error <- humanize(error)
   
   return(error)
-    
+  
 }
 
 # ---- function to check elapsed days between landing date and sampling date ---
@@ -1083,7 +1139,7 @@ check_elapsed_days <- function(){
     filter(elapsed_days>3 | elapsed_days<(-1)) %>%
     unique() %>%
     addTypeOfError("WARNING: tiempo transcurrido entre la fecha de desembarco y
-                   la de muestreo mayor que 3 días o menor que 0 días")
+                   la de muestreo mayor que 3 d?as o menor que 0 d?as")
   
   return(errors)
   
@@ -1137,6 +1193,7 @@ muestreos_up <- importRIMFiles(
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
+
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -1203,7 +1260,7 @@ ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
 
 ERRORS$estrategia <- checkStrategy()
 
-ERRORS$multiple_tipo_muestreo <- multipleTypeSamle()
+ERRORS$multiple_tipo_muestreo <- multipleTypeSample()
 
 ERRORS$tiempo_transcurrido <- check_elapsed_days()
 
