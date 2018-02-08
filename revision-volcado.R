@@ -36,8 +36,8 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-12"
-# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01-to-06"
+#PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-12"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/PRUEBAS"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
@@ -93,6 +93,12 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # month as character
 MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
+
+# read especies_sujetas_a_posible_confusión_taxonómica.csv file
+ESP_TAXONOMIC_CONFUSION <- read.csv(
+  "especies_sujetas_a_posible_confusión_taxonómica.csv",
+  fileEncoding = "UTF-8",
+  colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
 
 # check the month is correct
 # can be 1 to 12, or "annual" to check all the gear
@@ -319,7 +325,7 @@ speciesWithCategoriesWithSameWeightLanding <- function(){
     count_(fields_to_count) %>%
     filter(n>1)
   colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
-  errors <- addTypeOfError(errors, "WARNING: varias categor?as con igual peso desembarcado")
+  errors <- addTypeOfError(errors, "WARNING: varias categorías con igual peso desembarcado")
   return(errors)
 }
 
@@ -333,7 +339,7 @@ allCategoriesWithSameSampledWeights <- function (){
     #tally() %>% # tally() is the same that summarise(num = n())
     summarise(NUM_ESP_CAT_MISMO_PESO_MUE=n())%>%
     filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
-    addTypeOfError("WARNING: varias especies de la categor?as con igual peso muestreado")
+    addTypeOfError("WARNING: varias especies de la categorías con igual peso muestreado")
 }
 
 # function to search samples with doubtfull species of the category.
@@ -644,7 +650,7 @@ mixedSpeciesInCategory <- function(){
   
   errors <- merge(x=clean_catches_in_lenghts, y=not_allowed_in_category, by.x = "COD_ESP_CAT", by.y = "COD_ESP_MUE")
   
-  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que est? agrupada en Especies para la Categor?a")
+  errors <- addTypeOfError(errors, "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría")
   
 } 
 
@@ -670,7 +676,7 @@ doubtfulSampledSpecies <- function(){
   # 'especies de la categoría':
   # remove other allowed species
   # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
-    select(one_of(selected_fields))
+  #  select(one_of(selected_fields))
 
   # remove duplicates
   errors <- unique(genus_not_allowed)
@@ -723,7 +729,7 @@ categoriesWithRepeatedSexes <- function() {
               group_by_(.dots = selected_fields) %>%
               summarise(NUM_MISMOS_SEXOS = n()) %>%
               filter(NUM_MISMOS_SEXOS != 1) %>%
-              addTypeOfError("Categor?as con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
+              addTypeOfError("categorías con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
 
 }
 
@@ -1152,6 +1158,37 @@ check_elapsed_days <- function(){
   
 }
 
+# ---- function to warning species with taxonomic confusion --------------------
+#' Search in catches and catches_in_lengths dataset the species which can have
+#' problems with taxonomic confusion. 
+#' 
+#' This species are listed in the dataset
+#' ESP_TAXONOMIC_CONFUSION.
+#' 
+#' @return dataframe with warnings
+#' 
+taxonomicSpecieConfusion <- function () {
+  
+  err_catches <- catches%>%
+    select(one_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_MUE", "ESP_MUE"))) %>%
+    unique%>%
+    merge(, y = ESP_TAXONOMIC_CONFUSION, by.x=(c("COD_ESP_MUE", "COD_ORIGEN")), by.y = (c("COD_ESP_WARNING", "COD_ORIGEN"))) %>%
+    addTypeOfError("WARNING: ¿seguro que la especie del muestreo no es la propuesta en ESP_PROPUESTA?")
+  
+  err_catches_in_lengths <- catches_in_lengths%>%
+    select(one_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_CAT", "ESP_CAT"))) %>%
+    unique%>%
+    merge(, y = ESP_TAXONOMIC_CONFUSION, by.x=(c("COD_ESP_CAT", "COD_ORIGEN")), by.y = (c("COD_ESP_WARNING", "COD_ORIGEN"))) %>%
+    addTypeOfError("WARNING: ¿seguro que la especie de la categoría no es la propuesta en ESP_PROPUESTA?")
+  
+  err <- merge(err_catches, err_catches_in_lengths, all = TRUE) %>%
+    select(-c(ESP_WARNING))
+
+  colnames(err)[colnames(err) == "COMENTARIOS"] <- "COMENTARIO ESPECIE"
+  
+  return(err)
+  
+}
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
 # ------------------------------------------------------------------------------
@@ -1296,6 +1333,8 @@ check_them_all <- function () {
     err$no_sexed_species <- checkNoSexedSpecies()
     
     err$sexed_species <- checkSexedSpecies()
+    
+    err$taxonomic_specie_confusion <- taxonomicSpecieConfusion()
     
     
     # ---- IN WEIGHTS ----
