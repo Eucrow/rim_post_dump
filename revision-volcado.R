@@ -36,13 +36,13 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-10"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-12"
 # PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-01-to-06"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 10 # month in numeric or FALSE for a complete year 
+MONTH <- 12 # month in numeric or FALSE for a complete year 
 YEAR <- "2017"
 
 # ------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ YEAR <- "2017"
 
 library(plyr)
 library(dplyr) #arrange_()
-library(tools) #file_path_sans_ext()
+# library(tools) #file_path_sans_ext()
 library(devtools)
 
 # ---- install googlesheets from github
@@ -209,7 +209,8 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 
 # Function to check the coherence between 'ESTRATO_RIM' and 'gear' -------------
 coherenceEstratoRimGear <- function(df){
-  merge_estrato_rim_gear<-merge(x=df, y=CORRECT_ESTRATORIM_ARTE, by.x = c("ESTRATO_RIM", "ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
+  estratorim_arte$VALID<-TRUE
+  merge_estrato_rim_gear<-merge(x=df, y=estratorim_arte, by.x = c("ESTRATO_RIM", "ARTE"), by.y = c("ESTRATO_RIM", "ARTE"), all.x = TRUE)
   incoherent_data <- -which(merge_estrato_rim_gear[["VALID"]])
   incoherent_data <- merge_estrato_rim_gear[incoherent_data,c(BASE_FIELDS, "COD_ARTE.x", "ARTE")]
   incoherent_data <- unique(incoherent_data)
@@ -221,7 +222,7 @@ coherenceEstratoRimGear <- function(df){
 # Function to search errors in number of ships (empty field, =0 or >2) ---------
 numberOfShips <- function (){
   errors <- catches[catches["N_BARCOS"] == 0 | catches["N_BARCOS"] > 2 | is.null(catches["N_BARCOS"]), c(BASE_FIELDS, "N_BARCOS")]
-  errors <- addTypeOfError(errors, "WARNING: n?mero de barcos igual a 0 o mayor de 2")
+  errors <- addTypeOfError(errors, "WARNING: número de barcos igual a 0 o mayor de 2")
   return (errors)
 }
 
@@ -230,7 +231,7 @@ numberOfShips <- function (){
 numberOfRejections <- function(){
   errors <- catches %>%
     filter(N_RECHAZOS == ""|is.na(N_RECHAZOS)|is.null(N_RECHAZOS))
-  errors <- addTypeOfError(errors, "ERROR: n?mero de rechazos sin rellenar")
+  errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
   return(errors)
 }
 
@@ -332,11 +333,10 @@ allCategoriesWithSameSampledWeights <- function (){
     #tally() %>% # tally() is the same that summarise(num = n())
     summarise(NUM_ESP_CAT_MISMO_PESO_MUE=n())%>%
     filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
-    addTypeOfError("WARNING: varias especies de la categor?a con igual peso muestreado")
+    addTypeOfError("WARNING: varias especies de la categor?as con igual peso muestreado")
 }
 
-# function to search samples with doubtfull species of the category. This function
-# use the allowed genus dataframe of SAPMUEBASE.
+# function to search samples with doubtfull species of the category.
 # Search, too, the genus finished in -formes, -dae, - spp and - sp.
 doubtfulCategorySpecies <- function(){
   
@@ -349,17 +349,20 @@ doubtfulCategorySpecies <- function(){
   # + = one of more of previous
   # | = or
   
-  genus_not_allowed <- catches_in_lengths[to_check_genus,]
-  
-  # remove other allowed species from the dataframe with not allowed species
-  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_CAT"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+  genus_not_allowed <- catches_in_lengths[to_check_genus,] %>%
     select(one_of(selected_fields))
+  
+  # this is obsolete: when was allowed Loligo spp an Allotheuthis spp saved in
+  # 'especies de la categoría':
+  # remove other allowed species from the dataframe with not allowed species
+  # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_CAT"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+  #   select(one_of(selected_fields))
   
   # remove duplicates
   errors <- unique(genus_not_allowed)  %>%
     arrange_(BASE_FIELDS)
   
-  errors <- addTypeOfError(errors, "WARNING: ?seguro que es esa especie en Espcies de la Categor?a?")
+  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Especies de la Categoría?")
   
   return(errors)
 }
@@ -660,16 +663,19 @@ doubtfulSampledSpecies <- function(){
   genus_not_allowed <- catches[to_check_genus,]
   
   # remove the mixed species (allowed)
-  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% unique(mixed_species[["COD_ESP_MUE"]])),]
+  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% unique(mixed_species[["COD_ESP_MUE"]])),] %>%
+    select(one_of(selected_fields))
   
+  # this is obsolete: when was allowed Loligo spp an Allotheuthis spp saved in
+  # 'especies de la categoría':
   # remove other allowed species
-  genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
+  # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
     select(one_of(selected_fields))
 
   # remove duplicates
   errors <- unique(genus_not_allowed)
   
-  errors <- addTypeOfError(errors, "WARNING: ?seguro que es esa especie en Especies del Muestreo?")
+  errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Especies del Muestreo?")
   
   return(errors)
 }
@@ -849,7 +855,7 @@ checkSexedSpecies <- function() {
     rename("COD_PUERTO" = COD_PUERTO.x, "PUERTO" = PUERTO.x, "LOCODE" = LOCODE.x, "ESP_MUE" = ESP_MUE.x) %>%
     select(one_of(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO"))) %>%
     unique()%>%
-    addTypeOfError("ERROR: especie que deber?a ser sexada")
+    addTypeOfError("ERROR: especie que debería ser sexada")
   
   return(errors)
 }
@@ -887,7 +893,7 @@ checkNoSexedSpecies <- function() {
   
   # merge errors
   errors <- rbind(errors_species_must_not_be_sexed, errors_species_must_be_sexed_only_in_some_ports) %>%
-    addTypeOfError("ERROR: especie que NO deber?a ser sexada")
+    addTypeOfError("ERROR: especie que NO debería ser sexada")
   
   return(errors)
 }
@@ -1003,7 +1009,7 @@ checkShipsPairBottomTrawl <- function(){
       ((N_BARCOS == 2 | N_BARCOS == 3 | N_BARCOS == 4) & ESTRATO_RIM != "PAREJA_CN") |
       (N_BARCOS != 2 & N_BARCOS != 3 & N_BARCOS != 4 & ESTRATO_RIM == "PAREJA_CN")
     ) %>%
-    addTypeOfError("ERROR: n?mero de barcos no coherente con el estrato rim")
+    addTypeOfError("ERROR: número de barcos no coherente con el estrato rim")
   return (errors)
 #errors <- addInfluenceAreaVariable(errors, "COD_PUERTO")
 #write.csv(errors, file = "parejas_num_barcos_1.csv")
@@ -1023,7 +1029,7 @@ checkSizeRange<- function (){
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
     unique()%>%
-    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro hist?rico de tallas m?nimas y m?ximas")%>%
+    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas por estrato rim.")%>%
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
@@ -1032,7 +1038,7 @@ checkSizeRange<- function (){
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
-    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango hist?rico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
     humanizeVariable("COD_ESP_CAT")%>%
     select(-c(TALLA_MIN, TALLA_MAX))
   
@@ -1043,21 +1049,22 @@ checkSizeRange<- function (){
 
 }
 
-checkCatchesP90 <- function(){
+checkCatchesP97 <- function(){
   
   warnings <- catches %>%
-    select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, P_DESEM) %>%
-    merge(., p90_capturas_historico,
+    select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
+    group_by_(.dots = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")) %>%
+    summarise(P_DESEM_TOT = sum(P_DESEM)) %>%
+    merge(., p97_capturas_historico,
           by.x = c("ESTRATO_RIM", "COD_ESP_MUE"),
           by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
-    filter(P_DESEM > P90) %>%
-    mutate('%dif' = format((P90 * 100 / P_DESEM), digits=0))
+    filter(P_DESEM_TOT > P97) %>%
+    mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P97) * 100 / P_DESEM_TOT), digits=0))%>%
+    addTypeOfError("Captura de la especie (de todas las categorías) superior al percentil 97 del histórico de capturas 2009 al 2016 por estrato rim.")
   
   return(warnings)
   
 }
-
-ppp <- checkCatchesP90()
 
 # function to check estrategia
 # TODO: rellenar esto para document()
@@ -1157,15 +1164,13 @@ mixed_species <- especies_mezcla
 #read the no mixed species dataset
 sampled_spe_no_mixed <- especies_no_mezcla
 
-#read the estrato-rim - arte dataset to obtain the correct estratorim, gear and its relation
-CORRECT_ESTRATORIM_ARTE <- estratorim_arte
-CORRECT_ESTRATORIM_ARTE$VALID<-TRUE
-
 ###obtain the not allowed species
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
+# this is obsolete: when was allowed Loligo spp an Allotheuthis spp saved in
+# 'especies de la categoría':
 ### obtain the allowed genus
-ALLOWED_GENUS <- read.csv("generos_permitidos.csv")
+#ALLOWED_GENUS <- read.csv("generos_permitidos.csv")
 
 ### obtain the cfpo
 CFPO <- cfpo2016
@@ -1199,125 +1204,141 @@ lengths <- muestreos_up$lengths
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
 
-# ---- REPEATED IN IPDTOSIRENO ----
-
-ERRORS$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
-
-ERRORS$puerto <- check_variable_with_master(catches, "COD_PUERTO")
-
-ERRORS$arte <- check_variable_with_master(catches, "COD_ARTE")
-
-ERRORS$origen <- check_variable_with_master(catches, "COD_ORIGEN")
-
-ERRORS$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
-
-ERRORS$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
-
-ERRORS$false_MT1 <- check_false_mt1()
-
-ERRORS$false_MT2 <- check_false_mt2()
-
-ERRORS$no_mixed_as_mixed <- check_no_mixed_as_mixed()
-
-ERRORS$mixed_as_no_mixed <- check_mixed_as_no_mixed()
-
-# ---- IN HEADER ----
-
-ERRORS$false_mt2b <- checkMt2b()
-
-ERRORS$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
-
-ERRORS$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
-
-ERRORS$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin()
-
-ERRORS$number_of_ships <- numberOfShips()
-
-ERRORS$number_of_rejections <- numberOfRejections()
-
-ERRORS$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
-
-ERRORS$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
-
-##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
-
-ERRORS$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
-
-# no_en_cfpo <- ERRORS$errors_ships_not_in_cfpo %>%
-#                 filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
-#                 select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
-#                 unique()
-        
-ERRORS$errors_ships_not_registered <- shipsNotRegistered(catches)
-
-ERRORS$errors_multiple_estrato_rim <- checkMultipleEstratoRIM()
-
-ERRORS$errors_multiple_arte <- checkMultipleGear()
-
-ERRORS$errors_multiple_puerto <- checkMultiplePort()
-
-ERRORS$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
-
-ERRORS$estrategia <- checkStrategy()
-
-ERRORS$multiple_tipo_muestreo <- multipleTypeSample()
-
-ERRORS$tiempo_transcurrido <- check_elapsed_days()
-
-# ---- IN SPECIES ----
-
-ERRORS$mixed_species_category <- mixedSpeciesInCategory()
-      
-ERRORS$not_allowed_sampled_species <- notAllowedSampledSpecies()
-
-ERRORS$sampled_species_doubtful <- doubtfulSampledSpecies()
-
-ERRORS$not_allowed_category_species <- notAllowedCategorySpecies()
-
-ERRORS$doubtful_category_species <- doubtfulCategorySpecies()
-
-ERRORS$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
-
-ERRORS$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
-
-ERRORS$lenghts_weights_sample <- checkTALL.PESO()
-
-ERRORS$no_sexed_species <- checkNoSexedSpecies()
-
-ERRORS$sexed_species <- checkSexedSpecies()
-
-
-# ---- IN WEIGHTS ----
-
-ERRORS$same_sampled_weight <- allCategoriesWithSameSampledWeights()
+check_them_all <- function () {
   
-ERRORS$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
+  tryCatch({
     
-ERRORS$weight_landed_zero <- weightLandedZero()
-
-ERRORS$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
+    err <- list()
     
-ERRORS$pes_mue_desem_zero <- pesMueDesemZero()
-
-ERRORS$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding()
+    # ---- REPEATED IN IPDTOSIRENO ----
+    
+    err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+    
+    err$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+    
+    err$arte <- check_variable_with_master(catches, "COD_ARTE")
+    
+    err$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+    
+    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+    
+    err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+    
+    err$false_MT1 <- check_false_mt1()
+    
+    err$false_MT2 <- check_false_mt2()
+    
+    err$no_mixed_as_mixed <- check_no_mixed_as_mixed()
+    
+    err$mixed_as_no_mixed <- check_mixed_as_no_mixed()
+    
+    # ---- IN HEADER ----
+    
+    err$false_mt2b <- checkMt2b()
+    
+    err$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
+    
+    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
+    
+    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin()
+    
+    err$number_of_ships <- numberOfShips()
+    
+    err$number_of_rejections <- numberOfRejections()
+    
+    err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
+    
+    err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
+    
+    ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
+    
+    err$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
+    
+    # no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
+    #                 filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
+    #                 select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
+    #                 unique()
+            
+    err$errors_ships_not_registered <- shipsNotRegistered(catches)
+    
+    err$errors_multiple_estrato_rim <- checkMultipleEstratoRIM()
+    
+    err$errors_multiple_arte <- checkMultipleGear()
+    
+    err$errors_multiple_puerto <- checkMultiplePort()
+    
+    err$errors_num_barcos_pareja <- checkShipsPairBottomTrawl()
+    
+    err$estrategia <- checkStrategy()
+    
+    err$multiple_tipo_muestreo <- multipleTypeSample()
+    
+    err$tiempo_transcurrido <- check_elapsed_days()
+    
+    # ---- IN SPECIES ----
+    
+    err$mixed_species_category <- mixedSpeciesInCategory()
+          
+    err$not_allowed_sampled_species <- notAllowedSampledSpecies()
+    
+    err$sampled_species_doubtful <- doubtfulSampledSpecies()
+    
+    err$not_allowed_category_species <- notAllowedCategorySpecies()
+    
+    err$doubtful_category_species <- doubtfulCategorySpecies()
+    
+    err$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight()
+    
+    err$categories_with_repeated_sexes <- categoriesWithRepeatedSexes()
+    
+    err$lenghts_weights_sample <- checkTALL.PESO()
+    
+    err$no_sexed_species <- checkNoSexedSpecies()
+    
+    err$sexed_species <- checkSexedSpecies()
+    
+    
+    # ---- IN WEIGHTS ----
+    
+    err$same_sampled_weight <- allCategoriesWithSameSampledWeights()
+      
+    err$sampled_weight_zero <- weightSampledZeroWithLengthsSampled()
         
-ERRORS$sop_zero <- sopZero() 
-     
-ERRORS$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
+    err$weight_landed_zero <- weightLandedZero()
+    
+    err$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled()
+        
+    err$pes_mue_desem_zero <- pesMueDesemZero()
+    
+    err$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding()
+            
+    err$sop_zero <- sopZero() 
+         
+    err$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo()
+    
+    err$sop_mayor_peso_vivo <- sopGreaterPesVivo()
+    
+    err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
+    
+    err$capturas_percentil_97 <- checkCatchesP97()
+    
+    
+    # ---- IN LENGTHS ----
+    
+    err$rango_tallas <- checkSizeRange()
+    
+    
+    # ---- COMBINE ERRORS ----
+    
+    combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = TRUE)
+    
+    return(combined_errors)
+    
+  })
+  
+}
 
-ERRORS$sop_mayor_peso_vivo <- sopGreaterPesVivo()
-
-ERRORS$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
-
-# ---- IN LENGTHS ----
-
-ERRORS$rango_tallas <- checkSizeRange()
-
-# ------------------------------------------------------------------------------    
-# #### COMBINE ERRORS ##########################################################
-# ------------------------------------------------------------------------------
-
-    combined_errors <- formatErrorsList()
+errors <- check_them_all()
 
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
@@ -1329,9 +1350,10 @@ ERRORS$rango_tallas <- checkSizeRange()
 
     #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
-    exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    #  
-    exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportListToXlsx(errors, suffix = paste0("kkkerrors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+      
+    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
 
     # a complete year 
 
