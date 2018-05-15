@@ -1089,3 +1089,83 @@ checkSameTripInVariousPorts <- function (){
   
   return(err)
 }
+
+
+# Export error list ------------------------------------------------------------
+# This is an improvement of exportListToXlsx, with colorization of rows with the
+# same COD_ID variable.
+# This does not work: Allways in row 23 the color is allways the same.
+# Instead of color the rows, I put a line between different cod_id rows
+exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") 
+{
+  if (!requireNamespace("openxlsx", quietly = TRUE)) {
+    stop("Openxlsx package needed for this function to work. Please install it.", 
+         call = FALSE)
+  }
+  lapply(seq_along(list), function(i) {
+    if (is.data.frame(list[[i]])) {
+      list_name <- names(list)[[i]]
+      if (prefix != "") 
+        prefix <- paste0(prefix, separation)
+      if (suffix != "") 
+        suffix <- paste0(separation, suffix)
+      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, 
+                         suffix, ".xlsx")
+      wb <- openxlsx::createWorkbook()
+      name_worksheet <- paste("0", MONTH, sep = "")
+      openxlsx::addWorksheet(wb, name_worksheet)
+      openxlsx::writeData(wb, name_worksheet, list[[i]])
+      num_cols_df <- length(list[[i]])
+      num_rows_df <- nrow(list[[1]])
+      head_style <- openxlsx::createStyle(fgFill = "#EEEEEE",
+                                          fontName = "Calibri", fontSize = "11", halign = "center",
+                                          valign = "center")
+      openxlsx::addStyle(wb, sheet = name_worksheet, head_style,
+                         rows = 1, cols = 1:num_cols_df)
+      openxlsx::setColWidths(wb, name_worksheet, cols = c(1:num_cols_df), 
+                             widths = "auto")
+      
+      id_changes <- which(!duplicated(list[[i]]$COD_ID))
+      
+      number_cod_id <- length(id_changes)
+      
+      # colors_to_use <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+      # colors_to_use <- sample(colors_to_use, number_cod_id)
+      
+      # colors_to_use <- grDevices::gray.colors(number_cod_id, start = 0.5)
+      
+      
+      counter <- 1
+      
+      for (r in id_changes){
+        
+        # style_cells <- openxlsx::createStyle(fgFill = colors_to_use[counter])
+        
+        stile_first_row <- openxlsx::createStyle(border = "top",
+                                                 borderColour = "black",
+                                                 borderStyle = "medium")
+        
+        if (!is.na(id_changes[r+1])) {
+          rows <- (r+1):id_changes[counter+1]
+        } else if (is.na(id_changes[r+1])){
+          rows <- (r+1):num_rows_df
+        } else {
+          stop("Error: see function exportErrorsList.")
+        }
+        # openxlsx::addStyle(wb, sheet = name_worksheet, style_cells,
+        #                    rows = rows, cols = 1:num_cols_df, gridExpand=T, stack = T)
+        
+        openxlsx::addStyle(wb, sheet = name_worksheet, stile_first_row,
+                           rows = r+1, cols = 1:num_cols_df, gridExpand=T, stack = T)
+        
+        counter <- counter+1
+      }
+      
+      Sys.setenv(R_ZIPCMD = "C:/Rtools/bin/zip.exe")
+      openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
+    }
+    else {
+      return(paste("This isn't a dataframe"))
+    }
+  })
+}
