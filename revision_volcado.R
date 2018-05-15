@@ -25,8 +25,9 @@
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
 # script.
 # - Make sure report files tallas_x_up from SIRENO are in PATH_FILES.
-# - Choose the way to export in the "EXPORT ERRORS" section of this script.
-# Uncomment the interested way. It's available in xlsx file or upload directly
+# - Create a directory called 'errors' inside PATH_FILES directory
+# - Choose the way to export in the "EXPORT ERRORS" section of this script.Uncomment
+# the interested way. It's available in xlsx file or upload directly
 # to google drive. In this case an account and password is required, and a token
 # is automatically generated.
 # - If xlsx option is choosen to export files, make sure a directory "errors" is
@@ -38,14 +39,14 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-#PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/2017-12"
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/anual"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_corregido_por_mi.TXT"
+# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/anual_oab"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/2018_03"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_2018_03.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_2018_03.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_2018_03.TXT"
 
-MONTH <- FALSE # month in numeric or FALSE for a complete year 
-YEAR <- "2017"
+MONTH <- 3 # month in numeric or FALSE for a complete year 
+YEAR <- "2018"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -66,8 +67,9 @@ library(devtools)
 
 
 # ---- install sapmuebase from local
+#remove.packages("sapmuebase")
 #install_github("Eucrow/sapmuebase")
- # install("F:/misdoc/sap/sapmuebase")
+  # install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
 
 
@@ -102,28 +104,6 @@ ESP_TAXONOMIC_CONFUSION <- read.csv(
   fileEncoding = "UTF-8",
   colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
 
-# check the month is correct
-# can be 1 to 12, or "annual" to check all the gear
-# tryCatch(
-#   {
-#     if (grepl("^\\d{1}$", MONTH)) {
-#       MONTH <- paste0("0",MONTH)
-#     } else if (grepl("^\\d{2}$", MONTH)) {
-#       if (as.integer(MONTH) < 0  | as.numeric(MONTH) > 13){
-#         error_text <- paste0("MONTH = ", MONTH, "??? How many months has your planet?")
-#         stop(error_text)
-#       }
-#     } else if (MONTH != "FALSE") {
-#       error_text <- paste("You have to select a month in digits or FALSE for a complete year")
-#       stop(error_text)
-#     }
-#   },
-#   error = function(err) {
-#     error_text <- paste0("C'mon boy... ", err)
-#     message(error_text)
-#   }
-# )
-
 
 # ------------------------------------------------------------------------------
 # #### FUNCTIONS ###############################################################
@@ -131,6 +111,7 @@ ESP_TAXONOMIC_CONFUSION <- read.csv(
 # All the functions required in this script are located in
 # revision_volcado_functions.R file.
 source('revision_volcado_functions.R')
+
 
 # ------------------------------------------------------------------------------
 # #### IMPORT DATA #############################################################
@@ -162,10 +143,10 @@ muestreos_up <- importRIMFiles(
   des_tal = FILENAME_DES_TAL,
   tal = FILENAME_TAL,
   path = PATH_FILES,
-  by_month = FALSE)
+  by_month = MONTH)
   
-# prueba <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
-# prueba <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
+# catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
+# catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
 # prueba_LENGTHS <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
  
 
@@ -173,7 +154,6 @@ muestreos_up <- importRIMFiles(
 catches <- muestreos_up$catches
 catches_in_lengths <- muestreos_up$catches_in_lengths
 lengths <- muestreos_up$lengths
-
 
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
@@ -225,14 +205,15 @@ check_them_all <- function () {
     
     err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
+    
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
     
     err$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
     
-    # no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
-    #                 filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
-    #                 select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
-    #                 unique()
+    no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
+                    filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
+                    select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
+                    unique()
             
     err$errors_ships_not_registered <- shipsNotRegistered(catches)
     
@@ -249,6 +230,8 @@ check_them_all <- function () {
     err$multiple_tipo_muestreo <- multipleTypeSample()
     
     err$tiempo_transcurrido <- check_elapsed_days()
+    
+    err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts()
     
     # ---- IN SPECIES ----
     
@@ -307,7 +290,7 @@ check_them_all <- function () {
     
     # ---- COMBINE ERRORS ----
     
-    combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = TRUE)
+    combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = T)
     
     return(combined_errors)
     
@@ -317,6 +300,7 @@ check_them_all <- function () {
 
 errors <- check_them_all()
 
+
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
 # ------------------------------------------------------------------------------
@@ -325,22 +309,24 @@ errors <- check_them_all()
 
     # one month
 
-    #exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    # exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    
       
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
     # a complete year 
 
-    #exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    # exportListToXlsx(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
 
-    #exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    # exportListToGoogleSheet(combined_errors, suffix = paste0("errors", "_", YEAR), separation = "_")
 
 # ------------------------------------------------------------------------------    
 # #### CHECK CODE_ID ###########################################################
 # This check is not for send to the sups, so it's out the ERRORS dataframe
+
 # ------------------------------------------------------------------------------
 
 # errors_cod_id <- checkCodId()
@@ -350,4 +336,87 @@ errors <- check_them_all()
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
+
+
+
+
+# put a background color to the rows of the same trip
+# this does not work: Allways in row 23 the color is allways the same.
+# Instead of color the rows, I put a line between different cod_id rows
+exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") 
+{
+  if (!requireNamespace("openxlsx", quietly = TRUE)) {
+    stop("Openxlsx package needed for this function to work. Please install it.", 
+         call = FALSE)
+  }
+  lapply(seq_along(list), function(i) {
+    if (is.data.frame(list[[i]])) {
+      list_name <- names(list)[[i]]
+      if (prefix != "") 
+        prefix <- paste0(prefix, separation)
+      if (suffix != "") 
+        suffix <- paste0(separation, suffix)
+      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, 
+                         suffix, ".xlsx")
+      wb <- openxlsx::createWorkbook()
+      name_worksheet <- paste("0", MONTH, sep = "")
+      openxlsx::addWorksheet(wb, name_worksheet)
+      openxlsx::writeData(wb, name_worksheet, list[[i]])
+      num_cols_df <- length(list[[i]])
+      num_rows_df <- nrow(list[[1]])
+      head_style <- openxlsx::createStyle(fgFill = "#EEEEEE",
+                                          fontName = "Calibri", fontSize = "11", halign = "center",
+                                          valign = "center")
+      openxlsx::addStyle(wb, sheet = name_worksheet, head_style,
+                         rows = 1, cols = 1:num_cols_df)
+      openxlsx::setColWidths(wb, name_worksheet, cols = c(1:num_cols_df), 
+                             widths = "auto")
+      
+      id_changes <- which(!duplicated(list[[i]]$COD_ID))
+      
+      number_cod_id <- length(id_changes)
+      
+      # colors_to_use <- grDevices::colors()[grep('gr(a|e)y', grDevices::colors(), invert = T)]
+      # colors_to_use <- sample(colors_to_use, number_cod_id)
+      
+      # colors_to_use <- grDevices::gray.colors(number_cod_id, start = 0.5)
+      
+      
+      counter <- 1
+      
+      for (r in id_changes){
+        
+        # style_cells <- openxlsx::createStyle(fgFill = colors_to_use[counter])
+        
+        stile_first_row <- openxlsx::createStyle(border = "top",
+                                                 borderColour = "black",
+                                                 borderStyle = "medium")
+        
+        if (!is.na(id_changes[r+1])) {
+          rows <- (r+1):id_changes[counter+1]
+        } else if (is.na(id_changes[r+1])){
+          rows <- (r+1):num_rows_df
+        } else {
+          stop("Error: see function exportErrorsList.")
+        }
+        # openxlsx::addStyle(wb, sheet = name_worksheet, style_cells,
+        #                    rows = rows, cols = 1:num_cols_df, gridExpand=T, stack = T)
+        
+        openxlsx::addStyle(wb, sheet = name_worksheet, stile_first_row,
+                           rows = r+1, cols = 1:num_cols_df, gridExpand=T, stack = T)
+        
+        counter <- counter+1
+      }
+      
+      Sys.setenv(R_ZIPCMD = "C:/Rtools/bin/zip.exe")
+      openxlsx::saveWorkbook(wb, filename, overwrite = TRUE)
+    }
+    else {
+      return(paste("This isn't a dataframe"))
+    }
+  })
+}
+
+exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+
 

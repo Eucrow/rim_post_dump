@@ -72,7 +72,7 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
       select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
       mutate(FECHA_MUE = as.Date(FECHA_MUE, "%d-%m-%y")) %>%
-      arrange_( "COD_PUERTO", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+      arrange_( "COD_PUERTO", "COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -150,7 +150,7 @@ pesMueDesemZero <- function(){
     filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
     select(one_of(fields_to_select))
   
-  errors <- addTypeOfError(errors, "ERROR: Peso muestreado desembarcado es 0")
+  errors <- addTypeOfError(errors, "ERROR: Peso muestreado es 0")
   
   return(errors)
 }
@@ -609,6 +609,8 @@ categoriesWithRepeatedSexes <- function() {
   
 }
 
+# TO DO: The COD_ID has been changed, so should be interesting fix this function
+# to check the new COD_ID
 # function to check if the cod_id are correctly created
 #' Check cod_id
 #
@@ -775,7 +777,7 @@ checkNoSexedSpecies <- function() {
   
   # merge errors
   errors <- rbind(errors_species_must_not_be_sexed, errors_species_must_be_sexed_only_in_some_ports) %>%
-    addTypeOfError("ERROR: especie que NO debería ser sexada")
+    addTypeOfError("ERROR: especie que NO debería ser sexada. Es posible que el SOP de estos muestreos sea 0, por lo que se ha de corregir.")
   
   return(errors)
 }
@@ -942,7 +944,7 @@ checkCatchesP97 <- function(){
           by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
     filter(P_DESEM_TOT > P97) %>%
     mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P97) * 100 / P_DESEM_TOT), digits=0))%>%
-    addTypeOfError("Captura de la especie (de todas las categorías) superior al percentil 97 del histórico de capturas 2009 al 2016 por estrato rim.")
+    addTypeOfError("Captura de la especie (de todas las categorías de la especie) superior al percentil 97 del histórico de capturas 2009 al 2016 por estrato rim.")
   
   return(warnings)
   
@@ -1027,8 +1029,7 @@ check_elapsed_days <- function(){
     select(one_of(c(BASE_FIELDS), "FECHA_DESEM", "elapsed_days")) %>%
     filter(elapsed_days>3 | elapsed_days<(-1)) %>%
     unique() %>%
-    addTypeOfError("WARNING: tiempo transcurrido entre la fecha de desembarco y
-                   la de muestreo mayor que 3 d?as o menor que 0 d?as")
+    addTypeOfError("WARNING: tiempo transcurrido entre la fecha de desembarco y la de muestreo mayor que 3 días o menor que 0 días")
   
   return(errors)
   
@@ -1064,4 +1065,27 @@ taxonomicSpecieConfusion <- function () {
   
   return(err)
   
+}
+
+# ---- function to warning species with taxonomic confusion --------------------
+#' Search in catches and catches_in_lengths dataset the species which can have
+#' problems with taxonomic confusion. 
+#' 
+#' This species are listed in the dataset
+#' ESP_TAXONOMIC_CONFUSION.
+#' 
+#' @return dataframe with warnings
+#' 
+checkSameTripInVariousPorts <- function (){
+  
+  err <- catches %>%
+    select(COD_ID, COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
+    unique()%>%
+    group_by(FECHA_MUE, COD_BARCO) %>%
+    mutate(n_ports_per_trip=n_distinct(COD_ID, COD_PUERTO)) %>%
+    filter(n_ports_per_trip > 1)%>%
+    humanize()%>%
+    addTypeOfError("ERROR: Un mismo barco ha descargado en varios puertos en la misma fecha. Es posible que el puerto pertenezca a un área de influencia distinta.")
+  
+  return(err)
 }
