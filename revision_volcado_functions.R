@@ -2,7 +2,7 @@
 # #### FUNCTIONS ###############################################################
 # ------------------------------------------------------------------------------
 
-# ---- function to make a backup of the errors files ---------------------------
+# function to make a backup of the errors files --------------------------------
 backup_files <- function(){
   date <- Sys.time();
   date <- as.POSIXlt(date);
@@ -142,7 +142,7 @@ sopZero <- function(){
   return (errors)
 }
 
-# function to search samples with P_MUE_DESEM = 0 or NA -------------------------
+# function to search samples with P_MUE_DESEM = 0 or NA ------------------------
 pesMueDesemZero <- function(){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
@@ -156,7 +156,7 @@ pesMueDesemZero <- function(){
 }
 
 
-# function to search samples with p_desem <= p_mue_desem ------------------------
+# function to search samples with p_desem <= p_mue_desem -----------------------
 pesMueDesemGreaterPesDesem <- function (){
   fields_to_select <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA",
                         "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_DESEM",
@@ -205,7 +205,7 @@ speciesWithCategoriesWithSameWeightLanding <- function(){
   return(errors)
 }
 
-# function to check the samples with categories which all of this species has the same sampled weight
+# function to check the samples with categories which all of this species has the same sampled weight --------
 allCategoriesWithSameSampledWeights <- function (){
   
   selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
@@ -218,7 +218,7 @@ allCategoriesWithSameSampledWeights <- function (){
     addTypeOfError("WARNING: varias especies de la categorías con igual peso muestreado")
 }
 
-# function to search samples with doubtfull species of the category.
+# function to search samples with doubtfull species of the category ------------
 # Search, too, the genus finished in -formes, -dae, - spp and - sp.
 doubtfulCategorySpecies <- function(){
   
@@ -249,8 +249,8 @@ doubtfulCategorySpecies <- function(){
   return(errors)
 }
 
-# function to search samples with not allowed species of the category. This function
-# use the not allowed species dataframe of SAPMUEBASE.
+# function to search samples with not allowed species of the category ----------
+# This function use the not allowed species dataframe of SAPMUEBASE.
 notAllowedCategorySpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
@@ -296,8 +296,9 @@ check_foreing_ships_MT2 <- function(df){
 }
 
 
-# function to check ships not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA
-# CONSTRUCCI?N or ALTA PROVISIONAL POR REACTIVACI?N in CFPO --------------------
+# function to check ships ------------------------------------------------------
+# not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN or ALTA PROVISIONAL
+# POR REACTIVACIÓN in CFPO
 shipsNotRegistered <- function(df, cfpo = CFPO){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
@@ -312,7 +313,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 }
 
 
-# function to check ships not in CFPO
+# function to check ships not in CFPO ------------------------------------------
 shipsNotInCFPO <- function(df, cfpo = CFPO){
   
   to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
@@ -324,7 +325,7 @@ shipsNotInCFPO <- function(df, cfpo = CFPO){
   return (errors_ships)
 }
 
-# function to check if all the mt2b has lengths
+# function to check if all the mt2b has lengths --------------------------------
 checkMt2b <- function(){
   
   # select all the mt2b samples
@@ -344,7 +345,7 @@ checkMt2b <- function(){
   return(false_mt2b)
 }
 
-#function to check if all mt2b has CERCO_GC or BACA_GC stratums
+#function to check if all mt2b has CERCO_GC or BACA_GC stratums ----------------
 checkMt2bRimStratum <- function () {
   
   # select all the mt2b samples
@@ -358,7 +359,7 @@ checkMt2bRimStratum <- function () {
   
 }
 
-# function to check samples with weight sampled = 0 with lenghts
+# function to check samples with weight sampled = 0 with lenghts ---------------
 weightSampledZeroWithLengthsSampled <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "P_MUE_VIVO", "SOP")
   err <- catches_in_lengths %>%
@@ -367,7 +368,7 @@ weightSampledZeroWithLengthsSampled <- function () {
     addTypeOfError("ERROR: peso muestra 0 con tallas muestreadas")
 }
 
-# function to check samples with weight landed = 0 or NA
+# function to check samples with weight landed = 0 or NA -----------------------
 weightLandedZero <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO")
   err <- catches %>%
@@ -377,7 +378,7 @@ weightLandedZero <- function () {
   return(err)
 }
 
-# function to check samples without lengths but with weight sampled
+# function to check samples without lengths but with weight sampled ------------
 weightSampledWithoutLengthsSampled <- function () {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM", "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM", "EJEM_MEDIDOS")
   err <- catches_in_lengths %>%
@@ -388,7 +389,7 @@ weightSampledWithoutLengthsSampled <- function () {
 }
 
 
-# function to check variables
+# function to check variables --------------------------------------------------
 #' Check variables
 #
 #' Check if the value of variables are consistents to the value in its SIRENO master.
@@ -435,8 +436,8 @@ check_variable_with_master <- function (df, variable){
 }
 
 
-# function to search false mt2 samples: samples with COD_TIPO_MUE as MT2A and
-# without any lenght
+# function to search false mt2 samples -----------------------------------------
+# samples with COD_TIPO_MUE as MT2A and without any lenght
 # df: dataframe
 # return: dataframe with erroneus samples
 check_false_mt2 <- function(){
@@ -461,8 +462,8 @@ check_false_mt2 <- function(){
   
 }
 
-# function to search false mt1 samples: samples with COD_TIPO_MUE as MT1A and
-# lenghts
+# search false mt1 samples -----------------------------------------------------
+# samples with COD_TIPO_MUE as MT1A and lenghts
 # df: dataframe
 # return: dataframe with erroneus samples
 check_false_mt1 <- function(){
@@ -486,8 +487,8 @@ check_false_mt1 <- function(){
   return(false_mt1)  
 }
 
-# function to check mixed species keyed as non mixed species: in COD_ESP_MUE
-# there are codes from non mixed species
+# check mixed species keyed as non mixed species -------------------------------
+# in COD_ESP_MUE there are codes from non mixed species
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_mixed_as_no_mixed <- function(){
@@ -498,8 +499,8 @@ check_mixed_as_no_mixed <- function(){
   return(non_mixed)
 }
 
-# function to check no mixed species keyed as mixed species: in COD_ESP_MUE
-# there are codes from mixed species
+# function to check no mixed species keyed as mixed species --------------------
+# in COD_ESP_MUEthere are codes from mixed species
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(){
@@ -511,7 +512,7 @@ check_no_mixed_as_mixed <- function(){
   return(non_mixed)
 }
 
-# function to check grouped species in Species of the Category
+# function to check grouped species in Species of the Category -----------------
 # return a dataframe with the samples with grouped species in Species of the Category
 mixedSpeciesInCategory <- function(){
   
@@ -530,7 +531,7 @@ mixedSpeciesInCategory <- function(){
   
 } 
 
-# function to check doubtful species in Sampling Species
+# function to check doubtful species in Sampling Species -----------------------
 doubtfulSampledSpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
@@ -563,7 +564,7 @@ doubtfulSampledSpecies <- function(){
 }
 
 
-# function to check if there are not allowed species in Sampling Species
+# function to check if there are not allowed species in Sampling Species -------
 notAllowedSampledSpecies <- function(){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
@@ -580,7 +581,7 @@ notAllowedSampledSpecies <- function(){
   return(errors)
 }
 
-# function to check sexes with exactly the same sampled weight
+# function to check sexes with exactly the same sampled weight -----------------
 sexesWithSameSampledWeight <- function (){
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", 
@@ -595,7 +596,7 @@ sexesWithSameSampledWeight <- function (){
 }
 
 
-# function to check categories with varios equal sexes (both of them male or female)
+# function to check categories with varios equal sexes (both of them male or female) ---------
 categoriesWithRepeatedSexes <- function() {
   
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", 
@@ -611,7 +612,7 @@ categoriesWithRepeatedSexes <- function() {
 
 # TO DO: The COD_ID has been changed, so should be interesting fix this function
 # to check the new COD_ID
-# function to check if the cod_id are correctly created
+# check if the cod_id are correctly created ------------------------------------
 #' Check cod_id
 #
 #' Check if the cod_id are correctly variables.
@@ -674,7 +675,7 @@ checkCodId <- function() {
   
 }
 
-# ---- function to fix TALL.PESO variable --------------------------------------
+# fix TALL.PESO variable -------------------------------------------------------
 #
 #' Change the content of variable TALL.PESO to TRUE.
 #' 
@@ -695,7 +696,7 @@ fixTALL.PESOVariable <- function (df) {
   
 }
 
-# ---- function to check TALL.PESO variable ------------------------------------
+# check TALL.PESO variable -----------------------------------------------------
 #
 #' Check if the content of variable TALL.PESO is allways TRUE.
 #' 
@@ -717,7 +718,7 @@ checkTALL.PESO <- function() {
   }
 }
 
-# ---- function to check sexed species -----------------------------------------
+# check sexed species ----------------------------------------------------------
 #
 #' Check samples with no sexed species that must be sexed
 #' 
@@ -744,7 +745,7 @@ checkSexedSpecies <- function() {
   return(errors)
 }
 
-# ---- function to check no sexed species -----------------------------------------
+# check no sexed species -----------------------------------------
 #
 #' Check samples with sexed species that must not be sexed
 #' 
@@ -782,7 +783,7 @@ checkNoSexedSpecies <- function() {
   return(errors)
 }
 
-# ---- function to check multiple ESTRATO_RIM in the same trip -----------------
+# check multiple ESTRATO_RIM in the same trip -----------------
 #
 #' Check samples with same date, vessel, gear, and port but with different 
 #' ESTRATO_RIM variable.
@@ -805,7 +806,7 @@ checkMultipleEstratoRIM <- function(){
   
 }
 
-# ---- function to check multiple gear in the same trip -----------------
+# check multiple gear in the same trip -----------------
 #
 #' Check samples with same date, vessel, ESTRATO_RIM, TIPO_MUE, and port but with different 
 #' gear variable.
@@ -828,7 +829,7 @@ checkMultipleGear <- function(){
   
 }
 
-# ---- function to check multiple COD_PUERTO in the same trip ------------------
+# check multiple COD_PUERTO in the same trip ------------------
 #
 #' Check samples with same date and vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different 
 #' gear variable.
@@ -857,7 +858,7 @@ checkMultiplePort <- function(){
   
 }
 
-# ---- function to check coherence between ESTRATO_RIM and origin --------------
+# check coherence between ESTRATO_RIM and origin --------------
 #
 #' Check coherence between ESTRATO_RIM and origin.
 #' 
@@ -876,7 +877,7 @@ checkCoherenceEstratoRimOrigin <- function(){
   
 }
 
-# ---- function to check ESTRATO_RIM and gear of trips with 2 or more ships. 
+# check ESTRATO_RIM and gear of trips with 2 or more ships --------------------- 
 # Exception with Santa Eugenia de Ribeira port, that usually only one ship is
 # sampled
 #
@@ -899,10 +900,9 @@ checkShipsPairBottomTrawl <- function(){
   #write.csv(errors, file = "parejas_num_barcos_1.csv")
 }
 
-# ---- function to warning the out of size of the species lengths
+# warning outliers in species lengths ------------------------------------------
 #
-#' Check the size range of species. And if the species exists in 
-#' the rango_tallas_historico dataset
+#' Check the size range of species of the species inthe rango_tallas_historico dataset
 #' 
 #' @return dataframe with warnings lengths
 #' 
@@ -933,6 +933,7 @@ checkSizeRange<- function (){
   
 }
 
+# warning outliers in species catches ------------------------------------------
 checkCatchesP97 <- function(){
   
   warnings <- catches %>%
@@ -950,7 +951,7 @@ checkCatchesP97 <- function(){
   
 }
 
-# function to check estrategia
+# check estrategia -------------------------------------------------------------
 # TODO: rellenar esto para document()
 
 checkStrategy <- function(){
@@ -964,7 +965,7 @@ checkStrategy <- function(){
   
 }
 
-# check same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
+# check same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE ----------------
 multipleTypeSample <- function(){
   
   # error <- catches %>%
@@ -997,8 +998,8 @@ multipleTypeSample <- function(){
   
 }
 
-# ---- function to check elapsed days between landing date and sampling date ---
-#' Check elapsed days between landing date and sampling date
+# check elapsed days between landing date and sampling date --------------------
+#' Check elapsed days between landing date and sampling date -------------------
 #' 
 #' A warning is generated if the elepsaed days are minor than 0 or greater than
 #' 2
@@ -1035,7 +1036,7 @@ check_elapsed_days <- function(){
   
 }
 
-# ---- function to warning species with taxonomic confusion --------------------
+# warning species with taxonomic confusion -------------------------------------
 #' Search in catches and catches_in_lengths dataset the species which can have
 #' problems with taxonomic confusion. 
 #' 
@@ -1067,7 +1068,7 @@ taxonomicSpecieConfusion <- function () {
   
 }
 
-# ---- function to warning species with taxonomic confusion --------------------
+# warning species with taxonomic confusion -------------------------------------
 #' Search in catches and catches_in_lengths dataset the species which can have
 #' problems with taxonomic confusion. 
 #' 
