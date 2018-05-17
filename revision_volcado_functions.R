@@ -1,6 +1,5 @@
-# ------------------------------------------------------------------------------
-# #### FUNCTIONS ###############################################################
-# ------------------------------------------------------------------------------
+# FUNCTIONS ####################################################################
+
 
 # function to make a backup of the errors files --------------------------------
 backup_files <- function(){
@@ -1068,7 +1067,7 @@ taxonomicSpecieConfusion <- function () {
   
 }
 
-# warning species with taxonomic confusion -------------------------------------
+# warning same trip in variuous ports at the same date -------------------------
 #' Search in catches and catches_in_lengths dataset the species which can have
 #' problems with taxonomic confusion. 
 #' 
@@ -1089,6 +1088,58 @@ checkSameTripInVariousPorts <- function (){
     addTypeOfError("ERROR: Un mismo barco ha descargado en varios puertos en la misma fecha. Es posible que el puerto pertenezca a un área de influencia distinta.")
   
   return(err)
+}
+
+
+#' Check if a variable exists in a dataframe -----------------------------------
+#' TODO: put in sapmuebase
+#' @return TRUE if the variable exists. Otherwise return an error.
+#' @param variable: variable to check.
+#' @param df: dataframe to check
+#' @export
+variable_exists_in_df <- function (variable, df){
+  
+  # get all the variables of df with the variable name = variable
+  var_in_df <- colnames(df)[colnames(df) %in% variable]
+  
+  if (length(var_in_df) > 1) {
+    stop(paste("Hey hard worker! check the ", variable, 
+               "variable. Looks like there are multiple columns with the same variable name.
+               Using consistents dataframes we will get a better world. Really :) ", 
+               variable, "."))
+  } else if (length(var_in_df) == 0) {
+    stop(paste(variable, " does not exists in this dataframe."))
+  } else return (TRUE)
+  
+}
+
+
+# check if the a variable is filled in all the rows ----------------------------
+#' TODO: put in sapmuebase???
+checkVariableFilled <- function(df, var) {
+  
+  tryCatch({
+    
+    variable_exists_in_df(var, df)
+    
+    fields <- c(BASE_FIELDS, var)
+    
+    err <- df[df[[var]] == ""
+              | is.na(df[[var]])
+              | is.null(df[[var]]), fields]
+    
+    err <- unique(err)
+    
+    err <- addTypeOfError(err, "ERROR: campo ", substitute(var), " vacío.")
+    
+    return(err)
+    
+  }, error = function(e) {
+    
+    print(e)
+    
+  })
+  
 }
 
 

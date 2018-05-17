@@ -233,6 +233,8 @@ check_them_all <- function () {
     
     err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts()
     
+    err$checkSampleResponsible <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
+    
     # ---- IN SPECIES ----
     
     err$mixed_species_category <- mixedSpeciesInCategory()
@@ -256,6 +258,8 @@ check_them_all <- function () {
     err$sexed_species <- checkSexedSpecies()
     
     err$taxonomic_specie_confusion <- taxonomicSpecieConfusion()
+    
+    err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
     
     
     # ---- IN WEIGHTS ----
@@ -281,6 +285,8 @@ check_them_all <- function () {
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem()
     
     err$capturas_percentil_97 <- checkCatchesP97()
+    
+    err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
     
     
     # ---- IN LENGTHS ----
@@ -314,7 +320,7 @@ errors <- check_them_all()
     # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
       
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
