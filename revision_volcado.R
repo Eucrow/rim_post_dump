@@ -40,13 +40,16 @@
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 # PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/anual_oab"
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/2018_03"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_2018_03.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_2018_03.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO_2018_03.TXT"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/2018_10"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_2018_10.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_2018_10.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_2018_10.TXT"
 
-MONTH <- 3 # month in numeric or FALSE for a complete year 
+MONTH <- 10 # month in numeric or FALSE for a complete year 
 YEAR <- "2018"
+
+# only if the file must be uploaded to google drive
+GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisión_volcado/2018/2018_correcciones_para_sups/"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -61,17 +64,21 @@ library(dplyr) #arrange_()
 library(devtools)
 
 # ---- install googlesheets from github
-#install_github("jennybc/googlesheets")
-#library(googlesheets)
-#suppressMessages(library(dplyr)) #What is suppressMessages????
+# install_github("jennybc/googlesheets")
+# library(googlesheets)
+# uppressMessages(library(dplyr)) #What is suppressMessages????
 
 
 # ---- install sapmuebase from local
-#remove.packages("sapmuebase")
-#install_github("Eucrow/sapmuebase")
+# remove.packages("sapmuebase")
+# .rs.restartR()
+# install_github("Eucrow/sapmuebase")
   # install("F:/misdoc/sap/sapmuebase")
 library(sapmuebase)
 
+# ---- install googledrive package from github
+# devtools::install_github("tidyverse/googledrive")
+library(googledrive)
 
 
 # ------------------------------------------------------------------------------
@@ -101,6 +108,7 @@ MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
 # read especies_sujetas_a_posible_confusión_taxonómica.csv file
 ESP_TAXONOMIC_CONFUSION <- read.csv(
   "especies_sujetas_a_posible_confusión_taxonómica.csv",
+  sep = ";",
   fileEncoding = "UTF-8",
   colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
 
@@ -125,7 +133,7 @@ mixed_species <- especies_mezcla
 #read the no mixed species dataset
 sampled_spe_no_mixed <- especies_no_mezcla
 
-###obtain the not allowed species
+###obtain the not allowed species dataset
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
 ### obtain the cfpo
@@ -318,12 +326,12 @@ errors <- check_them_all()
     # exportListToCsv(combined_errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
 
     # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    # exportListToXlsx(errors, suffix = paste0("errorsbbb", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-      
-    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" ) 
+    exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
+    
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
     # a complete year 
 
@@ -347,9 +355,6 @@ errors <- check_them_all()
 
 
 
-
-
-
-
+    
 
 

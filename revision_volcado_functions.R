@@ -111,7 +111,8 @@ numberOfShips <- function (){
 # Function to search errors in number of rejects (only empty, nas or null) -----
 numberOfRejections <- function(){
   errors <- catches %>%
-    filter(N_RECHAZOS == ""|is.na(N_RECHAZOS)|is.null(N_RECHAZOS))
+    filter(N_RECHAZOS == ""|is.na(N_RECHAZOS)|is.null(N_RECHAZOS)) %>%
+    select(one_of(BASE_FIELDS))
   errors <- addTypeOfError(errors, "ERROR: número de rechazos sin rellenar")
   return(errors)
 }
@@ -831,7 +832,7 @@ checkMultipleGear <- function(){
 # check multiple COD_PUERTO in the same trip ------------------
 #
 #' Check samples with same date and vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different 
-#' gear variable.
+#' port variable.
 #'
 #' @return dataframe with erroneous samples
 #'
@@ -944,7 +945,10 @@ checkCatchesP97 <- function(){
           by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
     filter(P_DESEM_TOT > P97) %>%
     mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P97) * 100 / P_DESEM_TOT), digits=0))%>%
-    addTypeOfError("Captura de la especie (de todas las categorías de la especie) superior al percentil 97 del histórico de capturas 2009 al 2016 por estrato rim.")
+    addTypeOfError("WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 97 del histórico de capturas 2014 al 2017 por estrato rim.")
+  
+  warnings[['P97']] <- format(round(warnings[['P97']], 1), round=1)
+  
   
   return(warnings)
   
@@ -1001,7 +1005,7 @@ multipleTypeSample <- function(){
 #' Check elapsed days between landing date and sampling date -------------------
 #' 
 #' A warning is generated if the elepsaed days are minor than 0 or greater than
-#' 2
+#' 3
 #' 
 #' @return dataframe with erroneous trips
 #' 
@@ -1077,7 +1081,7 @@ taxonomicSpecieConfusion <- function () {
 #' @return dataframe with warnings
 #' 
 checkSameTripInVariousPorts <- function (){
-  
+  # fecha/barco/estrato_rim/tipo_muestreo
   err <- catches %>%
     select(COD_ID, COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
     unique()%>%
@@ -1219,5 +1223,60 @@ exportErrorsList <- function (list, prefix = "", suffix = "", separation = "")
     else {
       return(paste("This isn't a dataframe"))
     }
+  })
+}
+
+
+# Export to google drive -------------------------------------------------------
+# Export the dataframes contained in a list to google drive
+exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation = ""){
+  
+  #check if package openxlsx is instaled:
+  if (!requireNamespace("googlesheets", quietly = TRUE)) {
+    stop("Googlesheets package needed for this function to work. Please install it.",
+         call = FALSE)
+  }
+  
+  # sep_along(list): generate regular sequences. With a list, generates
+  # the sequence 1, 2, ..., length(from). Return a integer vector.
+  lapply(seq_along(list), function(i){
+    
+    
+    if(is.data.frame(list[[i]])){
+      
+      list_name <- names(list)[[i]]
+      
+      if (prefix != "") prefix <- paste0(prefix, separation)
+      
+      if (suffix != "") suffix <- paste0(separation, suffix)
+      
+      # Before export to google drive, is mandatory export file to csv in local:
+      # When the googlesheet4 packages have the oauth implemented, we can
+      # use it instead of googledrive package
+      filename <- paste0(PATH_ERRORS, "/", prefix, list_name, suffix, '.csv')
+      
+      write.table(
+        list[[i]], 
+        file = filename, 
+        quote = FALSE, 
+        sep = ",", 
+        dec = ".", 
+        row.names = FALSE,
+        na = "")
+      
+      # export to google drive
+      google_drive_path <- paste0(GOOGLE_DRIVE_PATH, list_name, "/")
+      
+      
+      drive_upload(
+        media = filename,
+        path = google_drive_path,
+        type = "spreadsheet"
+      )
+      
+    } else {
+      return(paste("This isn't a dataframe"))
+    }
+    
   })
 }
