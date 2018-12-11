@@ -1081,7 +1081,6 @@ taxonomicSpecieConfusion <- function () {
 #' @return dataframe with warnings
 #' 
 checkSameTripInVariousPorts <- function (){
-  # fecha/barco/estrato_rim/tipo_muestreo
   err <- catches %>%
     select(COD_ID, COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
     unique()%>%
@@ -1152,8 +1151,13 @@ checkVariableFilled <- function(df, var) {
 # same COD_ID variable.
 # This does not work: Allways in row 23 the color is allways the same.
 # Instead of color the rows, I put a line between different cod_id rows
-exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") 
-{
+exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") {
+  
+  # Create errors subdirectory in case it doesn't exists:
+  if (!file.exists(file.path(PATH_FILES, ERRORS_SUBDIRECTORY))){
+    dir.create(file.path(PATH_FILES, ERRORS_SUBDIRECTORY))
+  }
+  
   if (!requireNamespace("openxlsx", quietly = TRUE)) {
     stop("Openxlsx package needed for this function to work. Please install it.", 
          call = FALSE)
