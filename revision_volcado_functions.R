@@ -1071,21 +1071,21 @@ taxonomicSpecieConfusion <- function () {
   
 }
 
-# warning same trip in variuous ports at the same date -------------------------
-#' Search in catches and catches_in_lengths dataset the species which can have
-#' problems with taxonomic confusion. 
+# error same trip in variuous ports at the same date -------------------------
+#' Search ships which landed in various ports at the same date.
 #' 
-#' This species are listed in the dataset
-#' ESP_TAXONOMIC_CONFUSION.
+#' There are a function 'checkMultiplePort' which find trips with FECHA_MUE,
+#' COD_BARCO, ESTRATO_RIM, COD_TIPO_MUE. But this checkSameTripInVariousPorts
+#' ignore ESTRATO_RIM and COD_TIPO_MUE variables.
 #' 
 #' @return dataframe with warnings
 #' 
 checkSameTripInVariousPorts <- function (){
   err <- catches %>%
-    select(COD_ID, COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
+    select(COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
     unique()%>%
     group_by(FECHA_MUE, COD_BARCO) %>%
-    mutate(n_ports_per_trip=n_distinct(COD_ID, COD_PUERTO)) %>%
+    mutate(n_ports_per_trip=n_distinct(COD_PUERTO)) %>%
     filter(n_ports_per_trip > 1)%>%
     humanize()%>%
     addTypeOfError("ERROR: Un mismo barco ha descargado en varios puertos en la misma fecha. Es posible que el puerto pertenezca a un área de influencia distinta.")
