@@ -325,26 +325,6 @@ shipsNotInCFPO <- function(df, cfpo = CFPO){
   return (errors_ships)
 }
 
-# function to check if all the mt2b has lengths --------------------------------
-checkMt2b <- function(){
-  
-  # select all the mt2b samples
-  mt2b <- catches %>%
-    filter(COD_TIPO_MUE == 4) %>%
-    select_(.dots = BASE_FIELDS)
-  
-  # select all the samples with lengths
-  mt2b_with_lenghts <- lengths %>%
-    filter(COD_TIPO_MUE == 4)  %>%
-    group_by_(.dots = BASE_FIELDS) %>%
-    summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
-  
-  false_mt2b <- anti_join(x = mt2b, y = mt2b_with_lenghts, by = c("FECHA_MUE","COD_BARCO")) %>% unique()
-  false_mt2b <- addTypeOfError(false_mt2b, "ERROR: MT2B sin tallas")
-  
-  return(false_mt2b)
-}
-
 #function to check if all mt2b has CERCO_GC or BACA_GC stratums ----------------
 checkMt2bRimStratum <- function () {
   
@@ -437,20 +417,20 @@ check_variable_with_master <- function (df, variable){
 
 
 # function to search false mt2 samples -----------------------------------------
-# samples with COD_TIPO_MUE as MT2A and without any lenght
+# samples with COD_TIPO_MUE as MT2 and without any lenght
 # df: dataframe
 # return: dataframe with erroneus samples
 check_false_mt2 <- function(){
   
   #Select all the samples with COD_TIPO_MUE = MT2
   mt2 <- catches %>%
-    filter(COD_TIPO_MUE == 2)  %>%
+    filter(COD_TIPO_MUE == 2 | COD_TIPO_MUE == 4)  %>%
     select_(.dots = BASE_FIELDS) %>%
     unique()
   
   # select all the samples with lengths
   mt2_with_lenghts <- lengths %>%
-    filter(COD_TIPO_MUE == 2)  %>%
+    filter(COD_TIPO_MUE == 2 | COD_TIPO_MUE == 4)  %>%
     group_by_(.dots = BASE_FIELDS) %>%
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
   

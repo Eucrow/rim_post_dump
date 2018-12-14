@@ -198,8 +198,6 @@ check_them_all <- function () {
     
     # ---- IN HEADER ----
     
-    err$false_mt2b <- checkMt2b()
-    
     err$errors_mt2b_rim_stratum <- checkMt2bRimStratum()
     
     err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
