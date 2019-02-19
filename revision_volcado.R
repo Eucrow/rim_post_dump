@@ -40,17 +40,17 @@
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 # PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2017/anual_oab"
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/2018_10"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/2018_12"
 ERRORS_SUBDIRECTORY <- "errors"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_2018_10.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_2018_10.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO_2018_10.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO_2018_12.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO_2018_12.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO_2018_12.TXT"
 
-MONTH <- 10 # month in numeric or FALSE for a complete year 
+MONTH <- 12 # month in numeric or FALSE for a complete year 
 YEAR <- "2018"
 
 # only if the file must be uploaded to google drive
-GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisi髇_volcado/2018/2018_correcciones_para_sups/"
+GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisi贸n_volcado/2018/2018_correcciones_para_sups/"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -106,9 +106,9 @@ PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 # month as character
 MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
 
-# read especies_sujetas_a_posible_confusi髇_taxon髆ica.csv file
+# read especies_sujetas_a_posible_confusi贸n_taxon贸mica.csv file
 ESP_TAXONOMIC_CONFUSION <- read.csv(
-  "especies_sujetas_a_posible_confusi髇_taxon髆ica.csv",
+  "especies_sujetas_a_posible_confusi贸n_taxon贸mica.csv",
   sep = ";",
   fileEncoding = "UTF-8",
   colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
@@ -329,7 +329,7 @@ errors <- check_them_all()
     
     exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     
-    exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
+    #exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
     
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
     # a complete year 
