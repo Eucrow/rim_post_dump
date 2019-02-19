@@ -590,68 +590,31 @@ categoriesWithRepeatedSexes <- function() {
   
 }
 
-# TO DO: The COD_ID has been changed, so should be interesting fix this function
-# to check the new COD_ID
-# check if the cod_id are correctly created ------------------------------------
-#' Check cod_id
-#
-#' Check if the cod_id are correctly variables.
-#' Check the length of the code, the type of sample, and the port.
+# check if the COD_ID variable is filled ---------------------------------------
+#' The COD_ID variable is filled when the data is dumped in SIRENO. But, if
+#' a new sample is hand typed, the COD_ID it is not generated and is saved as
+#' an empty field.
+#' This function check that all the registers of COD_ID are filled.
 #' @return Return a dataframe with the erroneus codes.
-checkCodId <- function() {
+
+checkCodId <- function(df){
   
-  # prepare dataframe
-  cod_id <- catches %>%
-    select(COD_ID, COD_PUERTO, TIPO_MUE, A?O)%>%
-    unique()%>%
-    addInfluenceAreaVariable("COD_PUERTO")
-  
-  errors_cod_id <- list()
-  
-  # check year
-  errors_cod_id[["year_cod_id"]] <- cod_id %>%
-    mutate(year_id = substr(COD_ID, 1, 4)) %>%
-    filter(year_id != A?O)%>%
-    addTypeOfError("incorrect year")
-  
-  # check number of characters of cod_id
-  errors_cod_id[["lenght_cod_id"]] <- cod_id %>% 
-    mutate(length_cod_id = nchar(as.character(COD_ID))) %>%
-    filter(length_cod_id != 13)%>%
-    addTypeOfError("code with less than 13 characteres")
-  
-  # check sample type
-  errors_cod_id[["sample_type_cod_id"]] <- cod_id %>%
-    mutate(
-      type_id = substr(COD_ID, 8, 9),
-      type_mue_cod = substr(TIPO_MUE, 3, 4),
-      check_tipo_mue = ifelse (type_id == type_mue_cod, "correct", "incorrect")
-    ) %>%
-    filter(check_tipo_mue == "incorrect") %>%
-    addTypeOfError("incoherent sample type")
-  
-  # check the field port
-  errors_cod_id[["field_port_cod_id"]] <- cod_id %>%
-    mutate(puerto_id = substr(COD_ID, 5, 7 )) %>%
-    mutate(
-      check_puerto = ifelse ( puerto_id == "CAD" & AREA_INF == "GC", "correcto",
-                              ifelse ( puerto_id == "LCG" & AREA_INF == "GN", "correcto",
-                                       ifelse (puerto_id == "SDR" & AREA_INF == "AC", "correcto",
-                                               ifelse(puerto_id == "VGO" & AREA_INF == "GS", "correcto", "incorrect")
-                                       )
-                              )
-      )
-    ) %>%
-    filter(check_puerto == "incorrect") %>%
-    addTypeOfError("incoherent port")
-  
-  # combine list errors_cod_id
-  errors <- Reduce(function(x, y) { merge(x, y, all = TRUE)} , errors_cod_id) %>%
-    # NOSE QUE ES ESE CAMPO TIPO_ERROR... 
-    select(COD_PUERTO, COD_ID, TIPO_MUE, A?O, TIPO_ERROR, AREA_INF)%>%
-    arrange(COD_ID, TIPO_ERROR)
-  # arrange(COD_ID)
-  return(errors)
+  if (variable_exists_in_df("COD_ID", df)){
+    
+    errors <- df[is.na(df[["COD_ID"]]),]
+    
+    errors <- errors[,BASE_FIELDS]
+    
+    errors <- addTypeOfError(errors, "ERROR: COD_ID variable is empty. This error only
+                   can be resolved by IT services in Madrid.")
+    
+    return(errors)
+    
+  } else {
+    
+    return(FALSE)
+    
+  }
   
 }
 

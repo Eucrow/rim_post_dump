@@ -300,6 +300,13 @@ check_them_all <- function () {
     
     err$rango_tallas <- checkSizeRange()
     
+    # ---- COD_ID ----
+    # This check is usefull in the anual review. When the data is dumped in
+    # SIRENO, COD_ID is automatically filled. But, if later someone add a new
+    # sample, the COD_ID doesn't fill and is saved as empty.
+    err$cod_id_filled_catches <- checkCodId(catches)
+    err$cod_id_filled_catches_in_lengths <- checkCodId(catches_in_lengths)
+    err$cod_id_filled_lengths <- checkCodId(lengths)
     
     # ---- COMBINE ERRORS ----
     
