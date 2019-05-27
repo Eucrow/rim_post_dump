@@ -309,6 +309,7 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
   errors_ships <- merge(x=to_ships, y=cfpo, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
   errors_ships <- errors_ships %>%
     filter( ESTADO != "ALTA DEFINITIVA" &
+              ESTADO != "Alta Definitiva" &
               ESTADO != "H - A.P. POR REACTIVACION" &
               ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
   text_type_of_error <- paste0("ERROR: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivaci?n, o A.P Por Nueva Construcci?n")

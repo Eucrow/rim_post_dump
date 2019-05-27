@@ -39,14 +39,14 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2019/2019_01"
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/anual_rim_oab"
+PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2019/2019_03"
+# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/anual_despues_cruce"
 ERRORS_SUBDIRECTORY <- "errors"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 1 # month in numeric or FALSE for a complete year 
+MONTH <- 3 # month in numeric or FALSE for a complete year 
 YEAR <- "2019"
 
 # only if the file must be uploaded to google drive
@@ -172,7 +172,6 @@ prueba_LENGTHS <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
 # catches_in_lengths <- muestreos_up$catches_in_lengths
 # lengths <- muestreos_up$lengths
 
-
 # ------------------------------------------------------------------------------
 # #### SEARCHING ERRORS ########################################################
 # ------------------------------------------------------------------------------
@@ -198,7 +197,7 @@ errors <- rim_check(muestreos_up)
     # one month
     # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
+    exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
 
     # a complete year 
     # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR), separation = "_")

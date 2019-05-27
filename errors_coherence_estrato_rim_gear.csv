@@ -1,0 +1,31 @@
+COD_ID;COD_PUERTO;PUERTO;LOCODE;FECHA_MUE;COD_BARCO;BARCO;ESTRATO_RIM;COD_TIPO_MUE;TIPO_MUE;COD_ARTE.x;ARTE;TIPO_ERROR
+201803102;0907;A Coruña;ESLCG;20-11-18;202517;PESCASAR;BACA_CN;1;MT1A (Encuestas IEO);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201803428;1418;Avilés;ESAVS;04-12-18;201854;CARMEN UNO;BETA_CN;1;MT1A (Encuestas IEO);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201802916;1418;Avilés;ESAVS;23-10-18;208663;EL MAKILAN;BETA_CN;1;MT1A (Encuestas IEO);202;VOLANTA;ERROR: no concuerda el estrato_rim con el arte
+201802536;0913;Finisterre;ESFNE;17-09-18;203170;O MARIO;BETA_CN;2;MT2A (Biometrico puerto);202;VOLANTA;ERROR: no concuerda el estrato_rim con el arte
+201800490;0926;Cillero;ESCIO;28-03-18;012671;O XAN;ENMALLE_AC;2;MT2A (Biometrico puerto);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201803640;1418;Avilés;ESAVS;27-03-18;201633;ALBA MAR;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803643;0925;Burela;ESBRL;03-04-18;202613;PIFE;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803637;1418;Avilés;ESAVS;26-09-18;201633;ALBA MAR;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803639;1418;Avilés;ESAVS;26-03-18;201633;ALBA MAR;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803646;0914;Muros;ESMRS;03-04-18;207193;PLAYA SAN FRANCISCO;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803647;1418;Avilés;ESAVS;10-04-18;208086;ELEUTERIO JOSE BALAYO;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803669;0907;A Coruña;ESLCG;13-06-18;200785;ANA ISABEL;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803644;0925;Burela;ESBRL;04-04-18;202613;PIFE;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201803645;0914;Muros;ESMRS;02-04-18;207193;PLAYA SAN FRANCISCO;JURELERA_CN;4;MT2B (Biometrico a bordo);103;GRAN ABERTURA VERTICAL;ERROR: no concuerda el estrato_rim con el arte
+201800665;0409;Santoña;ESSNN;21-03-18;202896;SIEMPRE ALEGRIA;LIN_CABALLA;2;MT2A (Biometrico puerto);601;CERCO;ERROR: no concuerda el estrato_rim con el arte
+201803211;1418;Avilés;ESAVS;13-11-18;205215;ROSA LOS VIENTOS;LIN_CALAMAR;1;MT1A (Encuestas IEO);502;NASA;ERROR: no concuerda el estrato_rim con el arte
+201801750;1418;Avilés;ESAVS;05-07-18;015900;NUEVO XABON;LIN_MERLUZA;1;MT1A (Encuestas IEO);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201802252;0926;Cillero;ESCIO;07-08-18;204383;EIXIL;PALANGRE_AC;1;MT1A (Encuestas IEO);102;BACA;ERROR: no concuerda el estrato_rim con el arte
+201802590;0917;Santa Eugenia de Ribeira;ESSNI;20-09-18;206268;VIKINJO;PALANGRE_CN;2;MT2A (Biometrico puerto);601;CERCO;ERROR: no concuerda el estrato_rim con el arte
+201800306;1418;Avilés;ESAVS;19-02-18;202659;TRAVESAU;PAREJA_CN;1;MT1A (Encuestas IEO);102;BACA;ERROR: no concuerda el estrato_rim con el arte
+201803097;0914;Muros;ESMRS;01-11-18;202390;NUEVO VERTE;TRASMALL_CN;1;MT1A (Encuestas IEO);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201803541;0913;Finisterre;ESFNE;10-12-18;003082;PLAYA DE LANGOSTEIRA;TRASMALL_CN;2;MT2A (Biometrico puerto);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201803439;0914;Muros;ESMRS;10-12-18;202390;NUEVO VERTE;TRASMALL_CN;2;MT2A (Biometrico puerto);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201800178;0913;Finisterre;ESFNE;03-01-18;015631;MONTE NARANCO SEGUNDO;TRASMALL_CN;1;MT1A (Encuestas IEO);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201803304;0913;Finisterre;ESFNE;04-12-18;015631;MONTE NARANCO SEGUNDO;TRASMALL_CN;1;MT1A (Encuestas IEO);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201801743;0913;Finisterre;ESFNE;03-07-18;015631;MONTE NARANCO SEGUNDO;TRASMALL_CN;1;MT1A (Encuestas IEO);201;BETA;ERROR: no concuerda el estrato_rim con el arte
+201803545;1418;Avilés;ESAVS;04-12-18;006635;PUNTA TAZONES;TRASMALL_CN;1;MT1A (Encuestas IEO);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201800492;1418;Avilés;ESAVS;05-03-18;013732;ANUSKA II;TRASMALL_CN;1;MT1A (Encuestas IEO);302;PALANGRE DE FONDO;ERROR: no concuerda el estrato_rim con el arte
+201802618;1418;Avilés;ESAVS;25-09-18;208663;EL MAKILAN;TRASMALL_CN;1;MT1A (Encuestas IEO);202;VOLANTA;ERROR: no concuerda el estrato_rim con el arte
+201802499;1418;Avilés;ESAVS;25-09-18;202207;NUEVO JOSPI;TRASMALL_CN;1;MT1A (Encuestas IEO);202;VOLANTA;ERROR: no concuerda el estrato_rim con el arte

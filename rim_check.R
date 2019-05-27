@@ -42,9 +42,9 @@ rim_check <- function (samples_imported) {
 
     err$errors_mt2b_rim_stratum <- checkMt2bRimStratum(catches)
 
-    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
+    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "RIM")
 
-    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches)
+    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches, "RIM")
 
     err$number_of_ships <- numberOfShips(catches)
 
