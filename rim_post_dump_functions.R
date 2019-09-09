@@ -1262,7 +1262,8 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
       
       # Before export to google drive, is mandatory export file to csv in local:
       # When the googlesheet4 packages have the oauth implemented, we can
-      # use it instead of googledrive package
+      # use it instead of googledrive package. Googlesheet4 already have the
+      # oauth implemented --> CHANGE!!!
       filename <- paste0(PATH_ERRORS, "/", prefix, list_name, suffix, '.csv')
       
       write.table(
@@ -1289,4 +1290,29 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
     }
     
   })
+}
+
+#' Check code: 2061
+#' Check if there are samples with the same name vessel but with differente
+#' SIRENO codification or SGPM codification.
+#' 
+#' @return dataframe with errors
+checkMultipleShipCode <- function(catches){
+  
+  # find the ship names with more than one COD_BARDO and CODSGPM
+  dsn <- catches %>%
+    select(BARCO,COD_BARCO, CODSGPM) %>%
+    unique()%>%
+    count(BARCO) %>%
+    filter(n>1)
+  
+  dsn <- as.character(dsn$BARCO)
+  
+  # get the samples with the multiple ships names
+  err <- catches[catches$BARCO %in% dsn,]
+  
+  err <- err[, BASE_FIELDS]
+  err <- addTypeOfError(err, "ERROR: Hay varios muestreos que tienen este mismo barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
+  
+  
 }

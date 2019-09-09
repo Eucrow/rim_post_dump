@@ -39,18 +39,21 @@
 # ------------------------------------------------------------------------------
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
-PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2019/2019_03"
-# PATH_FILES <- "F:/misdoc/sap/revision volcado/datos/2018/anual_despues_cruce"
+# PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
+PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_07"
+
 ERRORS_SUBDIRECTORY <- "errors"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 3 # month in numeric or FALSE for a complete year 
+MONTH <- 7 # month in numeric or FALSE for a complete year 
 YEAR <- "2019"
 
 # only if the file must be uploaded to google drive
-GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisión_volcado/2019/2019_correcciones_para_sups/"
+## ATTENTION WITH THE SPECIAL CHARACTER: Ã³
+# GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisiÃ³n_volcado/2019/2019_correcciones_para_sups/"
+GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2019/2019_correcciones_para_sups/"
 
 # cfpo to use in the script (must be included in sapmuebase package)
 cfpo_to_use <- "cfpo2018"
@@ -77,6 +80,12 @@ library(devtools)
 # remove.packages("sapmuebase")
 # .rs.restartR()
 # install("F:/misdoc/sap/sapmuebase")
+# install("C:/Users/Marco IEO/Desktop/sapmuebase")
+
+# ---- install sapmuebase from github
+# remove.packages("sapmuebase")
+# .rs.restartR()
+# install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
 
@@ -89,7 +98,8 @@ library(googledrive)
 # #### SET WORKING DIRECTORY ###################################################
 # ------------------------------------------------------------------------------
 
-setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
+# setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
+# setwd("C:/Users/Marco IEO/Google Drive/revision_volcado/revision_volcado_R/")
 
 # ------------------------------------------------------------------------------
 # #### GLOBAL VARIABLES ########################################################
@@ -107,21 +117,14 @@ PATH_ERRORS <- paste(PATH_FILES,"/errors", sep="")
 PATH_BACKUP <- paste(PATH_ERRORS, "/backup", sep="")
 
 # month as character
-MONTH_AS_CHARACTER <- sprintf("%02d", MONTH)
-
-# read especies_sujetas_a_posible_confusion_taxonómica.csv file
-ESP_TAXONOMIC_CONFUSION <- read.csv(
-  "especies_sujetas_a_posible_confusion_taxonomica.csv",
-  sep = ";",
-  colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
-
+MONTH_AS_CHARACTER <- ifelse(isFALSE(MONTH), "", sprintf("%02d", MONTH))
 
 # ------------------------------------------------------------------------------
 # #### FUNCTIONS ###############################################################
 # ------------------------------------------------------------------------------
 # All the functions required in this script are located in
 # revision_volcado_functions.R file.
-source('revision_volcado_functions.R')
+source('rim_post_dump_functions.R')
 
 # function to check the rim files:
 source('rim_check.R')
@@ -145,6 +148,12 @@ sampled_spe_no_mixed <- especies_no_mezcla
 ###obtain the not allowed species dataset
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
 
+# read especies_sujetas_a_posible_confusion_taxonómica.csv file
+ESP_TAXONOMIC_CONFUSION <- read.csv(
+  "especies_sujetas_a_posible_confusion_taxonomica.csv",
+  sep = ";",
+  colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
+
 ### obtain the cfpo
 CFPO <- get(cfpo_to_use)
   # ignore useless columns
@@ -162,9 +171,13 @@ muestreos_up <- importRIMFiles(
   path = PATH_FILES,
   by_month = MONTH)
   
-catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
-catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
-prueba_LENGTHS <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
+# catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
+# catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
+# lengths_sampled <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
+
+
+# TO DO: check that muestreos_up is not empty --> sometimes happend because the
+# directory or month hasn't been changed.
  
 
 #isolate dataframes
@@ -180,13 +193,13 @@ prueba_LENGTHS <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
 #   - sampled type 1, MT1A
 #   - sampled type 2, MT2A
 #   - sampled type 6, MT3  
+
 errors <- rim_check(muestreos_up)
 
 # TODO
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
 # errors <- oab_check(muestreos_up)
-
 
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################

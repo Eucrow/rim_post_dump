@@ -53,6 +53,8 @@ rim_check <- function (samples_imported) {
     err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
     err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
+    
+    err$multiple_ship_code <- checkMultipleShipCode(catches)
 
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
