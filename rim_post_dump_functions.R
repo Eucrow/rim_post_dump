@@ -1292,7 +1292,7 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
   })
 }
 
-#' Check code: 2061
+#' Check code: 1061
 #' Check if there are samples with the same name vessel but with differente
 #' SIRENO codification or SGPM codification.
 #' 
@@ -1312,7 +1312,115 @@ checkMultipleShipCode <- function(catches){
   err <- catches[catches$BARCO %in% dsn,]
   
   err <- err[, BASE_FIELDS]
-  err <- addTypeOfError(err, "ERROR: Hay varios muestreos que tienen este mismo barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
+  err <- addTypeOfError(err, "ERROR: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
   
+}
+
+#' Check code: 1062
+#' Check coherence between DCF Metier, Rim Stratum and Origin.
+#' 
+#' @return dataframe with errors
+coherenceDCFMetierRimStratumOrigin <- function(df){
+  
+  metier_caladero_dcf_clean <- metier_caladero_dcf[,c("ESTRATO_RIM",
+                                                      "METIER_DCF", "COD_ORIGEN")]
+  metier_caladero_dcf_clean$VALID <- TRUE
+  
+  df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "METIER_DCF")]
+  
+  err <- merge(df_clean, metier_caladero_dcf_clean,
+               by = c("ESTRATO_RIM", "METIER_DCF", "COD_ORIGEN"),
+               all.x = T
+  )
+  
+  err <- err[which(err$VALID!=TRUE | is.na(err$VALID)),]
+  
+  err <- addTypeOfError(err, "Metier DCF does not match with Rim Stratum and Origin")
+  
+  return(err)
+  
+}
+
+#' Check code: 1063
+#' Check coherence between DCF Fishing Ground, Rim Stratum and Origin.
+#' 
+#' @return dataframe with errors
+coherenceDCFFishingGroundRimStratumOrigin <- function(df){
+  
+  metier_caladero_dcf_clean <- metier_caladero_dcf[,c("ESTRATO_RIM",
+                                                      "CALADERO_DCF", "COD_ORIGEN")]
+  metier_caladero_dcf_clean$VALID <- TRUE
+  
+  df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "CALADERO_DCF")]
+  
+  err <- merge(df_clean, metier_caladero_dcf_clean,
+               by = c("ESTRATO_RIM", "CALADERO_DCF", "COD_ORIGEN"),
+               all.x = T
+  )
+  
+  err <- err[which(err$VALID!=TRUE | is.na(err$VALID)),]
+  
+  err <- addTypeOfError(err, "Fishing Ground DCF does not match with Rim Stratum and Origin")
+  
+  return(err)
+  
+}
+
+#' Check code: 1064
+#' Check all the categories are measured. If one or more are not, return a
+#' warning.
+#' 
+#' @return dataframe with errors
+allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
+  
+  # Some categories never are measured, so must be ignored
+  regex_to_ignore <- c("^.*(?i)colas.*",
+                       "^.*(?i)melada$",
+                       "^.*trozos$",
+                       "^(?i)alas\ .*$"
+  )
+  
+  regex_to_ignore <- paste(regex_to_ignore, collapse = "|")
+  
+  # Clean the categories master
+  maestro_categorias_clean <- maestro_categorias[, c("ESPCOD", "PUECOD", "ESPCAT", "TIPPROCOD")]
+  
+  # Clean catches dataframe
+  clean_catches <- df_catches[ which(df_catches$COD_TIPO_MUE == "2"), ]
+  
+  clean_catches <- merge(clean_catches, maestro_categorias_clean,
+                         by.x = c("COD_ESP_MUE", "COD_PUERTO", "COD_CATEGORIA"),
+                         by.y = c("ESPCOD", "PUECOD", "ESPCAT"),
+                         all.x = T)
+  
+  
+  clean_catches <- clean_catches[ -grep(regex_to_ignore, clean_catches$CATEGORIA),]
+  
+  # Get the number of categories in catches dataframe
+  cat_cat <- clean_catches %>%
+    group_by(COD_ID, COD_ESP_MUE) %>%
+    mutate( n_cat_catches = n_distinct(COD_CATEGORIA)) %>%
+    select(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_MUE, n_cat_catches) %>%
+    unique()
+  
+  # Get the number of categories with sampled lengths
+  sam_cat_len <- df_lengths_sampled %>%
+    group_by(COD_ID, COD_ESP_MUE) %>%
+    mutate( n_cat_lengths = n_distinct(COD_CATEGORIA)) %>%
+    select(COD_ID, COD_ESP_MUE, n_cat_lengths) %>%
+    unique()
+  
+  # Get errors
+  
+  errors <- merge(cat_cat, sam_cat_len, all.x = T, by.x = c("COD_ID", "COD_ESP_MUE"))
+  
+  errors <- errors[which(errors[["n_cat_catches"]] >1 &
+                           errors[["n_cat_lengths"]] < errors[["n_cat_catches"]]),]
+  
+  errors <- addTypeOfError(errors, "WARNING: some species in the category are measured but others are not")
+  
+  errors <- errors[, c("COD_ID", "COD_ESP_MUE", "FECHA_MUE", "COD_BARCO", "TIPO_ERROR")]
+  
+  return(errors)
   
 }

@@ -18,7 +18,7 @@
 # #### INSTRUCTIONS ############################################################
 # ------------------------------------------------------------------------------
 
-# To use this scritp:
+# To use this script:
 
 # - Make sure the file 'revision_volcado_functions.R' is located in the same
 # directory that this file.
@@ -40,19 +40,20 @@
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES 
 
 # PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
-PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_07"
+# PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_08"
+PATH_FILES <- file.path(getwd(), "datos/2019/2019_06")
 
 ERRORS_SUBDIRECTORY <- "errors"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 7 # month in numeric or FALSE for a complete year 
+MONTH <- 6 # month in numeric or FALSE for a complete year 
 YEAR <- "2019"
 
 # only if the file must be uploaded to google drive
 ## ATTENTION WITH THE SPECIAL CHARACTER: Ã³
-# GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisiÃ³n_volcado/2019/2019_correcciones_para_sups/"
+GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisiÃ³n_volcado/2019/2019_correcciones_para_sups/"
 GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2019/2019_correcciones_para_sups/"
 
 # cfpo to use in the script (must be included in sapmuebase package)
@@ -79,7 +80,7 @@ library(devtools)
 # ---- install sapmuebase from local
 # remove.packages("sapmuebase")
 # .rs.restartR()
-# install("F:/misdoc/sap/sapmuebase")
+# install("D:/sap/sapmuebase")
 # install("C:/Users/Marco IEO/Desktop/sapmuebase")
 
 # ---- install sapmuebase from github
@@ -210,6 +211,11 @@ errors <- rim_check(muestreos_up)
     # one month
     # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+  
+  
+    # WARNING: the google drive upload doesn't work:
+    # Error in add_id_path(nodes, root_id = root_id, leaf = leaf) : 
+    # !anyDuplicated(nodes$id) is not TRUE 
     exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
 
     # a complete year 

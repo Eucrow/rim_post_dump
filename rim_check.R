@@ -85,6 +85,13 @@ rim_check <- function (samples_imported) {
     err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts(catches)
 
     err$checkSampleResponsible <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
+    
+    # This errors must be used only in anual, when the Fishing Ground and DCF
+    # Metier is filled:
+    
+    err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
+    
+    err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
 
     # ---- IN SPECIES ----
 
@@ -143,6 +150,7 @@ rim_check <- function (samples_imported) {
     # ---- IN LENGTHS ----
 
     err$rango_tallas <- checkSizeRange(lengths_sampled)
+    err$allCategoriesMeasured <- allCategoriesMeasured(catches, lengths_sampled)
 
     # ---- COD_ID ----
     # This check is usefull in the anual review. When the data is dumped in
