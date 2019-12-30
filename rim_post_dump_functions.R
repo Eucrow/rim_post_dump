@@ -1400,7 +1400,7 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   cat_cat <- clean_catches %>%
     group_by(COD_ID, COD_ESP_MUE) %>%
     mutate( n_cat_catches = n_distinct(COD_CATEGORIA)) %>%
-    select(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_MUE, n_cat_catches) %>%
+    select(BASE_FIELDS, COD_ESP_MUE, n_cat_catches) %>%
     unique()
   
   # Get the number of categories with sampled lengths
@@ -1417,9 +1417,9 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   errors <- errors[which(errors[["n_cat_catches"]] >1 &
                            errors[["n_cat_lengths"]] < errors[["n_cat_catches"]]),]
   
-  errors <- addTypeOfError(errors, "WARNING: some species in the category are measured but others are not")
+  errors <- addTypeOfError(errors, "WARNING: some categories of the species are measured but others are not")
   
-  errors <- errors[, c("COD_ID", "COD_ESP_MUE", "FECHA_MUE", "COD_BARCO", "TIPO_ERROR")]
+  errors <- errors[, c(BASE_FIELDS, "TIPO_ERROR")]
   
   return(errors)
   

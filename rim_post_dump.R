@@ -80,7 +80,7 @@ library(devtools)
 # ---- install sapmuebase from local
 # remove.packages("sapmuebase")
 # .rs.restartR()
-# install("D:/sap/sapmuebase")
+# install("F:/sap/sapmuebase")
 # install("C:/Users/Marco IEO/Desktop/sapmuebase")
 
 # ---- install sapmuebase from github
