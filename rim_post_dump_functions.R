@@ -70,7 +70,6 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM, 
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
       select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
-      mutate(FECHA_MUE = as.Date(FECHA_MUE, "%d-%m-%y")) %>%
       arrange_( "COD_PUERTO", "COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
     
     #Remove columns with only NA values
@@ -1375,9 +1374,12 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   
   # Some categories never are measured, so must be ignored
   regex_to_ignore <- c("^.*(?i)colas.*",
-                       "^.*(?i)melada$",
-                       "^.*trozos$",
-                       "^(?i)alas\ .*$"
+                       "^.*(?i)melad(a|o)$",
+                       "^.*(?i)melad(a|o).*",
+                       "^.*(?i)trozos$",
+                       "^.*(?i)picad(a|o)",
+                       "^(?i)alas\ .*$",
+                       "^Huevas$"
   )
   
   regex_to_ignore <- paste(regex_to_ignore, collapse = "|")
@@ -1398,28 +1400,31 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   
   # Get the number of categories in catches dataframe
   cat_cat <- clean_catches %>%
-    group_by(COD_ID, COD_ESP_MUE) %>%
+    group_by(COD_ID, COD_ESP_MUE, ESP_MUE) %>%
     mutate( n_cat_catches = n_distinct(COD_CATEGORIA)) %>%
-    select(BASE_FIELDS, COD_ESP_MUE, n_cat_catches) %>%
+    select(BASE_FIELDS, COD_ESP_MUE, ESP_MUE, n_cat_catches) %>%
     unique()
   
   # Get the number of categories with sampled lengths
   sam_cat_len <- df_lengths_sampled %>%
-    group_by(COD_ID, COD_ESP_MUE) %>%
+    group_by(COD_ID, COD_ESP_MUE, ESP_MUE) %>%
     mutate( n_cat_lengths = n_distinct(COD_CATEGORIA)) %>%
-    select(COD_ID, COD_ESP_MUE, n_cat_lengths) %>%
+    select(COD_ID, COD_ESP_MUE, ESP_MUE, n_cat_lengths) %>%
     unique()
   
   # Get errors
   
-  errors <- merge(cat_cat, sam_cat_len, all.x = T, by.x = c("COD_ID", "COD_ESP_MUE"))
+  errors <- merge(cat_cat,
+                  sam_cat_len,
+                  all.x = T,
+                  by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"))
   
   errors <- errors[which(errors[["n_cat_catches"]] >1 &
                            errors[["n_cat_lengths"]] < errors[["n_cat_catches"]]),]
   
   errors <- addTypeOfError(errors, "WARNING: some categories of the species are measured but others are not")
   
-  errors <- errors[, c(BASE_FIELDS, "TIPO_ERROR")]
+  errors <- errors[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "TIPO_ERROR")]
   
   return(errors)
   

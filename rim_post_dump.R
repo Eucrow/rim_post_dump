@@ -41,19 +41,17 @@
 
 # PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
 # PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_08"
-PATH_FILES <- file.path(getwd(), "datos/2019/2019_06")
+PATH_FILES <- file.path(getwd(), "datos/2019/2019_11")
 
 ERRORS_SUBDIRECTORY <- "errors"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 6 # month in numeric or FALSE for a complete year 
+MONTH <- 11 # month in numeric or FALSE for a complete year 
 YEAR <- "2019"
 
 # only if the file must be uploaded to google drive
-## ATTENTION WITH THE SPECIAL CHARACTER: Ã³
-GOOGLE_DRIVE_PATH <- "/equipo muestreos/revisiÃ³n_volcado/2019/2019_correcciones_para_sups/"
 GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2019/2019_correcciones_para_sups/"
 
 # cfpo to use in the script (must be included in sapmuebase package)
@@ -80,7 +78,7 @@ library(devtools)
 # ---- install sapmuebase from local
 # remove.packages("sapmuebase")
 # .rs.restartR()
-# install("F:/sap/sapmuebase")
+# install("F:/misdoc/sap/sapmuebase")
 # install("C:/Users/Marco IEO/Desktop/sapmuebase")
 
 # ---- install sapmuebase from github
@@ -166,12 +164,12 @@ CFPO <- get(cfpo_to_use)
 # ------------------------------------------------------------------------------
 
 muestreos_up <- importRIMFiles(
-  des_tot = FILENAME_DES_TOT,
-  des_tal = FILENAME_DES_TAL,
-  tal = FILENAME_TAL,
+  catches = FILENAME_DES_TOT,
+  catches_in_lengths = FILENAME_DES_TAL,
+  lengths = FILENAME_TAL,
   path = PATH_FILES,
   by_month = MONTH)
-  
+
 # catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
 # catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
 # lengths_sampled <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
