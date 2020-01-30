@@ -41,14 +41,14 @@
 
 # PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
 # PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_08"
-PATH_FILES <- file.path(getwd(), "datos/2019/2019_11")
+PATH_FILES <- file.path(getwd(), "datos/2019/2019_12")
 
 ERRORS_SUBDIRECTORY <- "errors"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- 11 # month in numeric or FALSE for a complete year 
+MONTH <- 12 # month in numeric or FALSE for a complete year 
 YEAR <- "2019"
 
 # only if the file must be uploaded to google drive

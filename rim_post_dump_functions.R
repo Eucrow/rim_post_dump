@@ -815,7 +815,7 @@ checkShipsPairBottomTrawl <- function(catches){
 checkSizeRange<- function (lengths_sampled){
   
   warningsIsRanged <- lengths_sampled%>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO)%>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO)%>%
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
     unique()%>%
@@ -824,7 +824,7 @@ checkSizeRange<- function (lengths_sampled){
     select(-c(TALLA_MIN, TALLA_MAX))
   
   warningsOutOfRange <- lengths_sampled %>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, SEXO, TALLA)%>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO, TALLA)%>%
     merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
