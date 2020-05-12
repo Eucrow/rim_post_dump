@@ -84,14 +84,13 @@ rim_check <- function (samples_imported) {
 
     err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts(catches)
 
-    err$checkSampleResponsible <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
+    err$checkSampleInCharge <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
     
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
     
-    # err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
-    # 
-    # err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
+    err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
+    err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
 
     # ---- IN SPECIES ----
 
@@ -142,14 +141,14 @@ rim_check <- function (samples_imported) {
 
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
 
-    err$capturas_percentil_97 <- checkCatchesP97(catches)
+    err$capturas_percentil_99 <- checkCatchesP99(catches)
 
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
 
     # ---- IN LENGTHS ----
 
-    err$rango_tallas <- checkSizeRange(lengths_sampled)
+    err$rango_tallas <- checkSizeRangeRIM(lengths_sampled)
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
 
     # ---- COD_ID ----

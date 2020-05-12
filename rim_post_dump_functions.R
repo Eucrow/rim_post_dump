@@ -444,7 +444,7 @@ check_mixed_as_no_mixed <- function(catches){
 # df: dataframe
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(lengths_sampled){
-  selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT")
+  selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
   non_mixed <- merge(x=lengths_sampled, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
     select_(.dots = selected_fields) %>%
     unique()
@@ -808,15 +808,15 @@ checkShipsPairBottomTrawl <- function(catches){
 
 # warning outliers in species lengths ------------------------------------------
 #
-#' Check the size range of species of the species inthe rango_tallas_historico dataset
+#' Check the size range of species of the species inthe rango_tallas_historico_RIM dataset
 #' 
 #' @return dataframe with warnings lengths
 #' 
-checkSizeRange<- function (lengths_sampled){
+checkSizeRangeRIM<- function (lengths_sampled){
   
   warningsIsRanged <- lengths_sampled%>%
     select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO)%>%
-    merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
+    merge(y = rango_tallas_historico_RIM, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
     unique()%>%
     addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas por estrato rim.")%>%
@@ -825,7 +825,7 @@ checkSizeRange<- function (lengths_sampled){
   
   warningsOutOfRange <- lengths_sampled %>%
     select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO, TALLA)%>%
-    merge(y = rango_tallas_historico, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
+    merge(y = rango_tallas_historico_RIM, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
     mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
@@ -839,21 +839,53 @@ checkSizeRange<- function (lengths_sampled){
   
 }
 
+# warning outliers in species lengths ------------------------------------------
+#
+#' Check the size range of species in the rango_tallas_historico_caladero dataset
+#' 
+#' @return dataframe with warnings lengths
+#'
+checkSizeRangeRIMByFishingGround <- function (lengths_data){
+
+  lengths_data <- merge(x = lengths_data,
+                        y = sapmuebase::caladero[,c("CALADERO", "COD_ORIGEN")],
+                        all.x = T,
+                        by="COD_ORIGEN")
+  
+  lengths_data <- merge(x=lengths_data,
+                        y = rango_tallas_historico_caladero,
+                        by.x = c("COD_ESP_CAT", "CALADERO"),
+                        by.y = c("COD_ESP", "CALADERO"),
+                        all.x = T)
+  
+  warningsOutOfRange <- lengths_data %>%
+    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, TALLA, TALLA_MIN, TALLA_MAX)%>%
+    filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
+    # it's not possible use addTypeOfError here, I don't know why
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para su caladero):", TALLA_MIN, "-", TALLA_MAX))%>%
+    humanizeVariable("COD_ESP_CAT")
+  
+  return(warningsOutOfRange)
+  
+}
+
+# checkSizeRangeRIMByFishingGround(muestreos_up$lengths)
+
 # warning outliers in species catches ------------------------------------------
-checkCatchesP97 <- function(catches){
+checkCatchesP99 <- function(catches){
   
   warnings <- catches %>%
     select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
     group_by_(.dots = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")) %>%
     summarise(P_DESEM_TOT = sum(P_DESEM)) %>%
-    merge(., p97_capturas_historico,
+    merge(., p99_capturas_historico,
           by.x = c("ESTRATO_RIM", "COD_ESP_MUE"),
           by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
-    filter(P_DESEM_TOT > P97) %>%
-    mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P97) * 100 / P_DESEM_TOT), digits=0))%>%
-    addTypeOfError("WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 97 del histórico de capturas 2014 al 2017 por estrato rim.")
+    filter(P_DESEM_TOT > P99) %>%
+    mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P99) * 100 / P_DESEM_TOT), digits=0))%>%
+    addTypeOfError("WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 99 del histórico de capturas 2014 al 2018 por estrato rim.")
   
-  warnings[['P97']] <- format(round(warnings[['P97']], 1), round=1)
+  warnings[['P99']] <- format(round(warnings[['P99']], 1), round=1)
   
   
   return(warnings)
@@ -1280,7 +1312,7 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
       
       drive_upload(
         media = filename,
-        path = google_drive_path,
+        path = as_dribble(google_drive_path),
         type = "spreadsheet"
       )
       
@@ -1298,7 +1330,7 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
 #' @return dataframe with errors
 checkMultipleShipCode <- function(catches){
   
-  # find the ship names with more than one COD_BARDO and CODSGPM
+  # find the ship names with more than one COD_BARCO and CODSGPM
   dsn <- catches %>%
     select(BARCO,COD_BARCO, CODSGPM) %>%
     unique()%>%
@@ -1311,8 +1343,10 @@ checkMultipleShipCode <- function(catches){
   err <- catches[catches$BARCO %in% dsn,]
   
   err <- err[, BASE_FIELDS]
+  err <- unique(err)
   err <- addTypeOfError(err, "ERROR: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
   
+  return(err)
 }
 
 #' Check code: 1062
