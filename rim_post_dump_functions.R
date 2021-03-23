@@ -806,49 +806,17 @@ checkShipsPairBottomTrawl <- function(catches){
   #write.csv(errors, file = "parejas_num_barcos_1.csv")
 }
 
-# warning outliers in species lengths ------------------------------------------
+#' Check code: 1052
+# warning outliers in lengths by fishing ground --------------------------------
 #
-#' Check the size range of species of the species inthe rango_tallas_historico_RIM dataset
-#' 
-#' @return dataframe with warnings lengths
-#' 
-checkSizeRangeRIM<- function (lengths_sampled){
-  
-  warningsIsRanged <- lengths_sampled%>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO)%>%
-    merge(y = rango_tallas_historico_RIM, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
-    filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
-    unique()%>%
-    addTypeOfError("WARNING: esta especie con ese sexo no se encuentra en el maestro histórico de tallas mínimas y máximas por estrato rim.")%>%
-    humanizeVariable("COD_ESP_CAT")%>%
-    select(-c(TALLA_MIN, TALLA_MAX))
-  
-  warningsOutOfRange <- lengths_sampled %>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, SEXO, TALLA)%>%
-    merge(y = rango_tallas_historico_RIM, by.x = c("COD_ESP_CAT", "SEXO"), by.y = c("COD_ESP", "SEXO"), all.x = T)%>%
-    filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
-    # it's not possible use addTypeOfError here, I don't know why
-    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para ese sexo):", TALLA_MIN, "-", TALLA_MAX))%>%
-    humanizeVariable("COD_ESP_CAT")%>%
-    select(-c(TALLA_MIN, TALLA_MAX))
-  
-  # warnings <- rbind(warningsIsRanged, warningsOutOfRange)
-  warnings <- merge(warningsIsRanged, warningsOutOfRange, all = T)
-  
-  return(warnings)
-  
-}
-
-# warning outliers in species lengths ------------------------------------------
-#
-#' Check the size range of species in the rango_tallas_historico_caladero dataset
+#' Check the size range of species in the rango_tallas_historico_caladero dataset.
 #' 
 #' @return dataframe with warnings lengths
 #'
-checkSizeRangeRIMByFishingGround <- function (lengths_data){
+checkSizeRangeByFishingGround <- function (lengths_data){
 
   lengths_data <- merge(x = lengths_data,
-                        y = sapmuebase::caladero[,c("CALADERO", "COD_ORIGEN")],
+                        y = sapmuebase::caladero_origen[,c("CALADERO", "COD_ORIGEN")],
                         all.x = T,
                         by="COD_ORIGEN")
   
@@ -862,14 +830,37 @@ checkSizeRangeRIMByFishingGround <- function (lengths_data){
     select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA, TALLA, TALLA_MIN, TALLA_MAX)%>%
     filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)%>%
     # it's not possible use addTypeOfError here, I don't know why
-    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas (para su caladero):", TALLA_MIN, "-", TALLA_MAX))%>%
+    mutate(TIPO_ERROR = paste("WARNING: Talla fuera del rango histórico de tallas por caladero:", TALLA_MIN, "-", TALLA_MAX))%>%
     humanizeVariable("COD_ESP_CAT")
   
   return(warningsOutOfRange)
   
 }
+#' Check code: 1065
+# warning species without historical range by fishing ground -------------------
+#
+#' Check species without historical range by fishing ground.
+#' 
+#' @return dataframe with warnings.
+#'
+checkRangeInHistorical <- function(lengths_data){
 
-# checkSizeRangeRIMByFishingGround(muestreos_up$lengths)
+    warningsIsRanged <- lengths_data%>%
+      select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA)%>%
+      merge(y = rango_tallas_historico_caladero,
+            by.x = c("COD_ESP_CAT"),
+            by.y = c("COD_ESP"),
+            all.x = T)%>%
+      filter(is.na(TALLA_MIN) | is.na((TALLA_MAX)))%>%
+      unique()%>%
+      addTypeOfError("WARNING: esta especie no se encuentra en el maestro histórico por caladero de tallas mínimas y máximas.")%>%
+      humanizeVariable("COD_ESP_CAT")%>%
+      select(-c(TALLA_MIN, TALLA_MAX))
+    
+    return(warningsIsRanged)
+}
+
+
 
 # warning outliers in species catches ------------------------------------------
 checkCatchesP99 <- function(catches){
@@ -1176,7 +1167,7 @@ check_variable_with_master <- function (df, variable, specification){
     unique()
   
   
-  text_type_of_error <- paste0("ERROR: ", name_dataset, " no concuerda con los maestros de SIRENO")
+  text_type_of_error <- paste0("ERROR: ", name_dataset, " no concuerda con los maestros de este script.")
   errors <- addTypeOfError(errors, text_type_of_error)
   
   #return
@@ -1360,6 +1351,7 @@ coherenceDCFMetierRimStratumOrigin <- function(df){
   metier_caladero_dcf_clean$VALID <- TRUE
   
   df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "METIER_DCF")]
+  df_clean <- unique(df_clean)
   
   err <- merge(df_clean, metier_caladero_dcf_clean,
                by = c("ESTRATO_RIM", "METIER_DCF", "COD_ORIGEN"),
@@ -1385,6 +1377,7 @@ coherenceDCFFishingGroundRimStratumOrigin <- function(df){
   metier_caladero_dcf_clean$VALID <- TRUE
   
   df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "CALADERO_DCF")]
+  df_clean <- unique(df_clean)
   
   err <- merge(df_clean, metier_caladero_dcf_clean,
                by = c("ESTRATO_RIM", "CALADERO_DCF", "COD_ORIGEN"),
@@ -1419,14 +1412,14 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   regex_to_ignore <- paste(regex_to_ignore, collapse = "|")
   
   # Clean the categories master
-  maestro_categorias_clean <- maestro_categorias[, c("ESPCOD", "PUECOD", "ESPCAT", "TIPPROCOD")]
+  maestro_categorias_clean <- categorias[, c("COD_ESP", "COD_PUERTO", "COD_CATEGORIA", "PROCESO")]
   
   # Clean catches dataframe
   clean_catches <- df_catches[ which(df_catches$COD_TIPO_MUE == "2"), ]
   
   clean_catches <- merge(clean_catches, maestro_categorias_clean,
                          by.x = c("COD_ESP_MUE", "COD_PUERTO", "COD_CATEGORIA"),
-                         by.y = c("ESPCOD", "PUECOD", "ESPCAT"),
+                         by.y = c("COD_ESP", "COD_PUERTO", "COD_CATEGORIA"),
                          all.x = T)
   
   
@@ -1461,5 +1454,71 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   errors <- errors[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "TIPO_ERROR")]
   
   return(errors)
+  
+}
+
+
+#' Check code: 1064 --> NOOOO it is different of the 1068 which is used in rim_pre_dump
+#' Check variable with prescriptions dataset. Use the
+#' prescriptions_rim_2021_variables dataset.
+#' @param df Dataframe where the variable to check is.
+#' @param variable Variable to check as character. Allowed variables:
+#' ESTRATO_RIM, COD_PUERTO, COD_ORIGEN, COD_ARTE, METIER_DCF and CALADERO_DCF.
+#' @return dataframe with errors
+checkVariableWithRimMt2Prescriptions <- function(df, variable) {
+  
+  valid_variables = c("ESTRATO_RIM","COD_PUERTO","COD_ORIGEN","COD_ARTE",
+                      "METIER_DCF", "CALADERO_DCF")
+  if (!(variable %in% valid_variables)) {
+    stop(paste("This function is not available for variable", variable))
+  }
+  
+  allowed <- prescripciones_rim_mt2_2021_coherencia[,variable]
+  
+  # only MT2 samples:
+  df <- df[df[["COD_TIPO_MUE"]]==2, ]
+  
+  df <- df[!(df[[variable]] %in% allowed), ]
+  
+  if (nrow(df)>0){
+    fields <- BASE_FIELDS
+    
+    if (!(variable %in% BASE_FIELDS)) {
+      fields <- c(BASE_FIELDS, variable)
+    }
+    
+    df <- df[, fields]
+    
+    df <- unique(df)
+    
+    df[["TIPO_ERROR"]] <- apply(df, 1, function(x){
+      paste0( "The ", variable , " ", x[[variable]], " is not in actual MT2 prescriptions.")
+    })
+    
+    return(df)
+  }
+  
+  
+}
+
+
+#' Check code: 1068 --> NOOOO it is different of the 1068 which is used in rim_pre_dump
+#' Check if the variables ESTRATO_RIM, COD_PUERTO, COD_ORIGEN and
+#' COD_ARTE are coherent with MT2 rim prescriptions. ---------------------------
+#' @return dataframe with errors, if there are any.
+coherenceRimMt2Prescriptions <- function(df){
+  
+  df <- df[df[["COD_TIPO_MUE"]]==2, ] #THIS IS DIFFERENT IN rim_pre_dump, COD_TIPO_MUE is "MT2A"
+  
+  errors <- unique(df[, c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")])
+  errors <- merge(errors,
+                  prescripciones_rim_mt2_2021_coherencia,
+                  by=c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF"),
+                  all.x = TRUE)
+  if(nrow(errors)>0){
+    errors <- errors[is.na(errors[["PESQUERIA"]]), c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")]
+    errors <- addTypeOfError(errors, "This combination of port, gear, origin, rim stratum, dcf metier and dcf fishing ground are not in 2021 mt2 prescriptions.")
+    return (errors)
+  }
   
 }

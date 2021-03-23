@@ -25,15 +25,15 @@ oab_check <- function (samples_imported) {
     # ---- REPEATED IN IPDTOSIRENO ----
     
   
-    err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM", "RIM")
+    err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM", "OAB")
     
-    err$puerto <- check_variable_with_master(catches, "COD_PUERTO", "RIM")
+    # err$puerto <- check_variable_with_master(catches, "COD_PUERTO", "OAB")
     
-    err$arte <- check_variable_with_master(catches, "COD_ARTE", "RIM")
+    err$arte <- check_variable_with_master(catches, "COD_ARTE", "OAB")
     
     err$origen <- check_variable_with_master(catches, "COD_ORIGEN", "RIM")
     
-    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA", "RIM")
+    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA", "OAB")
 
     # err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE", "RIM")
     
@@ -44,12 +44,22 @@ oab_check <- function (samples_imported) {
     err$no_mixed_as_mixed <- check_no_mixed_as_mixed(lengths_sampled)
 
     err$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
+    
+    # this is new... I don't know if can be applied in oab in rim samples:
+    # TODO: test it.
+    err$estrato_rim_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "ESTRATO_RIM")
+    err$puerto_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_PUERTO")
+    err$origen_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ORIGEN")
+    err$arte_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ARTE")
+    err$metier_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "METIER_DCF")
+    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "CALADERO_DCF")
+    
 
     # ---- IN HEADER ----
 
     # err$errors_mt2b_rim_stratum <- checkMt2bRimStratum(catches)
 
-    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "RIM")
+    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "OAB")
 
     err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches, "RIM")
 
@@ -62,6 +72,10 @@ oab_check <- function (samples_imported) {
     err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
     
     err$multiple_ship_code <- checkMultipleShipCode(catches)
+    
+    # this is new... I don't know if can be applied in oab in rim samples:
+    # TODO: test it.
+    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2Prescriptions(catches)
 
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
@@ -156,9 +170,9 @@ oab_check <- function (samples_imported) {
 
 
     # ---- IN LENGTHS ----
+    err$size_range <- checkSizeRangeByFishingGround(lengths_sampled)
+    err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
 
-    err$rango_tallas <- checkSizeRangeRIM(lengths_sampled)
-    # err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
 
     # ---- COD_ID ----
     # This check is usefull in the anual review. When the data is dumped in
@@ -173,6 +187,13 @@ oab_check <- function (samples_imported) {
     #separated by influence area
     combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = F)
     
+    # ---- ADD COMMENTS VARIABLE (in comments is where the original trip code of
+    # the trip are stored.)
+    combined_errors[["total"]] <- merge(combined_errors[["total"]],
+                             unique(catches[,c("COD_ID", "OBSERVACIONES")]),
+                             by.x="COD_ID",
+                             by.y="COD_ID",
+                             all.x=TRUE)
     return(combined_errors)
     
   })

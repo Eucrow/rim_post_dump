@@ -42,19 +42,19 @@
 # PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
 # PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_08"
 # PATH_FILES <- file.path(getwd(), "datos/2020/2020_01")
-PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/datos/2019/2019_annual_after_nvdp_match"
+PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/datos/2021/2021_01"
 
 ERRORS_SUBDIRECTORY <- "errors"
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 MONTH <- FALSE # month in numeric or FALSE for a complete year
 # MONTH <- FALSE # month in numeric or FALSE for a complete year
-YEAR <- "2019"
+YEAR <- "2021"
 
 # only if the file must be uploaded to google drive
-GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2020/2020_correcciones_para_sups/"
+# GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2020/2020_correcciones_para_sups/"
 
 # cfpo to use in the script (must be included in sapmuebase package)
 cfpo_to_use <- "cfpo2019"
@@ -91,7 +91,7 @@ library(sapmuebase)
 
 # ---- install googledrive package from github
 # devtools::install_github("tidyverse/googledrive")
-library(googledrive)
+# library(googledrive)
 
 
 # ------------------------------------------------------------------------------
@@ -171,11 +171,17 @@ muestreos_up <- importRIMFiles(
   path = PATH_FILES,
   by_month = MONTH)
 
+
 # catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
 # catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
 # lengths_sampled <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
-  
-# TO DO: check that muestreos_up is not empty --> sometimes happend because the
+
+# filter only type 6 samples
+# muestreos_up$catches <- muestreos_up$catches[muestreos_up$catches$COD_TIPO_MUE == 6, ]
+# muestreos_up$catches_in_lengths <- muestreos_up$catches_in_lengths[muestreos_up$catches_in_lengths$COD_TIPO_MUE == 6, ]
+# muestreos_up$lengths <- muestreos_up$lengths[muestreos_up$lengths$COD_TIPO_MUE == 6, ]
+
+# TO DO: check that muestreos_up is not empty --> sometimes happened because the
 # directory or month hasn't been changed.
  
 #isolate dataframes
@@ -192,7 +198,7 @@ muestreos_up <- importRIMFiles(
 #   - sampled type 2, MT2A
 #   - sampled type 6, MT3  
 
-errors <- rim_check(muestreos_up)
+errors <- rim_check(muestreos_up) 
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
@@ -207,16 +213,16 @@ errors <- rim_check(muestreos_up)
 
     # one month
     # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
   
     # WARNING: the google drive upload doesn't work:
     # Error in add_id_path(nodes, root_id = root_id, leaf = leaf) : 
     # !anyDuplicated(nodes$id) is not TRUE 
     # devtools::install_github("tidyverse/googledrive")
-    exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
+    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
 
     # a complete year 
-    # exportListToXlsx(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
 
 # ------------------------------------------------------------------------------    
@@ -232,9 +238,5 @@ errors <- rim_check(muestreos_up)
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
-
-
-
-    
 
 
