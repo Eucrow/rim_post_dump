@@ -198,11 +198,13 @@ muestreos_up <- importRIMFiles(
 #   - sampled type 2, MT2A
 #   - sampled type 6, MT3  
 
-errors <- rim_check(muestreos_up) 
+errors <- rim_check(muestreos_up)
+
+errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
-# errors <- oab_check(muestreos_up)
+errors_oab <- oab_check(muestreos_up)
   
 
 # ------------------------------------------------------------------------------
@@ -223,6 +225,8 @@ errors <- rim_check(muestreos_up)
 
     # a complete year 
     exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    exportErrorsList(errors_oab, suffix = paste0("errors_oab", "_", YEAR), separation = "_")
+    exportCsvSAPMUEBASE(errors_complete, "errors_complete_anual_2021.csv")
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
 
 # ------------------------------------------------------------------------------    
@@ -231,7 +235,7 @@ errors <- rim_check(muestreos_up)
 
 # ------------------------------------------------------------------------------
 
-# errors_cod_id <- checkCodId()
+errors_cod_id <- checkCodId(muestreos_up$catches)
 
 
 # ------------------------------------------------------------------------------    

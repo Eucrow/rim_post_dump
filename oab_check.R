@@ -47,12 +47,15 @@ oab_check <- function (samples_imported) {
     
     # this is new... I don't know if can be applied in oab in rim samples:
     # TODO: test it.
-    err$estrato_rim_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "ESTRATO_RIM")
-    err$puerto_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_PUERTO")
-    err$origen_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ORIGEN")
-    err$arte_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ARTE")
-    err$metier_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "METIER_DCF")
-    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "CALADERO_DCF")
+    err$estrato_rim_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "ESTRATO_RIM")
+    err$puerto_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_PUERTO")
+    err$origen_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ORIGEN")
+    err$arte_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ARTE")
+    err$metier_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "METIER_DCF")
+    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "CALADERO_DCF")
+    
+    err$empty_fields_in_variables_catches <- emptyFieldsInVariables(catches, "RIM_CATCHES")
+    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(catches, "RIM_LENGTHS")
     
 
     # ---- IN HEADER ----
@@ -75,7 +78,7 @@ oab_check <- function (samples_imported) {
     
     # this is new... I don't know if can be applied in oab in rim samples:
     # TODO: test it.
-    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2Prescriptions(catches)
+    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES

@@ -1029,27 +1029,7 @@ checkSameTripInVariousPorts <- function (catches){
 }
 
 
-#' Check if a variable exists in a dataframe -----------------------------------
-#' TODO: put in sapmuebase
-#' @return TRUE if the variable exists. Otherwise return an error.
-#' @param variable: variable to check.
-#' @param df: dataframe to check
-#' @export
-variable_exists_in_df <- function (variable, df){
-  
-  # get all the variables of df with the variable name = variable
-  var_in_df <- colnames(df)[colnames(df) %in% variable]
-  
-  if (length(var_in_df) > 1) {
-    stop(paste("Hey hard worker! check the ", variable, 
-               "variable. Looks like there are multiple columns with the same variable name.
-               Using consistents dataframes we will get a better world. Really :) ", 
-               variable, "."))
-  } else if (length(var_in_df) == 0) {
-    stop(paste(variable, " does not exists in this dataframe."))
-  } else return (TRUE)
-  
-}
+
 
 
 # check if the a variable is filled in all the rows ----------------------------
@@ -1458,8 +1438,8 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
 }
 
 
-#' Check code: 1064 --> NOOOO it is different of the 1068 which is used in rim_pre_dump
-#' Check variable with prescriptions dataset. Use the
+#' Check code: 1070 ----
+#' Check if the value of variable is in prescriptions dataset. Use the 
 #' prescriptions_rim_2021_variables dataset.
 #' @param df Dataframe where the variable to check is.
 #' @param variable Variable to check as character. Allowed variables:
@@ -1502,11 +1482,11 @@ checkVariableWithRimMt2Prescriptions <- function(df, variable) {
 }
 
 
-#' Check code: 1068 --> NOOOO it is different of the 1068 which is used in rim_pre_dump
-#' Check if the variables ESTRATO_RIM, COD_PUERTO, COD_ORIGEN and
-#' COD_ARTE are coherent with MT2 rim prescriptions. ---------------------------
+#' Check code: 1069
+#' Check if the variables "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM",
+#' "METIER_DCF" and "CALADERO_DCF" are coherent with MT2 rim prescriptions.
 #' @return dataframe with errors, if there are any.
-coherenceRimMt2Prescriptions <- function(df){
+coherenceRimMt2PrescriptionsPost <- function(df){
   
   df <- df[df[["COD_TIPO_MUE"]]==2, ] #THIS IS DIFFERENT IN rim_pre_dump, COD_TIPO_MUE is "MT2A"
   
@@ -1519,6 +1499,119 @@ coherenceRimMt2Prescriptions <- function(df){
     errors <- errors[is.na(errors[["PESQUERIA"]]), c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")]
     errors <- addTypeOfError(errors, "This combination of port, gear, origin, rim stratum, dcf metier and dcf fishing ground are not in 2021 mt2 prescriptions.")
     return (errors)
+  }
+  
+}
+
+
+#' Check if a variable exists in a dataframe -----------------------------------
+#' TODO: put in sapmuebase
+#' @return TRUE if the variable exists. Otherwise return an error.
+#' @param variable: variable to check.
+#' @param df: dataframe to check
+#' @export
+variable_exists_in_df <- function (variable, df){
+  
+  # get all the variables of df with the variable name = variable
+  var_in_df <- colnames(df)[colnames(df) %in% variable]
+  
+  if (length(var_in_df) > 1) {
+    stop(paste("Hey hard worker! check the ", variable, 
+               "variable. Looks like there are multiple columns with the same variable name.
+               Using consistents dataframes we will get a better world. Really :) ", 
+               variable, "."))
+  } else if (length(var_in_df) == 0) {
+    stop(paste(variable, " does not exists in this dataframe."))
+  } else return (TRUE)
+  
+}
+
+
+
+#' Check if a variable or variables of a dataframe contain empty values. ----
+#' @param variables: vector with variables to check.
+#' @param df: dataframe to check.
+#' @param df_name: name of the dataframe where the error is found.
+#' @return A list with a dataframe of every variable with empty values. Every
+#' dataframe contains erroneus rows.
+#' @export
+checkEmptyValuesInVariables <- function (df, variables, df_name){
+  
+  # check if all the variables are in the dataframe
+  # TODO: make a decorator?
+  if(!all(variables %in% colnames(df))){
+    stop("Not all the variables are in the dataframe.")
+  }
+
+  variables <- as.list(variables)
+  
+  if(df_name!=""){
+    df_name <- paste(" in", df_name, " screen")
+  }
+  
+  errors <- lapply(variables, function(x){
+    
+      error <- (df[df[[x]]=="" | is.na(df[[x]]),])
+      
+      if (nrow(error)>0){
+        error <- addTypeOfError(error, "ERROR: Variable ", x, " empty", df_name )
+        if(x %in% BASE_FIELDS){
+          error <- error[, c(BASE_FIELDS, "TIPO_ERROR")]
+        } else {
+          error <- error[, c(BASE_FIELDS, x, "TIPO_ERROR")]
+        }
+      
+        
+      }
+      return(error)
+    
+  })
+  
+  errors <- Filter(function(x) nrow(x) > 0, errors)
+  
+  errors <- Reduce(function(x,y){
+    merge(x, y, all=TRUE, by=c(BASE_FIELDS, "TIPO_ERROR"))
+  },errors)
+  
+  
+  if(nrow(errors) > 0){
+    return(errors)
+  }
+  
+}
+
+#' Check code: 1071
+#' Empty fields in variables
+#' Return empty variables of a RIM dataframes imported by importOAB functions. Only
+#' variables saved in formato_variables dataset as mandatory are checked.
+#' @details Require one of the dataframes returned by importOABFiles functions:
+#' importRIMCatches() and importRIMLengths().
+#' @param df: dataframe returned by one of the importRIM functions.
+#' @param type_file: type of the imported file according to this values:
+#' RIM_CATCHES or RIM_LENGTHS.
+#' @return A dataframe with the COD_MAREA and variables with values missing.
+#' @export
+emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS")){
+  
+  # Detect if the variable type_file is correct:
+  match.arg(type_file)
+  
+  # Create helper_text
+  helper_text <- substr(type_file, 5, nchar(type_file))
+  helper_text <- tolower(helper_text)
+  
+  
+  mandatory_field <- paste0(type_file, "_MANDATORY")
+  
+  mandatory <- formato_variables[which(!is.na(formato_variables[type_file])
+                                       & formato_variables[mandatory_field] == TRUE), c("name_variable")]
+  df_mandatory <- df[,mandatory]
+  
+  err <- checkEmptyValuesInVariables(df_mandatory, mandatory, helper_text)
+  
+  # in case there aren't any errors, check_empty_values returns NULL, so:
+  if (!is.null(err)){
+    return(err)
   }
   
 }

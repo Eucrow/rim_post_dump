@@ -25,8 +25,8 @@ rim_check <- function (samples_imported) {
     # err$arte <- check_variable_with_master(catches, "COD_ARTE", "RIM")
     # 
     # err$origen <- check_variable_with_master(catches, "COD_ORIGEN", "RIM")
-    # 
-    # err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA", "RIM")
+
+    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA", "RIM")
 
     err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE", "RIM")
     
@@ -38,22 +38,25 @@ rim_check <- function (samples_imported) {
 
     err$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
     
-    err$estrato_rim_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "ESTRATO_RIM")
-    err$puerto_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_PUERTO")
-    err$origen_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ORIGEN")
-    err$arte_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "COD_ARTE")
-    err$metier_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "METIER_DCF")
-    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2Prescriptions(catches, "CALADERO_DCF")
+    err$estrato_rim_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "ESTRATO_RIM")
+    err$puerto_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_PUERTO")
+    err$origen_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ORIGEN")
+    err$arte_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ARTE")
+    err$metier_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "METIER_DCF")
+    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "CALADERO_DCF")
 
+    err$empty_fields_in_variables_catches <- emptyFieldsInVariables(catches, "RIM_CATCHES")
+    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(catches, "RIM_LENGTHS")
+    
     # ---- IN HEADER ----
 
     err$errors_mt2b_rim_stratum <- checkMt2bRimStratum(catches)
 
-    # err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "RIM")
-    # 
-    # err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches, "RIM")
+    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "RIM")
+
+    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches, "RIM")
     
-    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2Prescriptions(catches)
+    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
     err$number_of_ships <- numberOfShips(catches)
 
@@ -97,7 +100,6 @@ rim_check <- function (samples_imported) {
     
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
-    
     # err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
     # err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
 
