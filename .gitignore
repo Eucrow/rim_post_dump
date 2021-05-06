@@ -4,6 +4,8 @@
 .RData
 .Ruserdata
 revision_volcado_R.Rproj
+/data-raw/
+.Rbuildignore
 #confidential files
 CFPO2015.csv
 .httr-oauth

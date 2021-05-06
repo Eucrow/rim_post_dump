@@ -1,6 +1,6 @@
 #### ---------------------------------------------------------------------------
 #### Check monthly data recorded in SIRENO
-#### 
+####
 #### Return xls or upload to google docs files with errors detected by influence
 #### area
 ####
@@ -37,19 +37,19 @@
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
-# YOU HAVE ONLY TO CHANGE THIS VARIABLES 
+# YOU HAVE ONLY TO CHANGE THIS VARIABLES
 
 # PATH_FILES <- "F:/misdoc/sap/rim_post_dump/datos/2019/2019_01_to_07"
 # PATH_FILES <- "C:/Users/Marco IEO/Desktop/rim_post_dump/datos/2019/2019_08"
 # PATH_FILES <- file.path(getwd(), "datos/2020/2020_01")
-PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/datos/2021/2021_01"
+PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/datos/2021/2021_02"
 
 ERRORS_SUBDIRECTORY <- "errors"
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
-MONTH <- FALSE # month in numeric or FALSE for a complete year
+MONTH <- 2 # month in numeric or FALSE for a complete year
 # MONTH <- FALSE # month in numeric or FALSE for a complete year
 YEAR <- "2021"
 
@@ -57,7 +57,7 @@ YEAR <- "2021"
 # GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2020/2020_correcciones_para_sups/"
 
 # cfpo to use in the script (must be included in sapmuebase package)
-cfpo_to_use <- "cfpo2019"
+cfpo_to_use <- "cfpo2020"
 
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
@@ -146,7 +146,7 @@ mixed_species <- especies_mezcla
 sampled_spe_no_mixed <- especies_no_mezcla
 
 ###obtain the not allowed species dataset
-NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv", fileEncoding = "UTF-8")
+NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
 
 # read especies_sujetas_a_posible_confusion_taxonómica.csv file
 ESP_TAXONOMIC_CONFUSION <- read.csv(
@@ -158,9 +158,9 @@ ESP_TAXONOMIC_CONFUSION <- read.csv(
 CFPO <- get(cfpo_to_use)
   # ignore useless columns
   CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
-  
-  
-# ------------------------------------------------------------------------------ 
+
+
+# ------------------------------------------------------------------------------
 # #### IMPORT muestreos_UP files ###############################################
 # ------------------------------------------------------------------------------
 
@@ -183,7 +183,7 @@ muestreos_up <- importRIMFiles(
 
 # TO DO: check that muestreos_up is not empty --> sometimes happened because the
 # directory or month hasn't been changed.
- 
+
 #isolate dataframes
 # catches <- muestreos_up$catches
 # catches_in_lengths <- muestreos_up$catches_in_lengths
@@ -196,7 +196,7 @@ muestreos_up <- importRIMFiles(
 # Check rim data:
 #   - sampled type 1, MT1A
 #   - sampled type 2, MT2A
-#   - sampled type 6, MT3  
+#   - sampled type 6, MT3
 
 errors <- rim_check(muestreos_up)
 
@@ -204,8 +204,8 @@ errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
-errors_oab <- oab_check(muestreos_up)
-  
+# errors_oab <- oab_check(muestreos_up)
+
 
 # ------------------------------------------------------------------------------
 # #### EXPORT ERRORS ###########################################################
@@ -215,30 +215,30 @@ errors_oab <- oab_check(muestreos_up)
 
     # one month
     # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-  
+    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
+
     # WARNING: the google drive upload doesn't work:
-    # Error in add_id_path(nodes, root_id = root_id, leaf = leaf) : 
-    # !anyDuplicated(nodes$id) is not TRUE 
+    # Error in add_id_path(nodes, root_id = root_id, leaf = leaf) :
+    # !anyDuplicated(nodes$id) is not TRUE
     # devtools::install_github("tidyverse/googledrive")
     # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_" )
 
-    # a complete year 
-    exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
-    exportErrorsList(errors_oab, suffix = paste0("errors_oab", "_", YEAR), separation = "_")
-    exportCsvSAPMUEBASE(errors_complete, "errors_complete_anual_2021.csv")
-    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" ) 
+    # a complete year
+    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
+    # exportErrorsList(errors_oab, suffix = paste0("errors_oab", "_", YEAR), separation = "_")
+    # exportCsvSAPMUEBASE(errors_complete, "errors_complete_anual_2021.csv")
+    # exportListToGoogleSheet(errors, suffix = paste0("errors", "_", YEAR), separation = "_" )
 
-# ------------------------------------------------------------------------------    
+# ------------------------------------------------------------------------------
 # #### CHECK CODE_ID ###########################################################
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 
 # ------------------------------------------------------------------------------
 
-errors_cod_id <- checkCodId(muestreos_up$catches)
+# errors_cod_id <- checkCodId(muestreos_up$catches)
 
 
-# ------------------------------------------------------------------------------    
+# ------------------------------------------------------------------------------
 # #### MAKE A BACKUP
 # ------------------------------------------------------------------------------
     # backup_files()
