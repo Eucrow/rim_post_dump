@@ -7,11 +7,4 @@ revision_volcado_R.Rproj
 /data-raw/
 .Rbuildignore
 #confidential files
-CFPO2015.csv
-.httr-oauth
-.httr-oauth-SUSPENDED
-pruebas
-otros
-prueba.R
-datos
-data
+/data/
