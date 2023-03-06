@@ -1,4 +1,4 @@
-rim_check <- function (samples_imported) {
+rim_check_annual <- function (samples_imported) {
 
   tryCatch({
 
@@ -157,14 +157,14 @@ rim_check <- function (samples_imported) {
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
-    err$capturas_percentil_99 <- checkCatchesP99(catches)
+    # err$capturas_percentil_99 <- checkCatchesP99(catches)
 
     # ---- IN LENGTHS ----
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
 
     # comment in annual:
-    err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
-    err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
+    # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
+    # err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
 
     # ---- COD_ID ----
     # This check is usefull in the anual review. When the data is dumped in

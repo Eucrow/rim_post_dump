@@ -61,9 +61,12 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
     stop("separete_by_ia must be TRUE or FALSE")
   }
 
+  # Remove dataframes empties in list
+  errors <- Filter(nrow, errors)
+
   # Order the errors and remove columns with only NA values
   errors <- lapply(errors, function(x){
-
+    x
     # Order columns
     x <- x %>%
       select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM,
@@ -77,7 +80,9 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
     x <- Filter(function(x){!all(is.na(x))}, x)
 
     # Add column Comprobado
-    x[["comprobado"]] <- ""
+    if(length(x)>0) {
+      x[["comprobado"]]  <- ""
+    }
 
 
     return(x)
@@ -90,9 +95,9 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 # Function to check the coherence between 'ESTRATO_RIM' and 'gear' -------------
 coherenceEstratoRimGear <- function(df, specification){
 
-  estratorim_arte$VALID<-TRUE
+  estrato_rim_arte$VALID<-TRUE
 
-  df <- merge(x=df, y=estratorim_arte, by.x = c("ESTRATO_RIM", "COD_ARTE", "ARTE"), by.y = c("ESTRATO_RIM", "COD_ARTE", "ARTE"), all.x = TRUE)
+  df <- merge(x=df, y=estrato_rim_arte, by.x = c("ESTRATO_RIM", "COD_ARTE", "ARTE"), by.y = c("ESTRATO_RIM", "COD_ARTE", "ARTE"), all.x = TRUE)
 
   errors <- df[is.na(df$VALID),]
 
@@ -303,44 +308,67 @@ check_foreing_ships_MT2 <- function(df){
 }
 
 
-# function to check ships ------------------------------------------------------
-# not in "ALTA DEFINITIVA", "ALTA PROVISIONAL POR NUEVA CONSTRUCCIÓN or ALTA PROVISIONAL
-# POR REACTIVACIÓN in CFPO
+#' Check code: 1026
+#' Ships registered in CFPO in removal state ("Baja definitiva" and "Baja
+#' Provisional")
+#' @details Require a valid CFPO file.
+#' @param df: dataframe returned by one of the importRIM functions.
+#' @param cfpo: valid CFPO file.
+#' @return A dataframe with errors.
 shipsNotRegistered <- function(df, cfpo = CFPO){
 
-  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
-  errors_ships <- merge(x=to_ships, y=cfpo, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
-  errors_ships <- errors_ships %>%
-    filter( ESTADO != "ALTA DEFINITIVA" &
-              ESTADO != "Alta Definitiva" &
-              ESTADO != "H - A.P. POR REACTIVACION" &
-              ESTADO != "G - A.P. POR NUEVA CONSTRUCCION" )
-  text_type_of_error <- paste0("ERROR: barco incluido en el CFPO pero con un estado distinto a Alta Definitiva, A. P. Por Reactivaci?n, o A.P Por Nueva Construcci?n")
-  errors_ships <- addTypeOfError(errors_ships, text_type_of_error)
-  return (errors_ships)
+  df <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
+  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["CODSGPM"]])))
+
+  errors <- merge(x=df, y=cfpo, by.x = "CFR", by.y = "CFR", all.x = TRUE)
+
+  errors <- errors[errors[["ESTADO"]] %in% c("Baja Definitiva", "Baja Provisional"), ]
+
+  if(nrow(errors) > 0) {
+    text_type_of_error <- paste0("ERROR: barco en ", errors[["ESTADO"]], " en el CFPO.")
+    errors <- cbind(errors, "TIPO_ERROR" = text_type_of_error)
+    return (errors)
+  }
+
 }
 
 
-# function to check ships not in CFPO ------------------------------------------
+#' Check code: 1025
+#' Ships not in CFPO
+#' @details Require a valid CFPO file.
+#' @param df: dataframe returned by one of the importRIM functions.
+#' @param cfpo: valid CFPO file.
+#' @return A dataframe with errors.
 shipsNotInCFPO <- function(df, cfpo = CFPO){
 
-  to_ships <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
+  df <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
 
-  errors_ships <- merge(x=to_ships, y=cfpo, by.x = "CODSGPM", by.y = "CODIGO_BUQUE", all.x = TRUE)
-  errors_ships <- errors_ships %>%
-    filter(is.na(ESTADO))
-  errors_ships <- addTypeOfError(errors_ships, "ERROR: barco no incluido en el CFPO")
-  return (errors_ships)
+  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["CODSGPM"]])))
+
+  errors <- merge(x=df, y=cfpo, by.x = "CFR", by.y = "CFR", all.x = TRUE)
+
+  errors <- errors[is.na(errors[["ESTADO"]]),]
+
+  # if(nrow(errors)>0) {
+  #   errors <- addTypeOfError(errors, "ERROR: barco no incluido en el CFPO")
+  #   return (errors)
+  # }
+
+  if(nrow(errors)>0) {
+    text_type_of_error <- paste0("ERROR: barco no incluido en el CFPO.")
+    errors <- cbind(errors, "TIPO_ERROR" = text_type_of_error)
+    return (errors)
+  }
+
 }
 
-#function to check if all mt2b has CERCO_GC or BACA_GC stratums ----------------
+#function to check if all mt2b has CERCO_GC or BACA_GC stratA
 #only usefull in COD_TIPO_MUE = 4
 checkMt2bRimStratum <- function (catches) {
 
   # select all the mt2b samples
-  mt2b <- catches %>%
-    filter(COD_TIPO_MUE == 4) %>%
-    select_(.dots = BASE_FIELDS)
+
+  mt2b <- catches[catches[["COD_TIP_MUE"]] == 4, c(BASE_FIELDS)]
 
   err_stratum <- mt2b[!(mt2b[["ESTRATO_RIM"]] %in% c("CERCO_GC", "BACA_GC")),]
 
@@ -381,16 +409,14 @@ weightSampledWithoutLengthsSampled <- function (catches_in_lengths) {
 
 
 # function to search false mt2 samples -----------------------------------------
-# samples with COD_TIPO_MUE as MT2 and without any lenght
+# samples with COD_TIPO_MUE as MT2 and without any length
 # df: dataframe
-# return: dataframe with erroneus samples
+# return: dataframe with erroneous samples
 check_false_mt2 <- function(catches, lengths_sampled){
 
   #Select all the samples with COD_TIPO_MUE = MT2
-  mt2 <- catches %>%
-    filter(COD_TIPO_MUE == 2 | COD_TIPO_MUE == 4)  %>%
-    select_(.dots = BASE_FIELDS) %>%
-    unique()
+  mt2 <- catches[catches[["COD_TIPO_MUE"]] == 2 | catches[["COD_TIPO_MUE"]] == 4, c(BASE_FIELDS)]
+  mt2 <- unique(mt2)
 
   # select all the samples with lengths
   mt2_with_lenghts <- lengths_sampled %>%
@@ -398,7 +424,7 @@ check_false_mt2 <- function(catches, lengths_sampled){
     group_by_(.dots = BASE_FIELDS) %>%
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
 
-  # check if all the samples keyed as MT2 has lenghts
+  # check if all the samples keyed as MT2 has lengths
   false_mt2 <- anti_join(x = mt2, y = mt2_with_lenghts, by = c("FECHA_MUE","COD_BARCO")) %>% unique()
   false_mt2 <- addTypeOfError(false_mt2, "ERROR: MT2 sin tallas")
 
@@ -413,10 +439,9 @@ check_false_mt2 <- function(catches, lengths_sampled){
 check_false_mt1 <- function(catches, lengths_sampled){
 
   #Select all the samples with COD_TIPO_MUE = MT1
-  mt1 <- catches %>%
-    filter(COD_TIPO_MUE == 1)  %>%
-    select_(.dots = BASE_FIELDS) %>%
-    unique()
+
+  mt1 <- catches[catches[["COD_TIPO_MUE"]] == 1, c(BASE_FIELDS)]
+  mt1 <- unique(mt1)
 
   # select all the samples with lengths
   mt1_with_lenghts <- lengths_sampled %>%
@@ -437,8 +462,8 @@ check_false_mt1 <- function(catches, lengths_sampled){
 # return a dataframe with the samples with species keyed as non mixed species
 check_mixed_as_no_mixed <- function(catches){
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
-  non_mixed <- merge(x=catches, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT") %>%
-    select_(.dots = selected_fields)
+  non_mixed <- merge(x=catches, y=especies_mezcla["COD_ESP_CAT"], by.x = "COD_ESP_MUE", by.y = "COD_ESP_CAT")
+  non_mixed <- non_mixed[, c(selected_fields)]
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo")
   return(non_mixed)
 }
@@ -449,9 +474,9 @@ check_mixed_as_no_mixed <- function(catches){
 # return a dataframe with the samples with species keyed as non mixed species
 check_no_mixed_as_mixed <- function(lengths_sampled){
   selected_fields <- c(BASE_FIELDS,"COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT", "ESP_CAT")
-  non_mixed <- merge(x=lengths_sampled, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP") %>%
-    select_(.dots = selected_fields) %>%
-    unique()
+  non_mixed <- merge(x=lengths_sampled, y=especies_no_mezcla["COD_ESP"], by.x = "COD_ESP_MUE", by.y = "COD_ESP")
+  non_mixed <- non_mixed[, c(selected_fields)]
+  non_mixed <- unique(non_mixed)
   non_mixed <- addTypeOfError(non_mixed, "ERROR: especie no de mezcla agrupada en Especies del Muestreo")
   return(non_mixed)
 }
@@ -686,7 +711,7 @@ checkNoSexedSpecies <- function(lengths_sampled) {
 
   # merge errors
   errors <- rbind(errors_species_must_not_be_sexed, errors_species_must_be_sexed_only_in_some_ports) %>%
-    addTypeOfError("ERROR: especie que NO debería ser sexada. Es posible que el SOP de estos muestreos sea 0, por lo que se ha de corregir.")
+    addTypeOfError("WARNING: especie que NO debería ser sexada. Es posible que el SOP de estos muestreos sea 0, por lo que se ha de comprobar.")
 
   return(errors)
 }
@@ -774,9 +799,9 @@ checkMultiplePort <- function(catches){
 #'
 checkCoherenceEstratoRimOrigin <- function(catches, specification){
 
-  estratorim_origen$VALID<-TRUE
+  estrato_rim_origen$VALID<-TRUE
 
-  df <- merge(x=catches, y=estratorim_origen, by.x = c("ESTRATO_RIM", "COD_ORIGEN"), by.y = c("ESTRATO_RIM", "COD_ORIGEN"), all.x = TRUE)
+  df <- merge(x=catches, y=estrato_rim_origen, by.x = c("ESTRATO_RIM", "COD_ORIGEN"), by.y = c("ESTRATO_RIM", "COD_ORIGEN"), all.x = TRUE)
 
   errors <- df[is.na(df$VALID),]
 
@@ -879,10 +904,10 @@ checkCatchesP99 <- function(catches){
           by.x = c("ESTRATO_RIM", "COD_ESP_MUE"),
           by.y = c("ESTRATO_RIM", "COD_ESP"), all.x = T) %>%
     filter(P_DESEM_TOT > P99) %>%
-    mutate('%dif respecto al histórico de capturas' = format(((P_DESEM_TOT-P99) * 100 / P_DESEM_TOT), digits=0))%>%
+    mutate('% dif respecto al histórico de capturas' = round(((P_DESEM_TOT-P99) * 100 / P_DESEM_TOT)))%>%
     addTypeOfError("WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 99 del histórico de capturas 2014 al 2018 por estrato rim.")
 
-  warnings[['P99']] <- format(round(warnings[['P99']], 1), round=1)
+  warnings[['P99']] <- round(warnings[['P99']], 1)
 
 
   return(warnings)
@@ -896,7 +921,7 @@ checkStrategy <- function(catches){
 
   error_strategy <- catches %>%
     select(one_of(c(BASE_FIELDS, "ESTRATEGIA")))%>%
-    anti_join(y=tipo_mue, by = c("COD_TIPO_MUE", "ESTRATEGIA"))%>%
+    anti_join(y=tipo_muestreo, by = c("COD_TIPO_MUE", "ESTRATEGIA"))%>%
     addTypeOfError("ERROR: No concuerda el campo ESTRATEGIA con el campo TIPO DE MUESTREO")
 
   # MT2 samples of VORACERA_GC must be "En base a especie", so remove it of
@@ -1094,7 +1119,13 @@ check_variable_with_master <- function (df, variable){
     variable_formatted <- variable_formatted[[1]][2]
   }
 
+  # In case COD_TIPO_MUE, the dataset is "tipo_muestreo" instead of "tipo_mue":
+  if ( variable_formatted == "TIPO_MUE") { name_dataset <- "tipo_muestreo"}
+  else{
   name_dataset <- tolower(variable_formatted)
+
+  }
+
 
   #search the errors in variable
   errors <- anti_join(df, get(name_dataset), by = variable)
@@ -1117,9 +1148,9 @@ check_variable_with_master <- function (df, variable){
 # Export error list ------------------------------------------------------------
 # This is an improvement of exportListToXlsx, with colorization of rows with the
 # same COD_ID variable.
-# This does not work: Allways in row 23 the color is allways the same.
+# This does not work: Always in row 23 the color is always the same.
 # Instead of color the rows, I put a line between different cod_id rows
-exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") {
+exportErrorsList <- function (list, filename, separation = "") {
 
   # Create errors subdirectory in case it doesn't exists:
   if (!file.exists(file.path(PATH_FILES, ERRORS_SUBDIRECTORY))){
@@ -1133,15 +1164,18 @@ exportErrorsList <- function (list, prefix = "", suffix = "", separation = "") {
   lapply(seq_along(list), function(i) {
     if (is.data.frame(list[[i]])) {
       list_name <- names(list)[[i]]
-      if (prefix != "")
-        prefix <- paste0(prefix, separation)
-      if (suffix != "")
-        suffix <- paste0(separation, suffix)
-      filename <- paste0(PATH_ERRORS, "/", prefix, list_name,
-                         suffix, ".xlsx")
+      filename <- paste0(PATH_ERRORS, "/", list_name, "_",
+                         filename, ".xlsx")
       wb <- openxlsx::createWorkbook()
-      name_worksheet <- paste("0", MONTH, sep = "")
+      # name_worksheet <- paste("0", MONTH, sep = "")
+
+      if(length(MONTH)>1){
+        name_worksheet <- paste("0", MONTH_AS_CHARACTER, sep = "")
+      } else if (length(MONTH)==1){
+        name_worksheet <- sprintf("%02d", as.numeric(MONTH))
+      }
       openxlsx::addWorksheet(wb, name_worksheet)
+
       openxlsx::writeData(wb, name_worksheet, list[[i]])
       num_cols_df <- length(list[[i]])
       num_rows_df <- nrow(list[[1]])
@@ -1255,7 +1289,7 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
 }
 
 #' Check code: 1061
-#' Check if there are samples with the same name vessel but with differente
+#' Check if there are samples with the same name vessel but with different
 #' SIRENO codification or SGPM codification.
 #'
 #' @return dataframe with errors
@@ -1275,7 +1309,7 @@ checkMultipleShipCode <- function(catches){
 
   err <- err[, BASE_FIELDS]
   err <- unique(err)
-  err <- addTypeOfError(err, "ERROR: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
+  err <- addTypeOfError(err, "WARNING: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?")
 
   return(err)
 }
@@ -1369,7 +1403,7 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
   cat_cat <- clean_catches %>%
     group_by(COD_ID, COD_ESP_MUE, ESP_MUE) %>%
     mutate( n_cat_catches = n_distinct(COD_CATEGORIA)) %>%
-    select(BASE_FIELDS, COD_ESP_MUE, ESP_MUE, n_cat_catches) %>%
+    select(all_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, n_cat_catches) %>%
     unique()
 
   # Get the number of categories with sampled lengths
@@ -1386,9 +1420,10 @@ allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
                   all.x = T,
                   by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"))
 
-  if(nrow(errors)>0){
-    errors <- errors[which(errors[["n_cat_catches"]] >1 &
+  errors <- errors[which(errors[["n_cat_catches"]] >1 &
                              errors[["n_cat_lengths"]] < errors[["n_cat_catches"]]),]
+
+  if(nrow(errors)>0){
 
     errors <- addTypeOfError(errors, "WARNING: some categories of the species are measured but others are not")
 
@@ -1415,7 +1450,7 @@ checkVariableWithRimMt2PrescriptionsPost <- function(df, variable) {
     stop(paste("This function is not available for variable", variable))
   }
 
-  allowed <- prescripciones_rim_mt2_2021_coherencia[,variable]
+  allowed <- prescripciones_rim_mt2_coherencia[,variable]
 
   # only MT2 samples:
   df <- df[df[["COD_TIPO_MUE"]]==2, ]
@@ -1452,13 +1487,14 @@ coherenceRimMt2PrescriptionsPost <- function(df){
 
   df <- df[df[["COD_TIPO_MUE"]]==2, ] #THIS IS DIFFERENT IN rim_pre_dump, COD_TIPO_MUE is "MT2A"
 
-  errors <- unique(df[, c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")])
+  errors <- unique(df[, c("COD_ID","FECHA_MUE", "COD_BARCO", "BARCO", "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")])
   errors <- merge(errors,
-                  prescripciones_rim_mt2_2021_coherencia,
+                  prescripciones_rim_mt2_coherencia,
                   by=c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF"),
                   all.x = TRUE)
   if(nrow(errors)>0){
-    errors <- errors[is.na(errors[["PESQUERIA"]]), c("COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM", "METIER_DCF", "CALADERO_DCF")]
+    errors <- errors[is.na(errors[["PESQUERIA"]]), c("COD_ID","FECHA_MUE", "COD_BARCO", "BARCO", "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "METIER_DCF", "CALADERO_DCF")]
+    errors <- humanize(errors)
     errors <- addTypeOfError(errors, "This combination of port, gear, origin, rim stratum, dcf metier and dcf fishing ground are not in 2021 MT2 RIM prescriptions.")
     return (errors)
   }
@@ -1500,7 +1536,6 @@ variable_exists_in_df <- function (variable, df){
 checkEmptyValuesInVariables <- function (df, variables, df_name){
 
   # check if all the variables are in the dataframe
-  # TODO: make a decorator?
   if(!all(variables %in% colnames(df))){
     stop("Not all the variables are in the dataframe.")
   }
@@ -1520,7 +1555,24 @@ checkEmptyValuesInVariables <- function (df, variables, df_name){
       if(x %in% BASE_FIELDS){
         error <- error[, c(BASE_FIELDS, "TIPO_ERROR")]
       } else {
-        error <- error[, c(BASE_FIELDS, x, "TIPO_ERROR")]
+
+        # The variables "EJEM_MEDIDOS", "EJEM_PONDERADOS", "SOP"
+        # and "P_MUE_DESEM", must have more
+        # variables to properly identify the error:
+        if(x%in%c("EJEM_MEDIDOS", "EJEM_PONDERADOS", "SOP")){
+          error <- error[, c(BASE_FIELDS, "COD_ESP_MUE","ESP_MUE",
+                             "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT",
+                             "ESP_CAT", "TALLA", x, "TIPO_ERROR")]
+        } else if(x%in%c("P_MUE_VIVO","P_MUE_DESEM")){
+        # The variables"P_MUE_DESEM", must have more
+        # variables to properly identify the error:
+          error <- error[, c(BASE_FIELDS, "COD_ESP_MUE","ESP_MUE",
+                             "COD_CATEGORIA", "CATEGORIA", "COD_ESP_CAT",
+                             "ESP_CAT", x, "TIPO_ERROR")]
+        } else {
+          error <- error[, c(BASE_FIELDS, x, "TIPO_ERROR")]
+        }
+
       }
 
 
@@ -1529,12 +1581,15 @@ checkEmptyValuesInVariables <- function (df, variables, df_name){
 
   })
 
+
+  errors <- lapply(errors, unique)
+
   errors <- Filter(function(x) nrow(x) > 0, errors)
 
   if(length(errors)>0){
 
     errors <- Reduce(function(x,y){
-      merge(x, y, all=TRUE, by=c(BASE_FIELDS, "TIPO_ERROR"))
+      merge(x, y, all=TRUE)
     },errors)
 
     return(errors)
@@ -1553,7 +1608,6 @@ checkEmptyValuesInVariables <- function (df, variables, df_name){
 #' @param type_file: type of the imported file according to this values:
 #' RIM_CATCHES or RIM_LENGTHS.
 #' @return A dataframe with the COD_MAREA and variables with values missing.
-#' @export
 emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS")){
 
   # Detect if the variable type_file is correct:
@@ -1576,5 +1630,84 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
   if (!is.null(err)){
     return(err)
   }
+
+}
+
+
+#' Copy all the error files generated to a shared folder. ----
+#' Used to copy errors files generated to the shared folder
+copyFilesToFolder <- function (path_errors_from, path_errors_to){
+
+  # test if path_errors_from exists
+  ifelse(!file.exists(path_errors_from), stop(paste("Folder", path_errors_from, "does not exists.")), FALSE)
+
+  # test if path_errors_from have files
+  ifelse(length(list.files(path_errors_from))==0, stop(paste("Folder", path_errors_from, "doesn't have files.")), FALSE)
+
+  # if the share errors directory does not exists, create it:
+  ifelse(!dir.exists(path_errors_to), dir.create(path_errors_to), FALSE)
+
+  # test if there are files with the same name in folder. In this case,
+  # nothing is saved.
+  files_list_to <- list.files(path_errors_to)
+
+  files_list_from <- list.files(path_errors_from)
+
+  if(any(files_list_from %in% files_list_to)){
+    ae <- which(files_list_from %in% files_list_to)
+    ae <- paste(files_list_from[ae], collapse = ", ")
+    stop(paste("The file(s)", ae, "already exist(s). Nothing has been saved" ))
+
+  }
+
+  files_list_from <- file.path(path_errors_from, files_list_from)
+  file.copy(from=files_list_from, to=path_errors_to)
+
+}
+
+#' Create name of the errors file name. Use the global variables YEAR and
+#' MONTH_AS_CHARACTER, and suffix variable declared at the beginning of the script.
+createFilename <- function(){
+  filename <- paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER)
+
+  if (suffix != ""){
+    filename <- paste(filename, suffix, sep="_")
+  }
+
+  return (filename)
+}
+
+#' Create character with month, months, or any other tag to name the months used
+#' in the names of files.
+#' @param month month or months used.
+#' @param suffix_multiple_month Suffix used when multiple months are used.
+createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffix_multiple_months){
+
+  if (length(month) == 1 && month %in% seq(1:12)){
+    return(sprintf("%02d", month))
+  } else if (length(month) > 1 & all(month %in% seq(1:12))) {
+    return(suffix_multiple_months)
+  } else {
+    stop("Is there any error in the MONTH variable?")
+  }
+
+}
+
+
+#' Create path files from the MONTH, YEAR and suffix_multiple_months.
+#' @param month month or months used.
+#' @param year year.
+#' @param suffix_multiple_month Suffix used when multiple months are used.
+createPathFiles <- function (month = MONTH,
+                             year = YEAR,
+                             suffix_multiple_months = suffix_multiple_months){
+
+  if(length(month) != 1){
+    path_text <- paste0("data/", year, "/", year, "_", suffix_multiple_months)
+  } else {
+    path_text <- paste0("data/", year, "/", year, "_", sprintf("%02d", month))
+  }
+
+  return(file.path(getwd(), path_text))
 
 }
