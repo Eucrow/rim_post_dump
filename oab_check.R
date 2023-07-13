@@ -24,7 +24,6 @@ oab_check <- function (samples_imported) {
 
     # ---- REPEATED IN IPDTOSIRENO ----
 
-
     err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
 
     # err$puerto <- check_variable_with_master(catches, "COD_PUERTO")
@@ -55,7 +54,7 @@ oab_check <- function (samples_imported) {
     err$caladero_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "CALADERO_DCF")
 
     err$empty_fields_in_variables_catches <- emptyFieldsInVariables(catches, "RIM_CATCHES")
-    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(catches, "RIM_LENGTHS")
+    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(lengths_sampled, "RIM_LENGTHS")
 
 
     # ---- IN HEADER ----
@@ -65,6 +64,8 @@ oab_check <- function (samples_imported) {
     err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
 
     err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches)
+
+    # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
     err$number_of_ships <- numberOfShips(catches)
 
@@ -76,19 +77,15 @@ oab_check <- function (samples_imported) {
 
     err$multiple_ship_code <- checkMultipleShipCode(catches)
 
-    # this is new... I don't know if can be applied in oab in rim samples:
-    # TODO: test it.
-    err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
-
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
     err$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
 
-    no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
-      filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
-      select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
-      unique()
+    # no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
+    #   filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
+    #   select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
+    #   unique()
 
     err$errors_ships_not_registered <- shipsNotRegistered(catches)
 
@@ -167,14 +164,15 @@ oab_check <- function (samples_imported) {
 
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
 
-    err$capturas_percentil_99 <- checkCatchesP99(catches)
-
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
+
+    # comment in annual:
+    # err$capturas_percentil_99 <- checkCatchesP99(catches)
 
 
     # ---- IN LENGTHS ----
-    err$size_range <- checkSizeRangeByFishingGround(lengths_sampled)
     err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
+    err$size_range <- checkSizeRangeByFishingGround(lengths_sampled)
 
 
     # ---- COD_ID ----

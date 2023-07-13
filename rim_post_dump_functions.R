@@ -209,8 +209,9 @@ speciesWithCategoriesWithSameWeightLanding <- function(catches){
   catches <- catches[,c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "P_DESEM")]
   fields_to_count <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")
   errors <- catches %>%
-    distinct() %>%
-    count_(fields_to_count) %>%
+    unique() %>%
+    group_by_at(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM"))%>%
+    summarise(n=n())%>%
     filter(n>1)
   colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
   errors <- addTypeOfError(errors, "WARNING: varias categorías con igual peso desembarcado")

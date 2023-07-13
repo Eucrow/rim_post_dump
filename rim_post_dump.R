@@ -37,12 +37,14 @@ FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- 1
-# MONTH <- c(1:12)
-# Use only in case MONTH is a vector of months: suffix to add to path:
-suffix_multiple_months <- ""
+# MONTH <- 1
+MONTH <- c(4)
+# Suffix to add to path. Use only in case MONTH is a vector of months. This
+# suffix will be added to the end of the path with a "_" as separation.
+suffix_multiple_months <- "annual_nvdp"
 
-# Suffix to add at the end of the export filename
+# Suffix to add at the end of the export file name. This suffix will be added to
+# the end of the file name with a "_" as separation.
 suffix <- ""
 
 # YEAR
@@ -98,6 +100,9 @@ source('rim_check.R')
 # function to check the annual rim files:
 source('rim_check_annual.R')
 
+# function to check the annual rim files:
+# source('rim_check_annual_post_cruce_test.R')
+
 # function to check the oab files:
 source('oab_check.R')
 
@@ -115,9 +120,6 @@ ERRORS <- list()
 
 PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
 
-
-
-
 # list with the common fields used in all tables
 BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
                  "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE",
@@ -131,7 +133,7 @@ PATH_BACKUP <- file.path(PATH_FILES, "backup")
 # month as character
 # MONTH_AS_CHARACTER <- ifelse(isFALSE(MONTH), "", sprintf("%02d", MONTH))
 # month as character in case of monthly check
-MONTH_AS_CHARACTER <- createMonthAsCharacter()
+MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
 # if (length(MONTH) == 1 && MONTH %in% seq(1:12)){
 #   MONTH_AS_CHARACTER <- ifelse(isFALSE(MONTH), "", sprintf("%02d", MONTH))
 # } else if (length(MONTH) > 1 & all(MONTH %in% seq(1:12))) {
@@ -143,7 +145,7 @@ MONTH_AS_CHARACTER <- createMonthAsCharacter()
 # }
 
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/SAP_MUE/SAP_RIM - RIM_data_review - RIM_data_review", YEAR, paste0(YEAR, "_", MONTH_AS_CHARACTER))
+PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review", YEAR, paste0(YEAR, "_", MONTH_AS_CHARACTER))
 
 
 # files to backup
@@ -217,14 +219,6 @@ muestreos_up <- importRIMFiles(
 # catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
 # lengths_sampled <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
 
-# remove type 6 samples
-# muestreos_up$catches <- muestreos_up$catches[muestreos_up$catches$COD_TIPO_MUE != 6, ]
-# muestreos_up$catches_in_lengths <- muestreos_up$catches_in_lengths[muestreos_up$catches_in_lengths$COD_TIPO_MUE != 6, ]
-# muestreos_up$lengths <- muestreos_up$lengths[muestreos_up$lengths$COD_TIPO_MUE != 6, ]
-
-# TO DO: check that muestreos_up is not empty --> sometimes happened because the
-# directory or month hasn't been changed.
-
 
 # SEARCHING ERRORS -------------------------------------------------------------
 
@@ -234,12 +228,13 @@ muestreos_up <- importRIMFiles(
 
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
+# errors <- rim_check_annual_post_cruce_text(muestreos_up)
 
 errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
-# errors_oab <- oab_check(muestreos_up)
+# errors <- oab_check(muestreos_up)
 
 
 # EXPORT ERRORS ----------------------------------------------------------------

@@ -153,11 +153,11 @@ rim_check_annual <- function (samples_imported) {
 
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
 
-
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
     # err$capturas_percentil_99 <- checkCatchesP99(catches)
+
 
     # ---- IN LENGTHS ----
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
