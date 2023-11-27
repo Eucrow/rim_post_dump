@@ -3,8 +3,9 @@
 .Rhistory
 .RData
 .Ruserdata
-revision_volcado_R.Rproj
+.Rproj
 /data-raw/
 .Rbuildignore
 #confidential files
 /data/
+/private/

@@ -28,17 +28,23 @@
 
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES ---------------------------------------
 
-# PATH_FILES <- file.path(getwd(), "datos/2022/2022_10_b")
-# PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/datos/2021/2021_annual"
+# Name of the subfolder where will be stored the errors generated in this script.
+ERRORS_SUBFOLDER_NAME <- "errors"
 
-ERRORS_SUBDIRECTORY <- "errors"
+# Name of the folder where are stored private files with sensitive information.
+PRIVATE_FOLDER_NAME <- "private"
+
+# Name of the files obtained from SIRENO database.
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
 FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-# MONTH <- 1
-MONTH <- c(4)
+MONTH <- c(9)
+
+# YEAR
+YEAR <- 2023
+
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
 suffix_multiple_months <- "annual_nvdp"
@@ -47,28 +53,17 @@ suffix_multiple_months <- "annual_nvdp"
 # the end of the file name with a "_" as separation.
 suffix <- ""
 
-# YEAR
-YEAR <- 2023
-
-# only if the file must be uploaded to google drive
-# GOOGLE_DRIVE_PATH <- "/equipo muestreos/revision_volcado/2020/2020_correcciones_para_sups/"
-
 # cfpo to use in the script
-# cfpo_to_use <- "CFPO_2021.csv"
 cfpo_to_use <- "CFPO 2022 DEF Marco.xlsx"
 
 
 # PACKAGES ---------------------------------------------------------------------
 
 library(plyr)
-library(dplyr) #arrange_()
-# library(tools) #file_path_sans_ext()
+library(dplyr)
+library(blastula) # to send emails
 library(devtools)
-
-# ---- install googlesheets from github
-# install_github("jennybc/googlesheets")
-# library(googlesheets)
-# suppressMessages(library(dplyr)) #What is suppressMessages????
+library(openxlsx) # to read directly CFPO from a excel file
 
 # ---- install sapmuebase from local
 # remove.packages("sapmuebase")
@@ -82,11 +77,6 @@ library(devtools)
 # install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
-
-
-# ---- install googledrive package from github
-# devtools::install_github("tidyverse/googledrive")
-# library(googledrive)
 
 
 # FUNCTIONS --------------------------------------------------------------------
@@ -106,19 +96,16 @@ source('rim_check_annual.R')
 # function to check the oab files:
 source('oab_check.R')
 
-
-# SET WORKING DIRECTORY --------------------------------------------------------
-
-# setwd("F:/misdoc/sap/revision volcado/revision_volcado_R/")
-# setwd("C:/Users/Marco IEO/Google Drive/revision_volcado/revision_volcado_R/")
-
-
 # GLOBAL VARIABLES -------------------------------------------------------------
 
 # list with all errors found in dataframes:
 ERRORS <- list()
 
+# Path where the files of the month and year will be stored.
 PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
+
+# Path where private files are stored.
+PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 
 # list with the common fields used in all tables
 BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
@@ -130,23 +117,13 @@ PATH_ERRORS <- file.path(PATH_FILES, "errors")
 # path to store files as backup
 PATH_BACKUP <- file.path(PATH_FILES, "backup")
 
-# month as character
-# MONTH_AS_CHARACTER <- ifelse(isFALSE(MONTH), "", sprintf("%02d", MONTH))
-# month as character in case of monthly check
+# Month as character
 MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
-# if (length(MONTH) == 1 && MONTH %in% seq(1:12)){
-#   MONTH_AS_CHARACTER <- ifelse(isFALSE(MONTH), "", sprintf("%02d", MONTH))
-# } else if (length(MONTH) > 1 & all(MONTH %in% seq(1:12))) {
-#   MONTH_AS_CHARACTER <- suffix_multiple_months
-# } else if (MONTH == "annual") {
-#   MONTH_AS_CHARACTER <- "annual"
-# } else {
-#   stop("Is there any error in the MONTH variable?")
-# }
 
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review", YEAR, paste0(YEAR, "_", MONTH_AS_CHARACTER))
-
+PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review",
+                               YEAR,
+                               paste0(YEAR, "_", MONTH_AS_CHARACTER))
 
 # files to backup
 FILES_TO_BACKUP <- c("rim_post_dump.R",
@@ -156,56 +133,45 @@ FILES_TO_BACKUP <- c("rim_post_dump.R",
                      "especies_sujetas_a_posible_confusion_taxonomica.csv",
                      "especies_no_permitidas.csv")
 
-createFilename <- function(){
-  filename <- paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER)
-
-  if (suffix != ""){
-    filename <- paste(filename, suffix, sep="_")
-  }
-
-  return (filename)
-}
-
 ERRORS_FILENAME <- createFilename()
 
-
+EMAIL_TEMPLATE <- "errors_email.Rmd"
 
 
 # IMPORT DATA ------------------------------------------------------------------
 
-#read the mixed species dataset
-
+# Get the mixed species data set.
 mixed_species <- especies_mezcla
 
-#read the no mixed species dataset
+# Get the no mixed species data set.
 sampled_spe_no_mixed <- especies_no_mezcla
 
-###obtain the not allowed species dataset
+# Get the not allowed species data set.
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
 
-# read especies_sujetas_a_posible_confusion_taxonómica.csv file
+# Get the species susceptible to taxonomic confusion data set.
 ESP_TAXONOMIC_CONFUSION <- read.csv(
   "especies_sujetas_a_posible_confusion_taxonomica.csv",
   sep = ";",
   colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
 
-### obtain the cfpo
-# CFPO <- get(cfpo_to_use)
-
-# CFPO <- read.csv2(paste0(getwd(), "/data-raw/", cfpo_to_use), sep = ";", fileEncoding = "windows-1252")
-# ignore useless columns
-# CFPO <- CFPO[,c("CODIGO_BUQUE", "ESTADO")]
-# CFPO <- CFPO[,c("CODIGOBUQUE", "Estado.Actual")]
-# colnames(CFPO) <- c("CODIGO_BUQUE", "ESTADO")
-
-library(openxlsx)
+# Get the CFPO
 CFPO <- read.xlsx(paste0(getwd(), "/data-raw/", cfpo_to_use), detectDates=TRUE)
 CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
 colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
 
+# Get the contacts data set. This data set contains the different roles and its
+# email, used in the distribution of error files. The roles are:
+# - GC, GS, GN and AC: the supervisors of the influence areas.
+# - sender: person responsible for sending the files.
+# - cc: related people to whom the email should also be sent.
+# This data set is obtained from the file contacts.csv stored in private folder
+# due to the confidential information contained in it. The contacts.csv file
+# must have a comma separated format with two fields: ROLE and EMAIL. The firs
+# line must contain the name of the variables.
+CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
 
-# IMPORT "muestreos UP" files --------------------------------------------------
-
+# IMPORT "muestreos UP" files
 muestreos_up <- importRIMFiles(
   catches = FILENAME_DES_TOT,
   catches_in_lengths = FILENAME_DES_TAL,
@@ -214,18 +180,7 @@ muestreos_up <- importRIMFiles(
   # ,  by_month = MONTH
   )
 
-
-# catches <- importRIMCatches(FILENAME_DES_TOT, path= PATH_FILES)
-# catches_in_lengths <- importRIMCatchesInLengths(FILENAME_DES_TAL, path= PATH_FILES)
-# lengths_sampled <- importRIMLengths(FILENAME_TAL, path= PATH_FILES)
-
-
 # SEARCHING ERRORS -------------------------------------------------------------
-
-# Check rim data:
-#   - sampled type 1, MT1A
-#   - sampled type 2, MT2A
-
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_post_cruce_text(muestreos_up)
@@ -261,6 +216,7 @@ errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
 copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
 
+
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
 # first save all files opened
 rstudioapi::documentSaveAll()
@@ -268,4 +224,37 @@ rstudioapi::documentSaveAll()
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 
+# SEND EMAILS AUTOMATICALLY ----------------------------------------------------
+# The first time the errors will be sent by email, a credential file must be
+# generated with create_smtp_creds_file:
+# create_smtp_creds_file(file = file.path(PRIVATE_FOLDER_NAME, "credentials"),
+#                        user = "",
+#                        host = "",
+#                        port = ,
+#                        use_ssl = )
 
+# The internal_links data frame must have two variables:
+# - AREA_INF: influence área with the values GC, GS, GN and AC, of the
+# - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
+# aren't any error file of a certain AREA_INF, must be set to "".
+# - NOTES: any notes to add to the email. If there aren't, must be set to "".
+accesory_email_info <- data.frame(
+                          AREA_INF = c("GC", "GS", "GN", "AC"),
+                          LINK = c("https://saco.csic.es/index.php/f/164118829",
+                                   "https://saco.csic.es/index.php/f/164118826",
+                                   "https://saco.csic.es/index.php/f/164118832",
+                                   "https://saco.csic.es/index.php/f/164118822"),
+                          NOTES = c("Aún no hemos implementado la detección de tallas al centímetro en especies que se miden al medio centímetro.",
+                                    "",
+                                    "",
+                                    "")
+                            )
+
+sendErrorsByEmail(accesory_email_info = accesory_email_info,
+                  contacts = CONTACTS,
+                  credentials_file = "credentials")
+
+
+# See in blastula md file:
+# 🏛️ Governance
+# This project is primarily maintained by Richard Iannone. Should there also be other authors, they might occasionally assist with some of these duties.

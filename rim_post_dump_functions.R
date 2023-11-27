@@ -73,7 +73,7 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
              TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM,
              P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
       select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
-      arrange_( "COD_PUERTO", "COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+      arrange( "COD_PUERTO", "COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
 
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
@@ -224,8 +224,7 @@ allCategoriesWithSameSampledWeights <- function (catches_in_lengths){
   selected_fields<-c(BASE_FIELDS,"N_CATEGORIAS","COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA","CATEGORIA", "P_MUE_DESEM", "SEXO")
 
   by_category <- catches_in_lengths %>%
-    group_by_(.dots = selected_fields) %>%
-    #tally() %>% # tally() is the same that summarise(num = n())
+    group_by_at(selected_fields) %>%
     summarise(NUM_ESP_CAT_MISMO_PESO_MUE=n())%>%
     filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
     addTypeOfError("WARNING: varias especies de la categorías con igual peso muestreado")
@@ -254,8 +253,7 @@ doubtfulCategorySpecies <- function(catches_in_lengths){
   #   select(one_of(selected_fields))
 
   # remove duplicates
-  errors <- unique(genus_not_allowed)  %>%
-    arrange_(BASE_FIELDS)
+  errors <- unique(genus_not_allowed)
 
   errors <- addTypeOfError(errors, "WARNING: ¿seguro que es esa especie en Especies de la Categoría?")
 
@@ -273,8 +271,7 @@ notAllowedCategorySpecies <- function(catches_in_lengths){
     select(one_of(selected_fields))
 
   # remove duplicates
-  errors <- unique(not_allowed)  %>%
-    arrange_(BASE_FIELDS)
+  errors <- unique(not_allowed)
 
   errors <- addTypeOfError(errors, "ERROR: muestreos con especies no permitidos en Especies de la Categor?a")
 
@@ -422,7 +419,7 @@ check_false_mt2 <- function(catches, lengths_sampled){
   # select all the samples with lengths
   mt2_with_lenghts <- lengths_sampled %>%
     filter(COD_TIPO_MUE == 2 | COD_TIPO_MUE == 4)  %>%
-    group_by_(.dots = BASE_FIELDS) %>%
+    group_by_at(BASE_FIELDS) %>%
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
 
   # check if all the samples keyed as MT2 has lengths
@@ -447,7 +444,7 @@ check_false_mt1 <- function(catches, lengths_sampled){
   # select all the samples with lengths
   mt1_with_lenghts <- lengths_sampled %>%
     filter(COD_TIPO_MUE == 1)  %>%
-    group_by_(.dots = BASE_FIELDS) %>%
+    group_by_at(BASE_FIELDS) %>%
     summarise(summatory = sum(EJEM_MEDIDOS, na.rm = TRUE))
 
   # check if all the samples keyed as MT1 hasn't lenghts
@@ -558,7 +555,7 @@ sexesWithSameSampledWeight <- function (catches_in_lengths){
                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "P_MUE_DESEM")
 
   errors <- catches_in_lengths %>%
-    group_by_(.dots=selected_fields)%>%
+    group_by_at(selected_fields)%>%
     summarise(NUM_SEXOS_MISMO_P_MUE_DESEM = n())%>%
     filter(NUM_SEXOS_MISMO_P_MUE_DESEM > 1) %>%
     addTypeOfError("WARNING: Sexos de una misma especie tienen exactamente el mismo peso muestra")
@@ -573,7 +570,7 @@ categoriesWithRepeatedSexes <- function(catches_in_lengths) {
                        "CATEGORIA", "COD_ESP_CAT", "ESP_CAT", "SEXO")
   errors <- catches_in_lengths %>%
     filter(SEXO != "U") %>%
-    group_by_(.dots = selected_fields) %>%
+    group_by_at(selected_fields) %>%
     summarise(NUM_MISMOS_SEXOS = n()) %>%
     filter(NUM_MISMOS_SEXOS != 1) %>%
     addTypeOfError("categorías con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras")
@@ -899,7 +896,7 @@ checkCatchesP99 <- function(catches){
 
   warnings <- catches %>%
     select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
-    group_by_(.dots = c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")) %>%
+    group_by_at(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")) %>%
     summarise(P_DESEM_TOT = sum(P_DESEM)) %>%
     merge(., p99_capturas_historico,
           by.x = c("ESTRATO_RIM", "COD_ESP_MUE"),
@@ -1120,11 +1117,11 @@ check_variable_with_master <- function (df, variable){
     variable_formatted <- variable_formatted[[1]][2]
   }
 
-  # In case COD_TIPO_MUE, the dataset is "tipo_muestreo" instead of "tipo_mue":
-  if ( variable_formatted == "TIPO_MUE") { name_dataset <- "tipo_muestreo"}
-  else{
-  name_dataset <- tolower(variable_formatted)
-
+  # In case COD_TIPO_MUE, the data set is "tipo_muestreo" instead of "tipo_mue":
+  if ( variable_formatted == "TIPO_MUE") {
+    name_dataset <- "tipo_muestreo"
+  }  else {
+    name_dataset <- tolower(variable_formatted)
   }
 
 
@@ -1154,8 +1151,8 @@ check_variable_with_master <- function (df, variable){
 exportErrorsList <- function (list, filename, separation = "") {
 
   # Create errors subdirectory in case it doesn't exists:
-  if (!file.exists(file.path(PATH_FILES, ERRORS_SUBDIRECTORY))){
-    dir.create(file.path(PATH_FILES, ERRORS_SUBDIRECTORY))
+  if (!file.exists(file.path(PATH_FILES, ERRORS_SUBFOLDER_NAME))){
+    dir.create(file.path(PATH_FILES, ERRORS_SUBFOLDER_NAME))
   }
 
   if (!requireNamespace("openxlsx", quietly = TRUE)) {
@@ -1667,7 +1664,8 @@ copyFilesToFolder <- function (path_errors_from, path_errors_to){
 }
 
 #' Create name of the errors file name. Use the global variables YEAR and
-#' MONTH_AS_CHARACTER, and suffix variable declared at the beginning of the script.
+#' MONTH_AS_CHARACTER, and suffix variable declared at the beginning of the
+#' script. Takes the form of errors_YEAR_MONTH_suffix
 createFilename <- function(){
   filename <- paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER)
 
@@ -1710,5 +1708,67 @@ createPathFiles <- function (month = MONTH,
   }
 
   return(file.path(getwd(), path_text))
+
+}
+
+#' Send errors files by email.
+#' @param accesory_email_info: df with two variables: AREA_INF (with the values GC,
+#' GS, GN and AC) and INTERNAL_LINK, with the link to the file.
+#' @param contacts: contacts data frame.
+#' @param credentials_file: file created with the function creds_file() from
+#' blastula package. Stored in private folder.
+#' @details
+#' The internal_links data frame must have two variables:
+#' - AREA_INF: influence área with the values GC, GS, GN and AC, of the
+#' - LINK: with the link to the error file in its AREA_INF. If there
+#' aren't any error file of a certain AREA_INF, the LINK must be set
+#' to "" or NA.
+#'
+#' The contacts data frame contains the different roles of the personal and its
+#' email to send them the error files. The roles are:
+#' - GC, GS, GN and AC: the supervisors of the influence areas. In the email,
+#' correspond to "to" field.
+#' - sender: person responsible for sending the files. In the email correspond
+#' to "from" field.
+#' - cc: related people to whom the email should also be sent. In the email
+#' correspond to "cc" field.
+#' This data set is obtained from the file contacts.csv stored in private folder
+#' due to the confidential information contained in it. The contacts.csv file
+#' must have a comma separated format with two fields: ROLE and EMAIL. The first
+#' line must contain the name of the variables.
+#'
+#' @require
+sendErrorsByEmail <- function(accesory_email_info, contacts, credentials_file){
+
+  apply(accesory_email_info, 1, function(x){
+
+    if(x[["LINK"]] != ""){
+
+      to <- contacts[contacts[["ROLE"]] == x[["AREA_INF"]] | contacts[["ROLE"]] == "sender", "EMAIL"]
+      from <- contacts[contacts[["ROLE"]] == "sender", "EMAIL"]
+      cc <- contacts[contacts[["ROLE"]] == "cc", "EMAIL"]
+
+      subject = paste0(YEAR,
+                       "_",
+                       sprintf("%02d", as.numeric(MONTH)),
+                       "_",
+                       x[["AREA_INF"]],
+                       " -- errores muestreos RIM")
+
+      rmd_email <- render_email(EMAIL_TEMPLATE)
+
+      smtp_send(email = rmd_email,
+                to = to,
+                from = from,
+                cc = cc,
+                subject = subject,
+                credentials = creds_file(file.path(PRIVATE_FOLDER_NAME, credentials_file))
+      )
+
+    } else {
+      print(paste("The", x[["AREA_INF"]], "influence area hasn't any error"))
+    }
+
+  })
 
 }
