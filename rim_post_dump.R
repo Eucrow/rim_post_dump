@@ -40,7 +40,7 @@ FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
 FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(9)
+MONTH <- c(8)
 
 # YEAR
 YEAR <- 2023
@@ -102,7 +102,8 @@ source('oab_check.R')
 ERRORS <- list()
 
 # Path where the files of the month and year will be stored.
-PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
+# PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
+PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/data/2023/2023_08_b"
 
 # Path where private files are stored.
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
@@ -226,25 +227,26 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
-# generated with create_smtp_creds_file:
-# create_smtp_creds_file(file = file.path(PRIVATE_FOLDER_NAME, "credentials"),
+# generated with create_smtp_creds_file. The credentials file is generated in
+# the private folder:
+# blastula::create_smtp_creds_file(file = file.path(PRIVATE_FOLDER_NAME, "credentials"),
 #                        user = "",
 #                        host = "",
 #                        port = ,
 #                        use_ssl = )
 
 # The internal_links data frame must have two variables:
-# - AREA_INF: influence área with the values GC, GS, GN and AC, of the
+# - AREA_INF: influence área with the values GC, GS, GN and AC.
 # - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
                           AREA_INF = c("GC", "GS", "GN", "AC"),
-                          LINK = c("https://saco.csic.es/index.php/f/164118829",
-                                   "https://saco.csic.es/index.php/f/164118826",
-                                   "https://saco.csic.es/index.php/f/164118832",
-                                   "https://saco.csic.es/index.php/f/164118822"),
-                          NOTES = c("Aún no hemos implementado la detección de tallas al centímetro en especies que se miden al medio centímetro.",
+                          LINK = c("",
+                                   "",
+                                   "",
+                                   ""),
+                          NOTES = c("",
                                     "",
                                     "",
                                     "")
@@ -254,7 +256,3 @@ sendErrorsByEmail(accesory_email_info = accesory_email_info,
                   contacts = CONTACTS,
                   credentials_file = "credentials")
 
-
-# See in blastula md file:
-# 🏛️ Governance
-# This project is primarily maintained by Richard Iannone. Should there also be other authors, they might occasionally assist with some of these duties.
