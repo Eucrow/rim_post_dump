@@ -1,32 +1,28 @@
-#### Check monthly data recorded in SIRENO
-####
-#### Return xls or upload to google docs files with errors detected by influence
-#### area
-####
-#### author: Marco A. Amez Fernandez
-#### email: ieo.marco.a.amez@gmail.com
-#### version: 2.0
-
+#### Check monthly data recorded in SIRENO.
+#### Return xls files by influence area with errors detected.
 
 # INSTRUCTIONS -----------------------------------------------------------------
 
 # To use this script:
-# - Make sure the file 'revision_volcado_functions.R' is located in the same
+# - Make sure the file "revision_volcado_functions.R" is located in the same
 # directory that this file.
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
 # script.
+# - A file "contacts.csv" must be stored in private folder. This data set
+# contains the different person roles and its email, used in the distribution of
+# error files.
+# The possible roles are:
+#   - GC, GS, GN and AC: the supervisors of the influence areas.
+#   - sender: person responsible for sending the files.
+#   - cc: related people to whom the email should also be sent.
+# The contacs file must have a comma separated format with two fields: ROLE and
+# EMAIL. The first line must contain the name of the variables.
+# - A CFPO file must be stored in private folder.
 # - Make sure report files tallas_x_up from SIRENO are in PATH_FILES.
-# - Create a directory called 'errors' inside PATH_FILES directory
-# - Choose the way to export in the "EXPORT ERRORS" section of this script.
-# Uncomment the interested way. It's available in xlsx file or upload directly
-# to google drive. In this case an account and password is required, and a token
-# is automatically generated.
-# - If xlsx option is choosen to export files, make sure a directory "errors" is
-# in PATH_FILENAME path
 # - Run all the script
 # - A file by influence area is generated in "errors" directory.
 
-# YOU HAVE ONLY TO CHANGE THIS VARIABLES ---------------------------------------
+# YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
 # Name of the subfolder where will be stored the errors generated in this script.
 ERRORS_SUBFOLDER_NAME <- "errors"
@@ -65,13 +61,7 @@ library(blastula) # to send emails
 library(devtools)
 library(openxlsx) # to read directly CFPO from a excel file
 
-# ---- install sapmuebase from local
-# remove.packages("sapmuebase")
-# .rs.restartR()
-# install("F:/misdoc/sap/sapmuebase")
-# install("C:/Users/ieoma/Desktop/sap/sapmuebase")
-
-# ---- install sapmuebase from github
+# install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
 # install_github("eucrow/sapmuebase")
@@ -98,7 +88,7 @@ source('oab_check.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
 
-# list with all errors found in dataframes:
+# list with all errors found in data frames:
 ERRORS <- list()
 
 # Path where the files of the month and year will be stored.
@@ -161,15 +151,7 @@ CFPO <- read.xlsx(paste0(getwd(), "/data-raw/", cfpo_to_use), detectDates=TRUE)
 CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
 colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
 
-# Get the contacts data set. This data set contains the different roles and its
-# email, used in the distribution of error files. The roles are:
-# - GC, GS, GN and AC: the supervisors of the influence areas.
-# - sender: person responsible for sending the files.
-# - cc: related people to whom the email should also be sent.
-# This data set is obtained from the file contacts.csv stored in private folder
-# due to the confidential information contained in it. The contacts.csv file
-# must have a comma separated format with two fields: ROLE and EMAIL. The firs
-# line must contain the name of the variables.
+# Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
 
 # IMPORT "muestreos UP" files
@@ -199,13 +181,9 @@ errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
     # one month
     # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
-    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
-    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR,"_annual"), separation = "_")
-
     # a complete year
     # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
-    # exportErrorsList(errors_oab, suffix = paste0("errors_oab", "_", YEAR), separation = "_")
     # exportCsvSAPMUEBASE(errors_complete, "errors_complete_anual_2021.csv")
 
 
@@ -236,12 +214,15 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 #                        use_ssl = )
 
 # The internal_links data frame must have two variables:
-# - AREA_INF: influence área with the values GC, GS, GN and AC.
+# - AREA_INF: influence area with the values GC, GS, GN and AC.
 # - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
-                          AREA_INF = c("GC", "GS", "GN", "AC"),
+                          AREA_INF = c("GC",
+                                       "GS",
+                                       "GN",
+                                       "AC"),
                           LINK = c("",
                                    "",
                                    "",
@@ -252,7 +233,7 @@ accesory_email_info <- data.frame(
                                     "")
                             )
 
-sendErrorsByEmail(accesory_email_info = accesory_email_info,
-                  contacts = CONTACTS,
-                  credentials_file = "credentials")
+# sendErrorsByEmail(accesory_email_info = accesory_email_info,
+#                   contacts = CONTACTS,
+#                   credentials_file = "credentials")
 
