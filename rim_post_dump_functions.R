@@ -1631,40 +1631,38 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
 
 }
 
-#' Check code: 
-#' Function to check if species, Sardina Pilchardus (10152) and Engraulis encrasicolus (10156)
-#' where measured in the correct way, in the middle centimeter (1/2 cm).
-#' @details Require the dataframe related with IEOUPMUETALACANDELARIO
-#' @param df: dataframe returned by one of the importRIM functions.
-#' @param type_file: type of the imported file according to this values:
-#' RIM_LENGTHS.
-#' @return A dataframe where the species were measured centimeter to centimeter.
+#' Check code:
+#' Function to check if species Sardina Pilchardus (10152) and Engraulis
+#' encrasicolus (10156) where measured in the correct way, at middle centimeter
+#' (1/2 cm).
+#' @param lengths: data frame returned by one of the importRIM functions.
+#' @return A data frame where the species were measured centimeter to centimeter.
+halfCentimeter <- function(lengths){
 
-
-middleCentimeter <- function(lengths){
-  
   #Fields: species, Sardina Pilchardus (10152) and Engraulis encrasicolus (10156)
-  especies <- c("10152", "10156")
-  #Fields: columns
-  col_filter <- c("COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_BARCO", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")
-  
-  lengths <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter]
+  species <- c("10152", "10156")
+
+  lengths <- lengths[lengths$COD_ESP_MUE %in% species, c(BASE_FIELDS, "COD_ID", "COD_ESP_MUE", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")]
+
   #Parameters: middle centimeter
   midCentTrue <- grepl("^.*.5$", lengths$TALLA)
-  
-  #Dataframes
+
+  #Data frames
   lengths_t <- lengths[midCentTrue, ]
-  lengths_t <- lengths_t %>% group_by(FECHA_MUE, COD_BARCO) %>% 
+  lengths_t <- lengths_t %>% group_by(FECHA_MUE, COD_BARCO, COD_ESP_MUE, COD_CATEGORIA, COD_ESP_CAT) %>%
     summarise(TALLAS_MED = n_distinct(TALLA))
   lengths_f <- merge(lengths, lengths_t, all.x=TRUE)
-  
+
   #Parameters: count 0 elements
-  lengths_f[lengths_f$TALLAS_MED==0,]
+  lengths_f <- lengths_f[is.na(lengths_f$TALLAS_MED),]
+  lengths_f <- lengths_f[, c(BASE_FIELDS, "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")]
+  lengths_f <- unique(lengths_f)
+
   if(length(lengths_f[1,])!=0){
-    errors <- addTypeOfError(lengths_f, "Warning: Puede que se hayan medido las tallas al cm en vez del 1/2 cm")
+    errors <- addTypeOfError(lengths_f, "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
     return(errors)
-  } 
-  
+  }
+
 }
 
 

@@ -159,6 +159,7 @@ rim_check <- function (samples_imported) {
 
     # comment in annual:
     err$capturas_percentil_99 <- checkCatchesP99(catches)
+    err$half_centimeter <- halfCentimeter(lengths_sampled)
 
     # ---- IN LENGTHS ----
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
