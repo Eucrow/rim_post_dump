@@ -20,5 +20,7 @@ after the dump process in SIRENO.
 Return a list of warnings and errors which are reviewed by EM-SAP staff and
 fixed it when it is necessary.
 
+The errors detected can be found in https://saco.csic.es/index.php/s/DrRnRao2442WtcP
+
 ### Warning:
 Due to privacy concerns, some minor functions can not work properly.
