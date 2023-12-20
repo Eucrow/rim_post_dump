@@ -1655,11 +1655,10 @@ middleCentimeter <- function(lengths){
   #Dataframes
   lengths_t <- lengths[midCentTrue, ]
   lengths_t <- lengths_t %>% group_by(FECHA_MUE, COD_BARCO) %>% 
-    summarise(TALLAS_MED = n_distinct(TALLA))
+    summarise(TALLAS_MED = n_distinct(TALLA)) %>% filter(TALLAS_MED > 1)
   lengths_f <- merge(lengths, lengths_t, all.x=TRUE)
   
   #Parameters: count 0 elements
-  
   lengths_f[lengths_f$TALLAS_MED==0,]
   if(length(lengths_f[1,])!=0 && length(lengths_f[,1])>1){
     errors <- addTypeOfError(lengths_f, "Warning: Puede que se hayan medido las tallas al cm en vez del 1/2 cm")
