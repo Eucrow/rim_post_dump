@@ -1649,18 +1649,13 @@ middleCentimeter <- function(lengths){
   col_filter <- c("COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_BARCO", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")
   
   #Filter where we have more than one register
-  lengths_a <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter] %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% 
-    summarise(Registros = n()) %>% filter(Registros>1)
-  
-  lengths <- merge(lengths_a, lengths, all.x=TRUE)
-  
-  #Parameters: middle centimeter
+  lengths <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter] %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% 
+    mutate(Registros = n()) %>% filter(Registros>1) 
+
+  #Count the middle centimeter measures
   midCentTrue <- grepl("^.*.5$", lengths$TALLA)
-  
-  #Dataframes
-  lengths_b <- lengths[midCentTrue, ]
-  lengths_b <- lengths_b %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% summarise(TALLAS_MED = n_distinct(TALLA))
-  lengths <- merge(lengths, lengths_t, all.x=TRUE)
+  lengths <- lengths[midCentTrue, ] %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% 
+    mutate(TALLAS_MED = n_distinct(TALLA))
   
   #Parameters: count 0 elements
   if(nrow(lengths[lengths_f$TALLAS_MED==0,])!=0){
