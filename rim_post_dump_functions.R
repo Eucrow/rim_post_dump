@@ -1633,7 +1633,7 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
 
 #' Check code: 
 #' Function to check if species, Sardina Pilchardus (10152) and Engraulis encrasicolus (10156)
-#' where measured in the correct way, in the middle centimeter (1/2 cm).
+#' were measured in the correct way, in the middle centimeter (1/2 cm).
 #' @details Require the dataframe related with IEOUPMUETALACANDELARIO
 #' @param df: dataframe returned by one of the importRIM functions.
 #' @param type_file: type of the imported file according to this values:
@@ -1648,22 +1648,25 @@ middleCentimeter <- function(lengths){
   #Fields: columns
   col_filter <- c("COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_BARCO", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")
   
-  lengths <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter]
+  #Filter where we have more than one register
+  lengths_a <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter] %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% 
+    summarise(Registros = n()) %>% filter(Registros>1)
+  
+  lengths <- merge(lengths_a, lengths, all.x=TRUE)
+  
   #Parameters: middle centimeter
   midCentTrue <- grepl("^.*.5$", lengths$TALLA)
   
   #Dataframes
-  lengths_t <- lengths[midCentTrue, ]
-  lengths_t <- lengths_t %>% group_by(FECHA_MUE, COD_BARCO) %>% 
-    summarise(TALLAS_MED = n_distinct(TALLA)) %>% filter(TALLAS_MED > 1)
-  lengths_f <- merge(lengths, lengths_t, all.x=TRUE)
+  lengths_b <- lengths[midCentTrue, ]
+  lengths_b <- lengths_b %>% group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>% summarise(TALLAS_MED = n_distinct(TALLA))
+  lengths <- merge(lengths, lengths_t, all.x=TRUE)
   
   #Parameters: count 0 elements
-  lengths_f[lengths_f$TALLAS_MED==0,]
-  if(length(lengths_f[1,])!=0){
+  if(nrow(lengths[lengths_f$TALLAS_MED==0,])!=0){
     errors <- addTypeOfError(lengths_f, "Warning: Puede que se hayan medido las tallas al cm en vez del 1/2 cm")
     return(errors)
-  } 
+  }  
   
 }
 
