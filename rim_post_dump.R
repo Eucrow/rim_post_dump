@@ -31,12 +31,12 @@ ERRORS_SUBFOLDER_NAME <- "errors"
 PRIVATE_FOLDER_NAME <- "private"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTACANDELARIO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
+FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(8)
+MONTH <- c(10)
 
 # YEAR
 YEAR <- 2023
@@ -92,8 +92,8 @@ source('oab_check.R')
 ERRORS <- list()
 
 # Path where the files of the month and year will be stored.
-# PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
-PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/data/2023/2023_08_b"
+PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
+# PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/data/2023/2023_08_b"
 
 # Path where private files are stored.
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
@@ -219,10 +219,10 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
-                          AREA_INF = c("GC",
-                                       "GS",
+                          AREA_INF = c("AC",
+                                       "GC",
                                        "GN",
-                                       "AC"),
+                                       "GS"),
                           LINK = c("",
                                    "",
                                    "",
@@ -232,6 +232,10 @@ accesory_email_info <- data.frame(
                                     "",
                                     "")
                             )
+
+
+# getOption("timeout")
+# options(timeout = 60)
 
 # sendErrorsByEmail(accesory_email_info = accesory_email_info,
 #                   contacts = CONTACTS,
