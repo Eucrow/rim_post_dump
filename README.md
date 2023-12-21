@@ -1,5 +1,7 @@
 # Post-dump revision of data saved in SIRENO
 
+v.2.2.2
+
 The SAP project from the Spanish Institute of Oceanography (IEO) obtains,
 analyzes and prepare the necessary information to monitor the fishery activity
 in Northeast Atlantic.
@@ -23,4 +25,5 @@ fixed it when it is necessary.
 The errors detected can be found in https://saco.csic.es/index.php/s/DrRnRao2442WtcP
 
 ### Warning:
+
 Due to privacy concerns, some minor functions can not work properly.
