@@ -1661,7 +1661,7 @@ halfCentimeter <- function(lengths){
   
   #Parameters: count 0 elements
   if(nrow(err)!=0){
-    errors <- addTypeOfError(lengths_f, "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
+    errors <- addTypeOfError(err, "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
     return(errors)
   }  
 
