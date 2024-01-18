@@ -1668,6 +1668,66 @@ halfCentimeter <- function(lengths){
 }
 
 
+#' Check code: ATOG02
+#' Function to check if species with priority G1 and G2 were not measured
+#' in the diferent samplings.
+#' @details Require the dataframe related with IEOUPMUETALACANDELARIO and IEOUPMUEDESTOTACANDELARIO
+#' @param df: dataframe returned by one of the importRIM functions.
+#' @param type_file: type of the imported file according to this values:
+#' RIM_LENGTHS.
+#' @return A dataframe where there is not register of any the species of both groups.
+
+
+checkPrioritySpecies <- function(lengths, catches, speciesPriority){
+  #IMP: cómo colocar el catálogo de especies
+  
+  #fields: vectors with the COD_ESP_MUE of species with priority G1 and G2
+  
+  nonPriorityGroups <- c("G2", "G3")
+  
+  filterGroupOne <- unique(speciesPriority[speciesPriority$PRIORIDAD == "G1", "COD_ESP_MUE"])
+  
+  filterGroupTwo <- unique(speciesPriority[speciesPriority$PRIORIDAD %in% nonPriorityGroups, "COD_ESP_MUE"])
+  
+  #Filter of the dataframes lenghtd and catches with the both group of species
+  
+  catchesOne <- catches[catches$COD_ESP_MUE %in% filterGroupOne, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+  
+  lengthsOne <- lengths[lengths$COD_ESP_MUE %in% filterGroupOne, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", 
+                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", 
+                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
+  
+  catchesTwo <- catches[catches$COD_ESP_MUE %in% filterGroupTwo, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")] 
+  
+  lengthsTwo <- lengths[lengths$COD_ESP_MUE %in% filterGroupTwo, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", 
+                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT", 
+                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
+  
+  #Fusion of the previous dataframes
+  
+  dfGroupOne <- merge(catchesOne, lengthsOne, all.x = TRUE)
+  
+  dfGroupTwo <- merge(catchesTwo, lengthsTwo, all.x = TRUE)
+  
+  #Detect the errors
+  
+  groupOneError <- dfGroupOne %>% filter(is.na(EJEM_MEDIDOS))
+  groupTwoWarning <- dfGroupTwo %>% filter(is.na(EJEM_MEDIDOS))
+  
+  if(nrow(groupOneError)!=0){
+    groupOneError <- addTypeOfError(groupOneError, "ERROR: Puede que no se haya medido alguna de las especies de prioridad G1")
+  } 
+  
+  if (nrow(groupTwoWarning)!=0){
+    groupTwoWarning <- addTypeOfError(groupTwoWarning, "WARNING: Puede que no se haya medido alguna de las especies de prioridad G2 o G3")
+  }
+  
+  errors <- rbind.data.frame(groupOneError, groupTwoWarning)
+  return(errors)
+  
+}
+
+
 #' Copy all the error files generated to a shared folder. ----
 #' Used to copy errors files generated to the shared folder
 copyFilesToFolder <- function (path_errors_from, path_errors_to){
