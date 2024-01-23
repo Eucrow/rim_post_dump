@@ -1669,8 +1669,8 @@ halfCentimeter <- function(lengths){
 }
 
 
-#' Check code: ATOG02
-#' Function to check if species with priority G1, G2 and G3 were not measured.
+#' Check code: 1077
+#' Function to check priority species (G1, G2 and G3) not measured.
 #' G1 species without lengths are considered as ERROR and G2 and G3 as WARNING.
 #' @param catches: data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
