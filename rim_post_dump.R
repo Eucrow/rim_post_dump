@@ -36,7 +36,7 @@ FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
 FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(10)
+MONTH <- c(11)
 
 # YEAR
 YEAR <- 2023
@@ -112,7 +112,7 @@ PATH_BACKUP <- file.path(PATH_FILES, "backup")
 MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
 
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review",
+PATH_SHARE_ERRORS <- file.path("C:/Users/alberto.candelario/Desktop/nextCloud/SAP_RIM/RIM_data_review",
                                YEAR,
                                paste0(YEAR, "_", MONTH_AS_CHARACTER))
 
@@ -234,10 +234,7 @@ accesory_email_info <- data.frame(
                             )
 
 
-# getOption("timeout")
-# options(timeout = 60)
-
-# sendErrorsByEmail(accesory_email_info = accesory_email_info,
-#                   contacts = CONTACTS,
-#                   credentials_file = "credentials")
+sendErrorsByEmail(accesory_email_info = accesory_email_info,
+                   contacts = CONTACTS,
+                   credentials_file = "credentials")
 
