@@ -1635,7 +1635,8 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
 #' Function to check if species Sardina Pilchardus (10152) and Engraulis
 #' encrasicolus (10156) where measured in the correct way, at middle centimeter
 #' (1/2 cm).
-#' @param lengths: data frame returned by one of the importRIM functions.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
 #' @return A data frame where the species were measured centimeter to centimeter.
 halfCentimeter <- function(lengths){
 
@@ -1664,6 +1665,61 @@ halfCentimeter <- function(lengths){
     errors <- addTypeOfError(err, "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
     return(errors)
   }
+
+}
+
+
+#' Check code: 1077
+#' Function to check priority species (G1, G2 and G3) not measured.
+#' G1 species without lengths are considered as ERROR and G2 and G3 as WARNING.
+#' @param catches: data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @return Data frame with priority species from G1, G2 and G3 with catches but
+#' no lengths. The G1 are labeled as ERROR, and G2 and G3 as WARNING.
+checkPrioritySpeciesSampled <- function(catches, lengths){
+
+  speciesErrors <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD == "G1",
+                                                "COD_ESP_MUE"])
+
+  speciesWarnings <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD %in% c("G2", "G3"),
+                                                  "COD_ESP_MUE"])
+
+  #Filter the data frames lengths and catches with both group of species
+
+  catchesErrors <- catches[catches$COD_ESP_MUE %in% speciesErrors, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+
+  lengthsErrors <- lengths[lengths$COD_ESP_MUE %in% speciesErrors, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE",
+                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT",
+                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
+
+  catchesWarnings <- catches[catches$COD_ESP_MUE %in% speciesWarnings, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+
+  lengthsWarnings <- lengths[lengths$COD_ESP_MUE %in% speciesWarnings, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE",
+                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT",
+                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
+
+  #Fusion of the previous data frames
+
+  dfErrors <- merge(catchesErrors, lengthsErrors, all.x = TRUE)
+
+  dfWarnings <- merge(catchesWarnings, lengthsWarnings, all.x = TRUE)
+
+  #Detect the errors
+  dfErrors <- dfErrors[is.na(dfErrors$EJEM_MEDIDOS),]
+  dfWarnings <- dfWarnings[is.na(dfWarnings$EJEM_MEDIDOS),]
+
+  if(nrow(dfErrors)!=0){
+    dfErrors <- addTypeOfError(dfErrors, "ERROR: Especie G1 con captura que no ha sido medida.")
+  }
+
+  if (nrow(dfWarnings)!=0){
+    dfWarnings <- addTypeOfError(dfWarnings, "WARNING: especie G2 o G3 con captura que no ha sido medida.")
+  }
+
+  errors <- rbind.data.frame(dfErrors, dfWarnings)
+  return(errors)
 
 }
 

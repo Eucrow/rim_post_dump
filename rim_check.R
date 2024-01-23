@@ -167,9 +167,10 @@ rim_check <- function (samples_imported) {
     # comment in annual:
     err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
     err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
+    err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
 
     # ---- COD_ID ----
-    # This check is usefull in the anual review. When the data is dumped in
+    # This check is useful in the annual review. When the data is dumped in
     # SIRENO, COD_ID is automatically filled. But, if later someone add a new
     # sample, the COD_ID doesn't fill and is saved as empty.
     err$cod_id_filled_catches <- checkCodId(catches)
