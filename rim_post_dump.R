@@ -163,6 +163,8 @@ muestreos_up <- importRIMFiles(
   # ,  by_month = MONTH
   )
 
+
+##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
