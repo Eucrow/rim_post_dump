@@ -162,6 +162,7 @@ rim_check_annual_post_cruce_text <- function (samples_imported) {
     # # ---- IN LENGTHS ----
     # err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
     # err$half_centimeter <- halfCentimeter(lengths_sampled)
+    # err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
     #
     # # comment in annual:
     # # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
