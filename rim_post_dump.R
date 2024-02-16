@@ -36,7 +36,7 @@ FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
 FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(11)
+MONTH <- c(12)
 
 # YEAR
 YEAR <- 2023
@@ -64,7 +64,7 @@ library(openxlsx) # to read directly CFPO from a excel file
 # install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
-# install_github("eucrow/sapmuebase")
+#install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
 
@@ -225,14 +225,18 @@ accesory_email_info <- data.frame(
                                        "GC",
                                        "GN",
                                        "GS"),
-                          LINK = c("",
-                                   "",
-                                   "",
-                                   ""),
-                          NOTES = c("",
-                                    "",
-                                    "",
-                                    "")
+                          LINK = c("https://saco.csic.es/index.php/f/178738883",
+                                   "https://saco.csic.es/index.php/f/178738885",
+                                   "https://saco.csic.es/index.php/f/178738892",
+                                   "https://saco.csic.es/index.php/f/178738889"),
+                          NOTES = c("Nota: se ha añadido un nuevo WARNING/ERROR de especies prioritarias que no han sido medidas.
+                                    Ejemplo: «WARNING: especie G2 o G3 con captura que no ha sido medida.»",
+                                    "Nota: se ha añadido un nuevo WARNING/ERROR de especies prioritarias que no han sido medidas.
+                                    Ejemplo: «WARNING: especie G2 o G3 con captura que no ha sido medida.»",
+                                    "Nota: se ha añadido un nuevo WARNING/ERROR de especies prioritarias que no han sido medidas.
+                                    Ejemplo: «WARNING: especie G2 o G3 con captura que no ha sido medida.»",
+                                    "Nota: se ha añadido un nuevo WARNING/ERROR de especies prioritarias que no han sido medidas.
+                                    Ejemplo: «WARNING: especie G2 o G3 con captura que no ha sido medida.»")
                             )
 
 
