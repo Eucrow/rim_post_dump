@@ -7,7 +7,7 @@
 *.Rproj
 /data-raw/
 .Rbuildignore
-IMP_ENVIAR_MARCO_BACKUP_FINAL
+IMP_ENVIAR_MARCO_BACKUP_FINAL.txt
 #confidential files
 /data/
 /private/
