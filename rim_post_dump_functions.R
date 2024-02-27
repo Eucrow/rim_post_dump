@@ -1843,6 +1843,28 @@ checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
 }
 
 
+#' Check code: 1080
+#' Function to check if the value of "CODSGPM" from the catches' dataframe
+#' is "0" or "Na" 
+#' @param catches: data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @return Data frame where we can find this error
+
+shipWhithoutCODSGPM <- function(catches){
+  
+  catches <- catches[catches$CODSGPM==0 | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
+  
+  if (nrow(catches)!=0){
+    
+    catches <- addTypeOfError(catches, "ERROR: El COD_SGPM para este muestreo es Na o 0")
+    
+  }
+  
+  catches <- unique(catches)
+  
+  return(catches)
+  
+}
 
 
 #' Copy all the error files generated to a shared folder. ----
