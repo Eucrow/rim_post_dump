@@ -100,6 +100,8 @@ rim_check <- function (samples_imported) {
 
     err$checkSampleInCharge <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
 
+    err$shipWhithoutCODSGPM <- shipWhithoutCODSGPM(catches)
+
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
     # err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
@@ -154,19 +156,23 @@ rim_check <- function (samples_imported) {
 
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
 
-
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
     err$capturas_percentil_99 <- checkCatchesP99(catches)
-    err$half_centimeter <- halfCentimeter(lengths_sampled)
+
 
     # ---- IN LENGTHS ----
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
 
+    err$half_centimeter <- halfCentimeter(lengths_sampled)
+
     # comment in annual:
     err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
+
+    # comment in annual:
     err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
+
     err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
 
     # ---- COD_ID ----
