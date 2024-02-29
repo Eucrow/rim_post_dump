@@ -1368,7 +1368,7 @@ coherenceDCFFishingGroundRimStratumOrigin <- function(df){
 #' Check all the categories are measured. If one or more are not, return a
 #' warning.
 #'
-#' @return dataframe with errors
+#' @return data frame with errors
 allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
 
   # Some categories never are measured, so must be ignored
@@ -1680,6 +1680,8 @@ halfCentimeter <- function(lengths){
 #' no lengths. The G1 are labeled as ERROR, and G2 and G3 as WARNING.
 checkPrioritySpeciesSampled <- function(catches, lengths){
 
+  clean_catches <- catches[catches$COD_TIPO_MUE == 2, ]
+
   speciesErrors <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD == "G1",
                                                 "COD_ESP_MUE"])
 
@@ -1733,6 +1735,7 @@ checkPrioritySpeciesSampled <- function(catches, lengths){
     
     groupTwoWarning <- addTypeOfError(groupTwoWarning, "WARNING: Puede que no se haya medido alguna de las especies de prioridad G2 o G3")
     
+
   }
   
   errors <- rbind.data.frame(groupOneError, groupTwoWarning)
@@ -1741,146 +1744,143 @@ checkPrioritySpeciesSampled <- function(catches, lengths){
 }
 
 #' Check code: 1078
-#' Function to check the presence of the ships from our ships' masterdata on the 
+#' Function to check the presence of the ships from our ships' masterdata on the
 #' working data
 #' @param catches: data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
-#' @param shipFishingGearMaster: master dataframe with the code ships and its 
+#' @param shipFishingGearMaster: master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022.
-#' @return Data frame with those ships no presents in our working data, labeled 
+#' @return Data frame with those ships no presents in our working data, labeled
 #' with a WARNING message
 
 checkShipNoMasterFishingGear <- function(catches, shipFishingGearMaster){
-  
+
   #Step 1: filter the necessary columns from the catches df and pass from level to normal data
-  
+
   catches <- catches[, BASE_FIELDS]
-  
+
   catches$COD_BARCO <- as.character(catches$COD_BARCO)
-  
+
   catches$ESTRATO_RIM <- as.character(catches$ESTRATO_RIM)
-  
+
   #Step 2: filter the ships in the catches' dataframe that are not present in boatFishingArtMaster
-  
+
   masterShip <- unique(shipFishingGearMaster$COD_BARCO)
-  
+
   catchesNoMasterShip <- catches[!(catches$COD_BARCO %in% masterShip), ]
-  
+
   #Step 3: check that the number of road is not equal to zero and add the type or error for obtained dataframes
-  
+
   if (nrow(catchesNoMasterShip)!=0){
-    
+
     catchesNoMasterShip <- addTypeOfError(catchesNoMasterShip, "WARNING: Barco no presente en el maestro")
-    
+
   }
-  
+
   catchesNoMasterShip <- unique(catchesNoMasterShip)
-  
+
   return(catchesNoMasterShip)
-  
+
 }
 
 #' Check code: 1079
-#' Function to check the coherence of the ESTRATO_RIM between our ships' masterdata  
+#' Function to check the coherence of the ESTRATO_RIM between our ships' masterdata
 #' and the working data
 #' @param catches: data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
-#' @param shipFishingGearMaster: master dataframe with the code ships and its 
+#' @param shipFishingGearMaster: master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022.
 #' @return Data frame that mark those ships where there is not coincidence between the
 #' ESTRATO_RIM from our ships' masterdata and the working data, specifying those what does not
 #' match with a Warning message
 
 checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
-  
+
   #Step 1: add the "Testigo" column to shipFishingGearMaster and convert "COD_BARCO" and "ESTRATO_RIM" as parameter
-  
+
   shipFishingGearMaster$TESTIGO <- "T"
-  
+
   shipFishingGearMaster$COD_BARCO <- as.character(shipFishingGearMaster$COD_BARCO)
-  
+
   shipFishingGearMaster$ESTRATO_RIM <- as.character(shipFishingGearMaster$ESTRATO_RIM)
-  
+
   #Step 2: filter the necessary columns from the catches df and pass from level to normal data
-  
+
   catches <- catches[, BASE_FIELDS]
-  
+
   catches$COD_BARCO <- as.character(catches$COD_BARCO)
-  
+
   catches$ESTRATO_RIM <- as.character(catches$ESTRATO_RIM)
-  
+
   #Step 3: filter the ships in the catches' dataframe that are present in shipFishingGearMaster
-  
+
   masterShip <- unique(shipFishingGearMaster$COD_BARCO)
-  
+
   catchesMasterShip <- catches[catches$COD_BARCO %in% masterShip, ]
-  
+
   #Step 4: merging the shipFishingGearMaster frame with the catches' one
-  
+
   catchesMasterShip <- merge(catchesMasterShip, shipFishingGearMaster, all.x=TRUE)
-  
+
   #Step 5: develop new dataframes, one to detect where the TESTIGO values are "Na"
-  
+
   catchesNaValues <- unique(catchesMasterShip[is.na(catchesMasterShip$TESTIGO), ])
-  
-  #Step 6: now, we make a subset of the masterShip with the ship's codes of the catchesNaValues.  
+
+  #Step 6: now, we make a subset of the masterShip with the ship's codes of the catchesNaValues.
   #Then, we create a special dataframe where we have unite all ESTRATOS that has one ship
-  #using the function «concatenaThor». 
-  
-  shipFishingGearMasterNaValues <- shipFishingGearMaster[shipFishingGearMaster$COD_BARCO %in% catchesNaValues$COD_BARCO, 
+  #using the function «concatenaThor».
+
+  shipFishingGearMasterNaValues <- shipFishingGearMaster[shipFishingGearMaster$COD_BARCO %in% catchesNaValues$COD_BARCO,
                                                          c("COD_BARCO","ESTRATO_RIM")]
-  
-  fusionEstratos <- tapply(shipFishingGearMasterNaValues$ESTRATO_RIM, 
-                           shipFishingGearMasterNaValues$COD_BARCO, 
+
+  fusionEstratos <- tapply(shipFishingGearMasterNaValues$ESTRATO_RIM,
+                           shipFishingGearMasterNaValues$COD_BARCO,
                            paste, collapse=", ")
-  
+
   shipCodes <- unique(shipFishingGearMasterNaValues$COD_BARCO)
-  
+
   fusionEstratosDataFrame <- data.frame(COD_BARCO=shipCodes, ESTRATOS=fusionEstratos)
-  
-  #Step 7: here we merge the fusionEstratosDataFrame with the catchesNaValues 
-  
+
+  #Step 7: here we merge the fusionEstratosDataFrame with the catchesNaValues
+
   catchesNaValues <- merge(catchesNaValues, fusionEstratosDataFrame, all.x=TRUE)
-  
+
   #Step 8: check that the number of road is not equal to zero and add the type or error for obtained dataframes
-  
+
   if (nrow(catchesNaValues)!=0){
     message <- paste0("WARNING: El barco trabajó en 2020-2022 en otros estratos diferentes: ", catchesNaValues$ESTRATOS)
     catchesNaValues$TIPO_ERROR <- message
   }
-  
+
   #Note: making a little fix in the columns of the catchesNaValues
-  
+
   catchesNaValues <- catchesNaValues[, c(BASE_FIELDS, "TIPO_ERROR")]
-  
+
   catchesNaValues <- unique(catchesNaValues)
-  
+
   return(catchesNaValues)
-  
+
 }
 
 
 #' Check code: 1080
-#' Function to check if the value of "CODSGPM" from the catches' dataframe
-#' is "0" or "Na" 
-#' @param catches: data frame returned by the importRIMCatches() or
+#' Function to check if the value of "CODSGPM" from the catches data frame
+#' is empty, "0" or NA.
+#' @param catches: catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
-#' @return Data frame where we can find this error
+#' @return Data frame whith errors.
 
 shipWhithoutCODSGPM <- function(catches){
-  
-  catches <- catches[catches$CODSGPM==0 | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
-  
+
+  catches <- catches[catches$CODSGPM=="0" | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
+
   if (nrow(catches)!=0){
-    
-    catches <- addTypeOfError(catches, "ERROR: El COD_SGPM para este muestreo es Na o 0")
-    
+    catches <- unique(catches)
+    catches <- addTypeOfError(catches, "ERROR: El código de la SGPM para este barco está vacio.")
+    return(catches)
   }
-  
-  catches <- unique(catches)
-  
-  return(catches)
-  
+
+
 }
 
 
@@ -1963,6 +1963,23 @@ createPathFiles <- function (month = MONTH,
 
 }
 
+#' Create suffix with month, months, or any other tag to name the months used
+#' in the names of files.
+#' @param month month or months used.
+#' @param suffix_multiple_month Suffix used when multiple months are used.
+createSuffixToExport <- function(month,
+                                 year,
+                                 month_as_character,
+                                 suffix_multiple_months){
+
+  if (length(month) == 1 && month %in% seq(1:12)) {
+    return(paste0(year, "_", month_as_character))
+  } else if (length(month) > 1 & all(month %in% seq(1:12))) {
+    return(paste0(year, "_", suffix_multiple_months))
+  }
+
+}
+
 #' Send errors files by email.
 #' @param accesory_email_info: df with two variables: AREA_INF (with the values GC,
 #' GS, GN and AC) and INTERNAL_LINK, with the link to the file.
@@ -1990,7 +2007,8 @@ createPathFiles <- function (month = MONTH,
 #' line must contain the name of the variables.
 #'
 #' @require
-sendErrorsByEmail <- function(accesory_email_info, contacts, credentials_file){
+sendErrorsByEmail <- function(accesory_email_info, contacts, credentials_file,
+                              identification_sampling){
 
   apply(accesory_email_info, 1, function(x){
 
@@ -2000,10 +2018,14 @@ sendErrorsByEmail <- function(accesory_email_info, contacts, credentials_file){
       from <- contacts[contacts[["ROLE"]] == "sender", "EMAIL"]
       cc <- contacts[contacts[["ROLE"]] == "cc", "EMAIL"]
 
-      subject = paste0(YEAR,
-                       "_",
-                       sprintf("%02d", as.numeric(MONTH)),
-                       "_",
+      # subject = paste0(YEAR,
+      #                  "_",
+      #                  sprintf("%02d", as.numeric(MONTH)),
+      #                  "_",
+      #                  x[["AREA_INF"]],
+      #                  " -- errores muestreos RIM")
+
+      subject = paste0(identification_sampling, " ",
                        x[["AREA_INF"]],
                        " -- errores muestreos RIM")
 
