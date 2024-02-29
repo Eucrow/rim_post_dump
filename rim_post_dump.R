@@ -30,20 +30,22 @@ ERRORS_SUBFOLDER_NAME <- "errors"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
+PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
+
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTACANDELARIO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
-FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ICES_2023.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ICES_2023.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_ICES_2023.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(10)
+MONTH <- c(1:12)
 
 # YEAR
 YEAR <- 2023
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual_nvdp"
+suffix_multiple_months <- "annual"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
@@ -64,7 +66,7 @@ library(openxlsx) # to read directly CFPO from a excel file
 # install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
-# install_github("eucrow/sapmuebase")
+#install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
 
@@ -111,8 +113,10 @@ PATH_BACKUP <- file.path(PATH_FILES, "backup")
 # Month as character
 MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
 
+SUFFIX_TO_EXPORT <- createSuffixToExport(MONTH, YEAR, MONTH_AS_CHARACTER, suffix_multiple_months)
+
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path("C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review",
+PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER,
                                YEAR,
                                paste0(YEAR, "_", MONTH_AS_CHARACTER))
 
@@ -166,8 +170,8 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-errors <- rim_check(muestreos_up)
-# errors <- rim_check_annual(muestreos_up)
+# errors <- rim_check(muestreos_up)
+errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_post_cruce_text(muestreos_up)
 
 errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
@@ -225,10 +229,10 @@ accesory_email_info <- data.frame(
                                        "GC",
                                        "GN",
                                        "GS"),
-                          LINK = c("",
-                                   "",
-                                   "",
-                                   ""),
+                          LINK = c("https://saco.csic.es/index.php/f/184616378",
+                                   "https://saco.csic.es/index.php/f/184616379",
+                                   "https://saco.csic.es/index.php/f/184616382",
+                                   "https://saco.csic.es/index.php/f/184616380"),
                           NOTES = c("",
                                     "",
                                     "",
@@ -236,10 +240,8 @@ accesory_email_info <- data.frame(
                             )
 
 
-# getOption("timeout")
-# options(timeout = 60)
-
-# sendErrorsByEmail(accesory_email_info = accesory_email_info,
-#                   contacts = CONTACTS,
-#                   credentials_file = "credentials")
+sendErrorsByEmail(accesory_email_info = accesory_email_info,
+                   contacts = CONTACTS,
+                   credentials_file = "credentials",
+                  identification_sampling = SUFFIX_TO_EXPORT)
 
