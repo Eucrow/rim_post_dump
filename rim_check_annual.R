@@ -99,6 +99,8 @@ rim_check_annual <- function (samples_imported) {
 
     err$checkSampleInCharge <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
 
+    err$shipWhithoutCODSGPM <- shipWhithoutCODSGPM(catches)
+
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
     # err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)

@@ -1368,7 +1368,7 @@ coherenceDCFFishingGroundRimStratumOrigin <- function(df){
 #' Check all the categories are measured. If one or more are not, return a
 #' warning.
 #'
-#' @return dataframe with errors
+#' @return data frame with errors
 allCategoriesMeasured <- function(df_catches, df_lengths_sampled){
 
   # Some categories never are measured, so must be ignored
@@ -1846,26 +1846,23 @@ checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
 
 
 #' Check code: 1080
-#' Function to check if the value of "CODSGPM" from the catches' dataframe
-#' is "0" or "Na" 
-#' @param catches: data frame returned by the importRIMCatches() or
+#' Function to check if the value of "CODSGPM" from the catches data frame
+#' is empty, "0" or NA.
+#' @param catches: catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
-#' @return Data frame where we can find this error
+#' @return Data frame whith errors.
 
 shipWhithoutCODSGPM <- function(catches){
-  
-  catches <- catches[catches$CODSGPM==0 | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
-  
+
+  catches <- catches[catches$CODSGPM=="0" | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
+
   if (nrow(catches)!=0){
-    
-    catches <- addTypeOfError(catches, "ERROR: El COD_SGPM para este muestreo es Na o 0")
-    
+    catches <- unique(catches)
+    catches <- addTypeOfError(catches, "ERROR: El código de la SGPM para este barco está vacio.")
+    return(catches)
   }
-  
-  catches <- unique(catches)
-  
-  return(catches)
-  
+
+
 }
 
 
