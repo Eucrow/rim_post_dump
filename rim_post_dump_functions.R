@@ -1688,39 +1688,57 @@ checkPrioritySpeciesSampled <- function(catches, lengths){
   speciesWarnings <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD %in% c("G2", "G3"),
                                                   "COD_ESP_MUE"])
 
-  #Filter the data frames lengths and clean_catches with both group of species
 
-  catchesErrors <- clean_catches[clean_catches$COD_ESP_MUE %in% speciesErrors, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+  catchesOne <- catches[catches$COD_ESP_MUE %in% speciesErrors & catches$COD_TIPO_MUE == "2", 
+                        c("COD_ID", "COD_ESP_MUE")]
+  
+  lengthsOne <- lengths[lengths$COD_ESP_MUE %in% speciesErrors & lengths$COD_TIPO_MUE == "2", 
+                        c("COD_ID", "COD_ESP_MUE")]
+  
+  lengthsOne$Testigo <- "T"
+  
+  catchesLengthOne <- unique(merge(catchesOne, lengthsOne, all.x= TRUE))
+  
+  groupOneError <- catchesLengthOne %>% filter(is.na(Testigo))
+  
+  groupOneError <- merge(groupOneError, catches, all.x = TRUE)
+  
+  groupOneError <- groupOneError[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+  
+  
+  
+  catchesTwo <- catches[catches$COD_ESP_MUE %in% speciesWarnings & catches$COD_TIPO_MUE == "2", 
+                        c("COD_ID", "COD_ESP_MUE")]
+  
+  lengthsTwo <- lengths[lengths$COD_ESP_MUE %in% speciesWarnings & lengths$COD_TIPO_MUE == "2", 
+                        c("COD_ID", "COD_ESP_MUE")]
+  
+  lengthsTwo$Testigo <- "T"
+  
+  catchesLengthTwo <- unique(merge(catchesTwo, lengthsTwo, all.x= TRUE))
+  
+  groupTwoWarning <- catchesLengthTwo %>% filter(is.na(Testigo))
+  
+  groupTwoWarning <- merge(groupTwoWarning, catches, all.x = TRUE)
+  
+  groupTwoWarning <- groupTwoWarning[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+  
+  
+  
+  if(nrow(groupOneError)!=0){
+    
+    groupOneError <- addTypeOfError(groupOneError, "ERROR: Puede que no se haya medido alguna de las especies de prioridad G1")
+    
+  } 
+  
+  if (nrow(groupTwoWarning)!=0){
+    
+    groupTwoWarning <- addTypeOfError(groupTwoWarning, "WARNING: Puede que no se haya medido alguna de las especies de prioridad G2 o G3")
+    
 
-  lengthsErrors <- lengths[lengths$COD_ESP_MUE %in% speciesErrors, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE",
-                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT",
-                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
-
-  catchesWarnings <- clean_catches[clean_catches$COD_ESP_MUE %in% speciesWarnings, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-
-  lengthsWarnings <- lengths[lengths$COD_ESP_MUE %in% speciesWarnings, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE",
-                                                                   "COD_CATEGORIA","CATEGORIA", "COD_ESP_CAT",
-                                                                   "ESP_CAT", "EJEM_MEDIDOS")]
-
-  #Fusion of the previous data frames
-
-  dfErrors <- merge(catchesErrors, lengthsErrors, all.x = TRUE)
-
-  dfWarnings <- merge(catchesWarnings, lengthsWarnings, all.x = TRUE)
-
-  #Detect the errors
-  dfErrors <- dfErrors[is.na(dfErrors$EJEM_MEDIDOS),]
-  dfWarnings <- dfWarnings[is.na(dfWarnings$EJEM_MEDIDOS),]
-
-  if(nrow(dfErrors)!=0){
-    dfErrors <- addTypeOfError(dfErrors, "ERROR: Especie G1 con captura que no ha sido medida.")
   }
-
-  if (nrow(dfWarnings)!=0){
-    dfWarnings <- addTypeOfError(dfWarnings, "WARNING: especie G2 o G3 con captura que no ha sido medida.")
-  }
-
-  errors <- rbind.data.frame(dfErrors, dfWarnings)
+  
+  errors <- rbind.data.frame(groupOneError, groupTwoWarning)
   return(errors)
 
 }
