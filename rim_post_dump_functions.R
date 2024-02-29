@@ -1852,7 +1852,7 @@ checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
 
 shipWhithoutCODSGPM <- function(catches){
   
-  catches <- catches[catches$CODSGPM==0 | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
+  catches <- catches[catches$CODSGPM==0 | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
   
   if (nrow(catches)!=0){
     
