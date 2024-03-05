@@ -33,9 +33,9 @@ PRIVATE_FOLDER_NAME <- "private"
 PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_ICES_2023.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_ICES_2023.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_ICES_2023.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(1:12)
@@ -45,7 +45,7 @@ YEAR <- 2023
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual"
+suffix_multiple_months <- "annual_post_oab"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
@@ -72,8 +72,8 @@ library(sapmuebase)
 
 
 # FUNCTIONS --------------------------------------------------------------------
-# All the functions required in this script are located in
-# revision_volcado_functions.R file.
+
+source('rim_post_dump_auxiliary_functions.R')
 source('rim_post_dump_functions.R')
 
 # function to check the rim files:
@@ -170,8 +170,8 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-# errors <- rim_check(muestreos_up)
-errors <- rim_check_annual(muestreos_up)
+errors <- rim_check(muestreos_up)
+# errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_post_cruce_text(muestreos_up)
 
 errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)

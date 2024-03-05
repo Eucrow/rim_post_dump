@@ -170,10 +170,8 @@ rim_check_annual <- function (samples_imported) {
 
     # comment in annual:
     # err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
-
-    #Commented temporary:
-    # err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
-
+    # err$g1SpeciesNotMeasured <- g1SpeciesNotMeasured(catches, lengths_sampled)
+    # err$g2SpeciesNotMeasured <- g2SpeciesNotMeasured(catches, lengths_sampled)
 
     # ---- COD_ID ----
     # This check is useful in the annual review. When the data is dumped in
