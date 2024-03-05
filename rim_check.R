@@ -3,7 +3,7 @@ rim_check <- function (samples_imported) {
   tryCatch({
 
     #filter by sample type
-    sample_types <- c(1, 2, 6)
+    sample_types <- c(1, 2, 4, 6)
 
     samples_imported <- lapply(samples_imported, function(x){
       out <- x[x[["COD_TIPO_MUE"]] %in% sample_types, ]
@@ -168,12 +168,12 @@ rim_check <- function (samples_imported) {
     err$half_centimeter <- halfCentimeter(lengths_sampled)
 
     # comment in annual:
-    err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
+    err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
 
     # comment in annual:
-    err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
-
-    err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
+    err$size_range <- checkSizeRangeByFishingGround(lengths_sampled)
+    err$g1SpeciesNotMeasured <- g1SpeciesNotMeasured(catches, lengths_sampled)
+    err$g2SpeciesNotMeasured <- g2SpeciesNotMeasured(catches, lengths_sampled)
 
     # ---- COD_ID ----
     # This check is useful in the annual review. When the data is dumped in
