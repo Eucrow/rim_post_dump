@@ -1427,23 +1427,20 @@ prioritySpeciesNotMeasured <- function(catches, lengths, group){
   lengths <- lengths[lengths$COD_TIPO_MUE %in% c(2, 4),
                      c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT", "EJEM_MEDIDOS")]
   lengths <- lengths[lengths$COD_ESP_MUE %in% sps, ]
-  # Due to number of individuals by length can be 0 or NA, in sum function the
-  # param na.rm must be TRUE:
-  lengths <- aggregate(lengths$EJEM_MEDIDOS,
-                             by=list("COD_ID"=lengths$COD_ID,
-                                     "COD_ESP_MUE"=lengths$COD_ESP_MUE,
-                                     "ESP_MUE"=lengths$ESP_MUE,
-                                     "COD_ESP_CAT"=lengths$COD_ESP_CAT,
-                                     "ESP_CAT"=lengths$ESP_CAT),
-                             sum, na.rm = TRUE)
-  names(lengths)[which(names(lengths) == "x")] <- "EJEM_MEDIDOS"
+
+  lengths <- lengths[!is.na(lengths$EJEM_MEDIDOS), ]
+  lengths <- lengths[lengths$EJEM_MEDIDOS != 0, ]
+  lengths$EJEM_MEDIDOS <- "T"
+  lengths <- unique(lengths)
+  lengths <- lengths[, c("COD_ID", "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT", "EJEM_MEDIDOS")]
 
   catches <- catches[catches$COD_ESP_MUE %in% sps, ]
 
   errors <- merge(catches,
-                 lengths,
-                 by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"),
-                 all.x= TRUE)
+                   lengths,
+                   by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"),
+                   all.x= TRUE)
+
   errors <- errors[is.na(errors$EJEM_MEDIDOS) | errors$EJEM_MEDIDOS == 0, ]
 
   errors <- errors[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT" )]
