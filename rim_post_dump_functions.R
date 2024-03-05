@@ -1403,81 +1403,93 @@ halfCentimeter <- function(lengths){
 }
 
 
-#' Check code: 1077
-#' Function to check priority species (G1, G2 and G3) not measured.
-#' G1 species without lengths are considered as ERROR and G2 and G3 as WARNING.
+
+#' Priority species with catches but not measured.
+#' Use MT2A and MT2B samples.
 #' @param catches: data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
 #' @param lengths: lengths data frame returned by the importRIMLengths() or
 #' importRIMFiles() functions.
-#' @return Data frame with priority species from G1, G2 and G3 with catches but
-#' no lengths. The G1 are labeled as ERROR, and G2 and G3 as WARNING.
-checkPrioritySpeciesSampled <- function(catches, lengths){
+#' @param group: character vector with priority group ("G1" to "G6").
+#' @return Data frame with species of the priority group without samples measured.
+#' @note
+#' This function does not return the errors column. Used in functions
+#' g1SpeciesNotMeasured and g2SpeciesNotMeasured.
+prioritySpeciesNotMeasured <- function(catches, lengths, group){
 
-  clean_catches <- catches[catches$COD_TIPO_MUE == 2, ]
+  sps <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD %in% group,
+                                           "COD_ESP_MUE"])
 
-  speciesErrors <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD == "G1",
-                                                "COD_ESP_MUE"])
+  catches <- catches[catches$COD_TIPO_MUE %in% c(2, 4),
+                     c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
+  catches <- unique(catches)
 
-  speciesWarnings <- unique(especies_prioritarias[especies_prioritarias$PRIORIDAD %in% c("G2", "G3"),
-                                                  "COD_ESP_MUE"])
+  lengths <- lengths[lengths$COD_TIPO_MUE %in% c(2, 4),
+                     c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT", "EJEM_MEDIDOS")]
+  lengths <- lengths[lengths$COD_ESP_MUE %in% sps, ]
+  # Due to number of individuals by length can be 0 or NA, in sum function the
+  # param na.rm must be TRUE:
+  lengths <- aggregate(lengths$EJEM_MEDIDOS,
+                             by=list("COD_ID"=lengths$COD_ID,
+                                     "COD_ESP_MUE"=lengths$COD_ESP_MUE,
+                                     "ESP_MUE"=lengths$ESP_MUE,
+                                     "COD_ESP_CAT"=lengths$COD_ESP_CAT,
+                                     "ESP_CAT"=lengths$ESP_CAT),
+                             sum, na.rm = TRUE)
+  names(lengths)[which(names(lengths) == "x")] <- "EJEM_MEDIDOS"
 
+  catches <- catches[catches$COD_ESP_MUE %in% sps, ]
 
-  catchesOne <- catches[catches$COD_ESP_MUE %in% speciesErrors & catches$COD_TIPO_MUE == "2", 
-                        c("COD_ID", "COD_ESP_MUE")]
-  
-  lengthsOne <- lengths[lengths$COD_ESP_MUE %in% speciesErrors & lengths$COD_TIPO_MUE == "2", 
-                        c("COD_ID", "COD_ESP_MUE")]
-  
-  lengthsOne$Testigo <- "T"
-  
-  catchesLengthOne <- unique(merge(catchesOne, lengthsOne, all.x= TRUE))
-  
-  groupOneError <- catchesLengthOne %>% filter(is.na(Testigo))
-  
-  groupOneError <- merge(groupOneError, catches, all.x = TRUE)
-  
-  groupOneError <- groupOneError[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-  
-  
-  
-  catchesTwo <- catches[catches$COD_ESP_MUE %in% speciesWarnings & catches$COD_TIPO_MUE == "2", 
-                        c("COD_ID", "COD_ESP_MUE")]
-  
-  lengthsTwo <- lengths[lengths$COD_ESP_MUE %in% speciesWarnings & lengths$COD_TIPO_MUE == "2", 
-                        c("COD_ID", "COD_ESP_MUE")]
-  
-  lengthsTwo$Testigo <- "T"
-  
-  catchesLengthTwo <- unique(merge(catchesTwo, lengthsTwo, all.x= TRUE))
-  
-  groupTwoWarning <- catchesLengthTwo %>% filter(is.na(Testigo))
-  
-  groupTwoWarning <- merge(groupTwoWarning, catches, all.x = TRUE)
-  
-  groupTwoWarning <- groupTwoWarning[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")]
-  
-  
-  
-  if(nrow(groupOneError)!=0){
-    
-    groupOneError <- addTypeOfError(groupOneError, "ERROR: Puede que no se haya medido alguna de las especies de prioridad G1")
-    
-  } 
-  
-  if (nrow(groupTwoWarning)!=0){
-    
-    groupTwoWarning <- addTypeOfError(groupTwoWarning, "WARNING: Puede que no se haya medido alguna de las especies de prioridad G2 o G3")
-    
+  errors <- merge(catches,
+                 lengths,
+                 by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"),
+                 all.x= TRUE)
+  errors <- errors[is.na(errors$EJEM_MEDIDOS) | errors$EJEM_MEDIDOS == 0, ]
 
-  }
-  
-  errors <- rbind.data.frame(groupOneError, groupTwoWarning)
-  return(errors)
+  errors <- errors[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "COD_ESP_CAT", "ESP_CAT" )]
 
 }
 
-#' Check code: 1078 PENDIENTE DE IMPLEMENTAR --> FALTA CREAR MAESTRO
+#' Check code: 1077
+#' G1 priority species with catches but not measured.
+#' Use MT2A and MT2B samples.
+#' @param catches: data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @return Data frame with species of the priority group without samples measured.
+g1SpeciesNotMeasured <- function(catches, lengths){
+
+  errors <- prioritySpeciesNotMeasured(catches, lengths, "G1")
+
+  if(nrow(errors)!=0){
+    errors <- addTypeOfError(errors, "ERROR: priority G1 species not measured.")
+    return(errors)
+  }
+
+}
+
+#' Check code: 1078
+#' G2 priority species with catches but not measured.
+#' Use MT2A and MT2B samples.
+#' @param catches: data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @return Data frame with species of the priority group without samples measured.
+g2SpeciesNotMeasured <- function(catches, lengths){
+
+  errors <- prioritySpeciesNotMeasured(catches, lengths, "G2")
+
+  if(nrow(errors)!=0){
+    errors <- addTypeOfError(errors, "WARNING: priority G2 species not measured.")
+    return(errors)
+  }
+
+}
+
+
+#' Check code: 1079 PENDIENTE DE IMPLEMENTAR --> FALTA CREAR MAESTRO
 #' Function to check the presence of the ships from our ships' masterdata on the
 #' working data
 #' @param catches: data frame returned by the importRIMCatches() or
@@ -1486,7 +1498,6 @@ checkPrioritySpeciesSampled <- function(catches, lengths){
 #' ESTRATO_RIM from 2020 to 2022.
 #' @return Data frame with those ships no presents in our working data, labeled
 #' with a WARNING message
-
 checkShipNoMasterFishingGear <- function(catches, shipFishingGearMaster){
 
   #Step 1: filter the necessary columns from the catches df and pass from level to normal data
@@ -1517,7 +1528,7 @@ checkShipNoMasterFishingGear <- function(catches, shipFishingGearMaster){
 
 }
 
-#' Check code: 1079 NOT IMPLEMENTED --> FALTA CREAR EL MAESTRO
+#' Check code: 1080 NOT IMPLEMENTED --> FALTA CREAR EL MAESTRO
 #' Function to check the coherence of the ESTRATO_RIM between our ships' masterdata
 #' and the working data
 #' @param catches: data frame returned by the importRIMCatches() or
@@ -1527,7 +1538,6 @@ checkShipNoMasterFishingGear <- function(catches, shipFishingGearMaster){
 #' @return Data frame that mark those ships where there is not coincidence between the
 #' ESTRATO_RIM from our ships' masterdata and the working data, specifying those what does not
 #' match with a Warning message
-
 checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
 
   #Step 1: add the "Testigo" column to shipFishingGearMaster and convert "COD_BARCO" and "ESTRATO_RIM" as parameter
