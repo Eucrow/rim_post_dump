@@ -213,7 +213,7 @@ check_foreing_ships_MT2 <- function(df){
 
 
 #' Check code: 1026
-#' Ships registered in CFPO in removal state ("Baja definitiva" and "Baja
+#' Ships registered in CFPO in removal state ("Baja Definitiva" and "Baja
 #' Provisional")
 #' @details Require a valid CFPO file.
 #' @param df: dataframe returned by one of the importRIM functions.
