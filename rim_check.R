@@ -158,6 +158,8 @@ rim_check <- function (samples_imported) {
 
     err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
+    err$categories99NotInMt2b <- categories99NotInMt2b(catches)
+
     # comment in annual:
     err$capturas_percentil_99 <- checkCatchesP99(catches)
 

@@ -213,7 +213,7 @@ check_foreing_ships_MT2 <- function(df){
 
 
 #' Check code: 1026
-#' Ships registered in CFPO in removal state ("Baja definitiva" and "Baja
+#' Ships registered in CFPO in removal state ("Baja Definitiva" and "Baja
 #' Provisional")
 #' @details Require a valid CFPO file.
 #' @param df: dataframe returned by one of the importRIM functions.
@@ -221,8 +221,8 @@ check_foreing_ships_MT2 <- function(df){
 #' @return A dataframe with errors.
 shipsNotRegistered <- function(df, cfpo = CFPO){
 
-  df <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
-  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["CODSGPM"]])))
+  df <- unique(df[,c(BASE_FIELDS, "COD_SGPM")])
+  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["COD_SGPM"]])))
 
   errors <- merge(x=df, y=cfpo, by.x = "CFR", by.y = "CFR", all.x = TRUE)
 
@@ -245,9 +245,9 @@ shipsNotRegistered <- function(df, cfpo = CFPO){
 #' @return A dataframe with errors.
 shipsNotInCFPO <- function(df, cfpo = CFPO){
 
-  df <- unique(df[,c(BASE_FIELDS, "CODSGPM")])
+  df <- unique(df[,c(BASE_FIELDS, "COD_SGPM")])
 
-  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["CODSGPM"]])))
+  df[,"CFR"] <- sprintf("ESP%09d", as.numeric(as.character(df[["COD_SGPM"]])))
 
   errors <- merge(x=df, y=cfpo, by.x = "CFR", by.y = "CFR", all.x = TRUE)
 
@@ -1027,9 +1027,9 @@ check_variable_with_master <- function (df, variable){
 #' @return dataframe with errors
 checkMultipleShipCode <- function(catches){
 
-  # find the ship names with more than one COD_BARCO and CODSGPM
+  # find the ship names with more than one COD_BARCO and COD_SGPM
   dsn <- catches %>%
-    select(BARCO,COD_BARCO, CODSGPM) %>%
+    select(BARCO,COD_BARCO, COD_SGPM) %>%
     unique()%>%
     count(BARCO) %>%
     filter(n>1)
@@ -1604,14 +1604,14 @@ checkShipDifferentFishingGear <- function(catches, shipFishingGearMaster){
 }
 
 
-#' Check code: 1080
-#' Check ships with "CODSGPM" value empty, "0" or NA.
+#' Check code: 1081
+#' Check ships with "COD_SGPM" value empty, "0" or NA.
 #' @param catches: catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
 #' @return Data frame whit errors.
 shipWhithoutCODSGPM <- function(catches){
 
-  catches <- catches[catches$CODSGPM=="0" | catches$CODSGPM=="" | is.na(catches$CODSGPM), c(BASE_FIELDS, "CODSGPM")]
+  catches <- catches[catches$COD_SGPM=="0" | catches$COD_SGPM=="" | is.na(catches$COD_SGPM), c(BASE_FIELDS, "COD_SGPM")]
 
   if (nrow(catches)!=0){
     catches <- unique(catches)
@@ -1621,3 +1621,23 @@ shipWhithoutCODSGPM <- function(catches){
 
 }
 
+#' Check code: 1082
+#' Categories with code finished in '99' in samples type different of
+#' "MT2B(Muestreo a bordo)". The categories finished in '99' can be only assigned
+#' to "MT2B(Muestreo a bordo)" samples.
+#' @param catches: catches data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @return Data frame whit errors.
+categories99NotInMt2b <- function(catches){
+
+  catches <- catches[catches$COD_TIPO_MUE != "4" & grepl("99$", catches$COD_CATEGORIA), BASE_FIELDS ]
+
+  if (nrow(catches)!=0){
+    catches <- addTypeOfError(catches, "ERROR: el código COD_CATEGORIA acaba en 99
+                            pero el tipo de muestreo NO es MT2B(Muestreo a bordo). Las
+                            categorías que acaban en 99 están reservadas sólo para
+                            los tipo de muestreo MT2B(Muestreo a bordo)")
+    return(catches)
+  }
+
+}

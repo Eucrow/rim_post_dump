@@ -33,9 +33,9 @@ PRIVATE_FOLDER_NAME <- "private"
 PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_RIM_2023.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_RIM_2023.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_RIM_2023.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(1:12)
@@ -52,7 +52,7 @@ suffix_multiple_months <- "annual_post_oab"
 suffix <- ""
 
 # cfpo to use in the script
-cfpo_to_use <- "CFPO 2022 DEF Marco.xlsx"
+cfpo_to_use <- "CFPO2023 DEF.xlsx"
 
 
 # PACKAGES ---------------------------------------------------------------------
