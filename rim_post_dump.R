@@ -170,8 +170,8 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-# errors <- rim_check(muestreos_up)
-errors <- rim_check_annual(muestreos_up)
+errors <- rim_check(muestreos_up)
+# errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_post_cruce_text(muestreos_up)
 
 errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
