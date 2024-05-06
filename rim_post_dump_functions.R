@@ -1621,3 +1621,19 @@ shipWhithoutCODSGPM <- function(catches){
 
 }
 
+#' Check code: 1081
+#' Check codes finished in 99 for no "MT2B(Muestreo a bordo)" samples
+#' @param catches: catches data frame returned by the importRIMCatches() or
+#' importRIMFiles() functions.
+#' @return Data frame whit errors.
+noOabSampleWrongCategoryCod <- function(catches){
+  
+  catches <- catches[catches$COD_TIPO_MUE != "4" & grepl("99$", catches$COD_CATEGORIA), ]
+  
+  if (nrow(catches)!=0){
+    catches <- addTypeOfError(catches, "ERROR: un muestreo distinto de MT2B(Muestreo a bordo)
+                              tiene un COD_CATEGORIA acabado en 99")
+    return(catches)
+  }
+  
+}
