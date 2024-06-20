@@ -267,18 +267,6 @@ copyFilesToFolder <- function (path_errors_from, path_errors_to){
 
 }
 
-#' Create name of the errors file name. Use the global variables YEAR and
-#' MONTH_AS_CHARACTER, and suffix variable declared at the beginning of the
-#' script. Takes the form of errors_YEAR_MONTH_suffix
-createFilename <- function(){
-  filename <- paste0("errors", "_", YEAR,"_",MONTH_AS_CHARACTER)
-
-  if (suffix != ""){
-    filename <- paste(filename, suffix, sep="_")
-  }
-
-  return (filename)
-}
 
 #' Create character with month, months, or any other tag to name the months used
 #' in the names of files.
@@ -297,43 +285,32 @@ createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffi
 }
 
 
-#' Create path files from the MONTH, YEAR and suffix_multiple_months.
-#' @param month month or months used.
-#' @param year year.
-#' @param suffix_multiple_month Suffix used when multiple months are used.
-createPathFiles <- function (month = MONTH,
-                             year = YEAR,
-                             suffix_multiple_months = suffix_multiple_months,
-                             suffix = suffix){
-  #suffix_complete <-  ""
-  
-  #if(exists(suffix)){
-  #  suffix_complete <- paste0("_", suffix)
-  #}
-  
-  if(length(month) != 1){
-    path_text <- paste0("data/", year, "/", year, "_", suffix_multiple_months)
-  } else {
-    path_text <- paste0("data/", year, "/", year, "_", sprintf("%02d", month))
-  }
-  
-  return(file.path(getwd(), path_text))
-  
-}
 
-#' Create suffix with month, months, or any other tag to name the months used
-#' in the names of files.
+
+#' Create identifier of the month/months, with suffix. Used to create the filenames
+#' and folders.
 #' @param month month or months used.
-#' @param suffix_multiple_month Suffix used when multiple months are used.
-createSuffixToExport <- function(month,
+#' @param year year used.
+#' @param month_as_character month as character.
+#' @param suffix_multiple_months Suffix used when multiple months are used.
+#' @param suffix Suffix used at the end of the file name. Usefull to have multiple error
+#' detections of the same month or year.
+createIdentifier <- function(month,
                                  year,
                                  month_as_character,
-                                 suffix_multiple_months){
+                                 suffix_multiple_months,
+                                 suffix){
+
+  suffix_complete <-  ""
+
+  if(suffix != ""){
+    suffix_complete <- paste0("_", suffix)
+  }
 
   if (length(month) == 1 && month %in% seq(1:12)) {
-    return(paste0(year, "_", month_as_character))
+    return(paste0(year, "_", month_as_character, suffix_complete))
   } else if (length(month) > 1 & all(month %in% seq(1:12))) {
-    return(paste0(year, "_", suffix_multiple_months))
+    return(paste0(year, "_", suffix_multiple_months, suffix_complete))
   }
 
 }

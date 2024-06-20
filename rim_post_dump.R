@@ -31,7 +31,8 @@ ERRORS_SUBFOLDER_NAME <- "errors"
 PRIVATE_FOLDER_NAME <- "private"
 
 #Note: main computer path
-PATH_SHARE_FOLDER <- "C:/Users/alberto.candelario/Desktop/nextCloud/SAP_RIM/RIM_data_review"
+# PATH_SHARE_FOLDER <- "C:/Users/alberto.candelario/Desktop/nextCloud/SAP_RIM/RIM_data_review"
+PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/nextCloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
 FILENAME_DES_TOT <- "IEOUPMUEDESTOTACANDELARIO.TXT"
@@ -50,7 +51,7 @@ suffix_multiple_months <- "annual_post_oab"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "b"
+suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2023 DEF.xlsx"
@@ -94,9 +95,14 @@ source('oab_check.R')
 # list with all errors found in data frames:
 ERRORS <- list()
 
+# Month as character
+MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
+
+# Identifier of the month/months, with suffixes
+IDENTIFIER <- createIdentifier(MONTH, YEAR, MONTH_AS_CHARACTER, suffix_multiple_months, suffix)
+
 # Path where the files of the month and year will be stored.
-PATH_FILES <- createPathFiles(MONTH, YEAR, suffix_multiple_months)
-# PATH_FILES <- "C:/Users/ieoma/Desktop/sap/rim_post_dump/data/2023/2023_08_b"
+PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
 
 # Path where private files are stored.
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
@@ -111,15 +117,9 @@ PATH_ERRORS <- file.path(PATH_FILES, "errors")
 # path to store files as backup
 PATH_BACKUP <- file.path(PATH_FILES, "backup")
 
-# Month as character
-MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
-
-SUFFIX_TO_EXPORT <- createSuffixToExport(MONTH, YEAR, MONTH_AS_CHARACTER, suffix_multiple_months)
 
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER,
-                               YEAR,
-                               paste0(YEAR, "_", MONTH_AS_CHARACTER, "_b"))
+PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
 # files to backup
 FILES_TO_BACKUP <- c("rim_post_dump.R",
@@ -129,7 +129,7 @@ FILES_TO_BACKUP <- c("rim_post_dump.R",
                      "especies_sujetas_a_posible_confusion_taxonomica.csv",
                      "especies_no_permitidas.csv")
 
-ERRORS_FILENAME <- createFilename()
+ERRORS_FILENAME <- paste0("errors", "_", YEAR,"_", IDENTIFIER)
 
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
@@ -187,7 +187,6 @@ errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 # Select the way to export errors:
 
     # one month
-    # exportListToCsv(errors, suffix = paste0(YEAR,"_",MONTH_AS_CHARACTER), separation = "_")
     exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
     # a complete year
     # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
@@ -244,5 +243,5 @@ accesory_email_info <- data.frame(
 sendErrorsByEmail(accesory_email_info = accesory_email_info,
                    contacts = CONTACTS,
                    credentials_file = "credentials",
-                  identification_sampling = SUFFIX_TO_EXPORT)
+                  identification_sampling = IDENTIFIER)
 
