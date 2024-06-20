@@ -303,16 +303,22 @@ createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffi
 #' @param suffix_multiple_month Suffix used when multiple months are used.
 createPathFiles <- function (month = MONTH,
                              year = YEAR,
-                             suffix_multiple_months = suffix_multiple_months){
-
+                             suffix_multiple_months = suffix_multiple_months,
+                             suffix = suffix){
+  #suffix_complete <-  ""
+  
+  #if(exists(suffix)){
+  #  suffix_complete <- paste0("_", suffix)
+  #}
+  
   if(length(month) != 1){
     path_text <- paste0("data/", year, "/", year, "_", suffix_multiple_months)
   } else {
     path_text <- paste0("data/", year, "/", year, "_", sprintf("%02d", month))
   }
-
+  
   return(file.path(getwd(), path_text))
-
+  
 }
 
 #' Create suffix with month, months, or any other tag to name the months used

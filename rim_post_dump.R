@@ -30,18 +30,19 @@ ERRORS_SUBFOLDER_NAME <- "errors"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
-PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
+#Note: main computer path
+PATH_SHARE_FOLDER <- "C:/Users/alberto.candelario/Desktop/nextCloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_RIM_2023.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_RIM_2023.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_RIM_2023.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTACANDELARIO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
+FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(1:12)
+MONTH <- c(3)
 
 # YEAR
-YEAR <- 2023
+YEAR <- 2024
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
@@ -49,7 +50,7 @@ suffix_multiple_months <- "annual_post_oab"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "b"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2023 DEF.xlsx"
@@ -118,7 +119,7 @@ SUFFIX_TO_EXPORT <- createSuffixToExport(MONTH, YEAR, MONTH_AS_CHARACTER, suffix
 # path to shared folder
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER,
                                YEAR,
-                               paste0(YEAR, "_", MONTH_AS_CHARACTER))
+                               paste0(YEAR, "_", MONTH_AS_CHARACTER, "_b"))
 
 # files to backup
 FILES_TO_BACKUP <- c("rim_post_dump.R",
@@ -229,10 +230,10 @@ accesory_email_info <- data.frame(
                                        "GC",
                                        "GN",
                                        "GS"),
-                          LINK = c("https://saco.csic.es/index.php/f/184616378",
-                                   "https://saco.csic.es/index.php/f/184616379",
-                                   "https://saco.csic.es/index.php/f/184616382",
-                                   "https://saco.csic.es/index.php/f/184616380"),
+                          LINK = c("https://saco.csic.es/index.php/f/206803929",
+                                   "https://saco.csic.es/index.php/f/206803937",
+                                   "https://saco.csic.es/index.php/f/206803935",
+                                   "https://saco.csic.es/index.php/f/206803939"),
                           NOTES = c("",
                                     "",
                                     "",
