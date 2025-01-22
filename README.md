@@ -15,9 +15,11 @@ correct dumping into IEO’s database (SIRENO) of the sampling information, a wa
 that ensures the information saved complies with the criteria, format and
 protocol agreed in the team.
 
-This script is framed in the deliberable _Data integrity, quality checkings_ of
-the EM-SAP _Quality Assurance Framework_ and is used to check the data saved
-after the dump process in SIRENO.
+This script is framed in the deliberable _Data integrity, quality checkings_
+([link to deliverable](https://saco.csic.es/s/DrRnRao2442WtcP)) of the EM-SAP
+_Quality Assurance Framework_
+([link to deliverable](https://saco.csic.es/s/M8beXgEJHM4DfPD)) and is used to
+check the data saved before the dump process in SIRENO.
 
 Return a list of warnings and errors which are reviewed by EM-SAP staff and
 fixed it when it is necessary.
