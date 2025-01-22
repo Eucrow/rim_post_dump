@@ -31,16 +31,15 @@ ERRORS_SUBFOLDER_NAME <- "errors"
 PRIVATE_FOLDER_NAME <- "private"
 
 #Note: main computer path
-# PATH_SHARE_FOLDER <- "C:/Users/alberto.candelario/Desktop/nextCloud/SAP_RIM/RIM_data_review"
-PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/nextCloud/SAP_RIM/RIM_data_review"
+PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTACANDELARIO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALACANDELARIO.TXT"
-FILENAME_TAL <- "IEOUPMUETALACANDELARIO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
+FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(3)
+MONTH <- c(5)
 
 # YEAR
 YEAR <- 2024
@@ -229,10 +228,10 @@ accesory_email_info <- data.frame(
                                        "GC",
                                        "GN",
                                        "GS"),
-                          LINK = c("https://saco.csic.es/index.php/f/206803929",
-                                   "https://saco.csic.es/index.php/f/206803937",
-                                   "https://saco.csic.es/index.php/f/206803935",
-                                   "https://saco.csic.es/index.php/f/206803939"),
+                          LINK = c("",
+                                   "",
+                                   "",
+                                   ""),
                           NOTES = c("",
                                     "",
                                     "",
