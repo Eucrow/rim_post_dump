@@ -1630,13 +1630,13 @@ shipWhithoutCODSGPM <- function(catches){
 #' @return Data frame whit errors.
 categories99NotInMt2b <- function(catches){
 
-  catches <- catches[catches$COD_TIPO_MUE != "4" & grepl("99$", catches$COD_CATEGORIA), BASE_FIELDS ]
+  catches <- catches[!(catches$COD_TIPO_MUE %in% c("4","6")) & grepl("99$", catches$COD_CATEGORIA), 
+                     BASE_FIELDS]
 
   if (nrow(catches)!=0){
-    catches <- addTypeOfError(catches, "ERROR: el código COD_CATEGORIA acaba en 99
-                            pero el tipo de muestreo NO es MT2B(Muestreo a bordo). Las
-                            categorías que acaban en 99 están reservadas sólo para
-                            los tipo de muestreo MT2B(Muestreo a bordo)")
+    
+    catches <- addTypeOfError(catches, "ERROR: el código COD_CATEGORIA acaba en 99 pero el tipo de muestreo NO es MT2B(Muestreo a bordo). Las categorías que acaban en 99 están reservadas sólo para los tipo de muestreo MT2B(Muestreo a bordo)")
+    
     return(catches)
   }
 
