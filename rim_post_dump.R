@@ -128,7 +128,7 @@ FILES_TO_BACKUP <- c("rim_post_dump.R",
                      "especies_sujetas_a_posible_confusion_taxonomica.csv",
                      "especies_no_permitidas.csv")
 
-ERRORS_FILENAME <- paste0("errors", "_", YEAR,"_", IDENTIFIER)
+ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
@@ -183,15 +183,7 @@ errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 
 # EXPORT ERRORS ----------------------------------------------------------------
-
-# Select the way to export errors:
-
-    # one month
     exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
-    # a complete year
-    # exportErrorsList(errors, suffix = paste0("errors", "_", YEAR), separation = "_")
-    # exportCsvSAPMUEBASE(errors_complete, "errors_complete_anual_2021.csv")
-
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe

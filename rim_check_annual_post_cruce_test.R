@@ -130,6 +130,7 @@ rim_check_annual_post_cruce_text <- function (samples_imported) {
     #
     # err$taxonomic_specie_confusion <- taxonomicSpecieConfusion(catches, catches_in_lengths)
     #
+    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
     #
     #
@@ -155,6 +156,7 @@ rim_check_annual_post_cruce_text <- function (samples_imported) {
     #
     # err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
     #
+    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
     #
     # err$categories99NotInMt2b <- categories99NotInMt2b(catches)
