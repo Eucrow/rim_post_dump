@@ -139,7 +139,8 @@ oab_check <- function (samples_imported) {
 
     err$taxonomic_specie_confusion <- taxonomicSpecieConfusion(catches, catches_in_lengths)
 
-    err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
+    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
+    # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
 
 
     # ---- IN WEIGHTS ----
@@ -164,7 +165,8 @@ oab_check <- function (samples_imported) {
 
     err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
 
-    err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
+    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
+    # err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
     # err$capturas_percentil_99 <- checkCatchesP99(catches)
