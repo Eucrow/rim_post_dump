@@ -34,26 +34,26 @@ PRIVATE_FOLDER_NAME <- "private"
 PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTMARCO.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALMARCO.TXT"
-FILENAME_TAL <- "IEOUPMUETALMARCO.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_rim_2024_2402.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_rim_2024_2402.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_rim_2024_2402.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(1:12)
 
 # YEAR
 YEAR <- 2024
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual_post_oab"
+suffix_multiple_months <- "annual_oab_imported"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "d"
 
 # cfpo to use in the script
-cfpo_to_use <- "CFPO2023 DEF.xlsx"
+cfpo_to_use <- "CFPO2024 DEF.xlsx"
 
 
 # PACKAGES ---------------------------------------------------------------------
@@ -151,7 +151,7 @@ ESP_TAXONOMIC_CONFUSION <- read.csv(
   colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
 
 # Get the CFPO
-CFPO <- read.xlsx(paste0(getwd(), "/data-raw/", cfpo_to_use), detectDates=TRUE)
+CFPO <- read.xlsx(file.path(PATH_PRIVATE_FILES, cfpo_to_use), detectDates=TRUE)
 CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
 colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
 
@@ -170,15 +170,16 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-errors <- rim_check(muestreos_up)
+# errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_post_cruce_text(muestreos_up)
 
-errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
-
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
-# errors <- oab_check(muestreos_up)
+errors <- oab_check(muestreos_up)
+
+
+errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 
 # EXPORT ERRORS ----------------------------------------------------------------
