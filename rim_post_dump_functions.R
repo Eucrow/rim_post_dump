@@ -1058,6 +1058,8 @@ coherenceDCFMetierRimStratumOrigin <- function(df){
 
   df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "METIER_DCF")]
   df_clean <- unique(df_clean)
+  df_clean <- df_clean[!(is.na(df_clean$COD_ORIGEN) | df_clean$COD_ORIGEN == ""), ]
+  df_clean <- df_clean[!(is.na(df_clean$METIER_DCF) | df_clean$METIER_DCF == ""), ]
 
   err <- merge(df_clean, metier_caladero_dcf_clean,
                by = c("ESTRATO_RIM", "METIER_DCF", "COD_ORIGEN"),
@@ -1084,6 +1086,9 @@ coherenceDCFFishingGroundRimStratumOrigin <- function(df){
 
   df_clean <- df[, c(BASE_FIELDS, "COD_ORIGEN", "CALADERO_DCF")]
   df_clean <- unique(df_clean)
+  # df_clean$CALADERO_DCF <- as.character(df_clean$CALADERO_DCF)
+  df_clean <- df_clean[!(is.na(df_clean$COD_ORIGEN) | df_clean$COD_ORIGEN == ""), ]
+  df_clean <- df_clean[!(is.na(df_clean$CALADERO_DCF) | df_clean$CALADERO_DCF == ""), ]
 
   err <- merge(df_clean, metier_caladero_dcf_clean,
                by = c("ESTRATO_RIM", "CALADERO_DCF", "COD_ORIGEN"),
@@ -1263,7 +1268,7 @@ variable_exists_in_df <- function (variable, df){
 #' @param df: dataframe to check.
 #' @param df_name: name of the dataframe where the error is found.
 #' @return A list with a dataframe of every variable with empty values. Every
-#' dataframe contains erroneus rows.
+#' dataframe contains erroneous rows.
 #' @export
 checkEmptyValuesInVariables <- function (df, variables, df_name){
 
@@ -1332,9 +1337,9 @@ checkEmptyValuesInVariables <- function (df, variables, df_name){
 
 #' Check code: 1071
 #' Empty fields in variables
-#' Return empty variables of a RIM dataframes imported by importOAB functions. Only
+#' Return empty variables of a RIM dataframes imported by importRIM functions. Only
 #' variables saved in formato_variables dataset as mandatory are checked.
-#' @details Require one of the dataframes returned by importOABFiles functions:
+#' @details Require one of the dataframes returned by importRIMFiles functions:
 #' importRIMCatches() and importRIMLengths().
 #' @param df: dataframe returned by one of the importRIM functions.
 #' @param type_file: type of the imported file according to this values:
