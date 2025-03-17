@@ -63,26 +63,32 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
   # Remove dataframes empties in list
   errors <- Filter(nrow, errors)
 
+  # Select the minimum columns to export.
+  cols_to_export <- c("AREA_INF", "COD_ID", "COD_PUERTO", "PUERTO", "FECHA_MUE", "COD_BARCO", "BARCO", "ESTRATO_RIM",
+                      "TIPO_MUE", "COD_ESP_MUE", "ESP_MUE", "COD_CATEGORIA", "CATEGORIA", "P_DESEM",
+                      "P_VIVO", "COD_ESP_CAT", "ESP_CAT", "SEXO")
+
+  # Filter only existing columns. This is mandatory because the arrange function
+  # used below doesn't work with non existing columns.
+  existing_cols <- intersect(cols_to_export, colnames(errors))
+
   # Order the errors and remove columns with only NA values
   errors <- lapply(errors, function(x){
     x
     # Order columns
     x <- x %>%
-      select(AREA_INF, COD_ID, COD_PUERTO, PUERTO, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM,
-             TIPO_MUE, COD_ESP_MUE, ESP_MUE, COD_CATEGORIA, CATEGORIA, P_DESEM,
-             P_VIVO, COD_ESP_CAT, ESP_CAT, SEXO, everything()) %>%
+      select(all_of(existing_cols), everything()) %>%
       select(-one_of("TIPO_ERROR"), one_of("TIPO_ERROR")) %>% #remove TIPO_ERROR, and add it to the end
-      arrange( "COD_PUERTO", "COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_CATEGORIA", "COD_ESP_CAT")
+      arrange(across(all_of(existing_cols)))
 
     #Remove columns with only NA values
     #Filter extracts the elements of a vector for which a predicate (logical) function gives true
     x <- Filter(function(x){!all(is.na(x))}, x)
 
-    # Add column Comprobado
+    # Add column checked
     if(length(x)>0) {
       x[["comprobado"]]  <- ""
     }
-
 
     return(x)
   })
