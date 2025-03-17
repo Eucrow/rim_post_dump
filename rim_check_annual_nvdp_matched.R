@@ -1,4 +1,4 @@
-rim_check_annual_post_cruce_text <- function (samples_imported) {
+rim_check_annual_nvdp_matched <- function (samples_imported) {
 
   tryCatch({
 
@@ -101,10 +101,13 @@ rim_check_annual_post_cruce_text <- function (samples_imported) {
     #
     # err$shipWhithoutCODSGPM <- shipWhithoutCODSGPM(catches)
 
-    # This errors must be used only in anual, when the Fishing Ground and DCF
+    # This errors must be used only in annual, when the Fishing Ground and DCF
     # Metier is filled:
     err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
     err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
+    err$emptyFishingGround <- checkEmptyValuesInVariables(catches, "CALADERO_DCF", "catches")
+    err$emptyMetier <- checkEmptyValuesInVariables(catches, "METIER_DCF", "catches")
+    err$errors_cod_id <- checkCodId(muestreos_up$catches)
 
     # ---- IN SPECIES ----
 

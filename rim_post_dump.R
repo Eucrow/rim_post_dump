@@ -34,9 +34,9 @@ PRIVATE_FOLDER_NAME <- "private"
 PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_rim_2024_2402.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_rim_2024_2402.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_rim_2024_2402.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_RIM_2024_1703.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_RIM_2024_1703.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_RIM_2024_1703.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(1:12)
@@ -46,11 +46,11 @@ YEAR <- 2024
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual_oab_imported"
+suffix_multiple_months <- "annual_nvdp_matched"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "d"
+suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -84,7 +84,7 @@ source('rim_check.R')
 source('rim_check_annual.R')
 
 # function to check the annual rim files:
-# source('rim_check_annual_post_cruce_test.R')
+source('rim_check_annual_nvdp_matched.R')
 
 # function to check the oab files:
 source('oab_check.R')
@@ -172,18 +172,22 @@ muestreos_up <- importRIMFiles(
 # SEARCHING ERRORS -------------------------------------------------------------
 # errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
-# errors <- rim_check_annual_post_cruce_text(muestreos_up)
+errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
-errors <- oab_check(muestreos_up)
+# errors <- oab_check(muestreos_up)
 
-
-errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
+# All the errors in a single data frame:
+# errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
 
 # EXPORT ERRORS ----------------------------------------------------------------
-    exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
+# by influence area
+exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
+# complete
+# write.xlsx(errors_complete, file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx")))
+
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe
@@ -233,7 +237,7 @@ accesory_email_info <- data.frame(
 
 
 sendErrorsByEmail(accesory_email_info = accesory_email_info,
-                   contacts = CONTACTS,
-                   credentials_file = "credentials",
+                  contacts = CONTACTS,
+                  credentials_file = "credentials",
                   identification_sampling = IDENTIFIER)
 
