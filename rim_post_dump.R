@@ -34,9 +34,9 @@ PRIVATE_FOLDER_NAME <- "private"
 PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_RIM_2024_1703.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_RIM_2024_1703.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_RIM_2024_1703.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOT_2024_03_18.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTAL_2024_03_18.TXT"
+FILENAME_TAL <- "IEOUPMUETAL_2024_03_18.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(1:12)
@@ -50,7 +50,7 @@ suffix_multiple_months <- "annual_nvdp_matched"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "b"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -170,9 +170,9 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-# errors <- rim_check(muestreos_up)
+errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
-errors <- rim_check_annual_nvdp_matched(muestreos_up)
+# errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
@@ -186,7 +186,7 @@ errors <- rim_check_annual_nvdp_matched(muestreos_up)
 # by influence area
 exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 # complete
-# write.xlsx(errors_complete, file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx")))
+write.xlsx(errors_complete, file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx")))
 
 
 # CHECK CODE_ID ----------------------------------------------------------------
