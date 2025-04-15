@@ -1627,9 +1627,9 @@ shipWhithoutCODSGPM <- function(catches){
 }
 
 #' Check code: 1082
-#' Categories with code finished in '99' in samples type different of
-#' "MT2B(Muestreo a bordo)". The categories finished in '99' can be only assigned
-#' to "MT2B(Muestreo a bordo)" samples.
+#' Detect categories with code ended in '99' that its sample's type are 
+#' neither "MT2B(Muestreo a bordo)" or "MT3 (Muestreo dirigido)", where
+#' this termination is exclusive for both. 
 #' @param catches: catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions.
 #' @return Data frame whit errors.
