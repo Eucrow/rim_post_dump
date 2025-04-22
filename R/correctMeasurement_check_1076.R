@@ -5,7 +5,7 @@
 #' encrasicolus (10156), and at the centimeter in the case of the rest of species.
 #' @param lengths: lengths data frame returned by the importRIMLengths() or
 #' importRIMFiles() functions.
-#' @param midSpecies: default parameter that is the vector with the specie code 
+#' @param midSpecies: default parameter that is a vector with the specie code 
 #' for species which are measured at the middle centimenter: 
 #' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
 #' @return A data frame where the species were measured wrong.
@@ -50,7 +50,7 @@ correctMeasurement <- function(lenghts, midSpecies = c("10152", "10156")){
                                  lengths$TALLAS_MED == 0 & 
                                  lengths$REGISTROS > 1, ]
   
-  #' Check if the rest of the species where measured in the wrong way
+  #' Check if the rest of the species where measured wrong
   #' (middle centimeter)
   
   error_rest <- lengths[!(lengths$COD_ESP_MUE %in% midSpecies) & 
