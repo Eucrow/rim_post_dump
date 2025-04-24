@@ -106,8 +106,8 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 exportErrorsList <- function (list, filename, separation = "") {
 
   # Create errors subdirectory in case it doesn't exists:
-  if (!file.exists(file.path(PATH_FILES, ERRORS_SUBFOLDER_NAME))){
-    dir.create(file.path(PATH_FILES, ERRORS_SUBFOLDER_NAME))
+  if (!file.exists(file.path(PATH_ERRORS))){
+    dir.create(file.path(PATH_ERRORS))
   }
 
   if (!requireNamespace("openxlsx", quietly = TRUE)) {
