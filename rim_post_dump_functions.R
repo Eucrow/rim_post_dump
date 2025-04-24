@@ -1370,18 +1370,14 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
 
 }
 
-#' Check code:1076
-#' Function to check if species where measured in the correct way, at middle centimeter
-#' (1/2 cm) in the case of Sardina Pilchardus (10152) and Engraulis
-#' encrasicolus (10156), and at the centimeter in the case of the rest of species.
+#' Function to process length's RIM file for the functions checkMiddleMeasures() and
+#' checkMeasures()
 #' @param lengths: lengths data frame returned by the importRIMLengths() or
 #' importRIMFiles() functions.
-#' @param midSpecies: default parameter that is the vector with the specie code 
-#' for species which are measured at the middle centimenter: 
-#' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
-#' @return A data frame where the species were measured wrong.
+#' @return a processed dataframe to work with it in the mentioned functions 
+#' at the description.
 
-correctMeasurement <- function(lenghts, midSpecies = c("10152", "10156")){
+processLengthFileForCheckMeasures <- function(lengths){
   
   # Work columns 
   
@@ -1414,34 +1410,70 @@ correctMeasurement <- function(lenghts, midSpecies = c("10152", "10156")){
   
   lengths[is.na(lengths)] <- 0
   
-  #' Check if Sardina Pilchardus or Engraulis encrasicolus where measured
+  return(lengths)
+  
+}
+
+#' Check code:1075
+#' Function to check if species where measured in the correct way, at centimeter.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @param midSpecies: default parameter that is the vector with the specie code 
+#' for species which are measured at the middle centimenter: 
+#' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
+#' @return A data frame where the species were measured wrong.
+
+checkMeasures <- function(lengths, midSpecies = c("10152", "10156")){
+  
+  lengths <- processLengthFileForCheckMeasures(lengths)
+  
+  #' Check if not both Sardina Pilchardus or Engraulis encrasicolus 
+  #' species where measured in the wrong way (middle centimeter)
+  
+  error <- lengths[!(lengths$COD_ESP_MUE %in% midSpecies) & 
+                     lengths$TALLAS_MED != 0, ]
+  
+  # Add Error message to the respective dataframe
+  
+  if (nrow(error) > 0) {
+    
+    error <- addTypeOfError(error, "ERROR: Especie medida erróneamente al 1/2 cm")
+  } 
+  
+  return(error)
+  
+}
+
+
+#' Check code:1076
+#' Function to check if species where measured in the correct way, at middle centimeter
+#' (1/2 cm) in the case of Sardina Pilchardus (10152) and Engraulis
+#' encrasicolus (10156).
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @param midSpecies: default parameter that is the vector with the specie code 
+#' for species which are measured at the middle centimenter: 
+#' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
+#' @return A data frame where the species were measured wrong.
+
+checkMiddleMeasures <- function(lengths, midSpecies = c("10152", "10156")){
+  
+  lengths <- processLengthFileForCheckMeasures(lengths)
+  
+  #' Check if both Sardina Pilchardus or Engraulis encrasicolus where measured
   #' wrong (not middle centimeter)
   
-  error_mid_species <- lengths[lengths$COD_ESP_MUE %in% midSpecies & 
-                                 lengths$TALLAS_MED == 0 & 
-                                 lengths$REGISTROS > 1, ]
-  
-  #' Check if the rest of the species where measured in the wrong way
-  #' (middle centimeter)
-  
-  error_rest <- lengths[!(lengths$COD_ESP_MUE %in% midSpecies) & 
-                          lengths$TALLAS_MED != 0, ]
+  error <- lengths[lengths$COD_ESP_MUE %in% midSpecies & 
+                     lengths$TALLAS_MED == 0 & 
+                     lengths$REGISTROS > 1, ]
   
   # Add Warning/Error message to the respective dataframe
   
-  if(nrow(error_mid_species) > 0){
+  if(nrow(error) > 0){
     
-    error_mid_species <- addTypeOfError(error_mid_species, 
-                                        "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
-  } else if (nrow(error_rest) > 0) {
-    
-    error_rest <- addTypeOfError(error_rest, 
-                                 "ERROR: Especie medida erróneamente al 1/2 cm")
+    error <- addTypeOfError(error, 
+                            "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
   } 
-  
-  # Merge both dataframe (in the case they exist) 
-  
-  error <- rbind(error_mid_species, error_rest)
   
   return(error)
   
