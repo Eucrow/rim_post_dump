@@ -10,9 +10,11 @@
 #' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
 #' @return A data frame where the species were measured wrong.
 
-checkMiddleMeasures <- function(lengths, midSpecies = c("10152", "10156")){
+checkMiddleMeasures <- function(lengths){
   
   lengths <- processLengthFileForCheckMeasures(lengths)
+  
+  midSpecies <-  c("10152", "10156")
   
   #' Check if both Sardina Pilchardus or Engraulis encrasicolus where measured
   #' wrong (not middle centimeter)
