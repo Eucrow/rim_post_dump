@@ -76,6 +76,7 @@ library(sapmuebase)
 
 source('rim_post_dump_auxiliary_functions.R')
 source('rim_post_dump_functions.R')
+source('R/rim_post_dump_functions_final.R')
 
 # function to check the rim files:
 source('rim_check.R')
@@ -98,7 +99,13 @@ ERRORS <- list()
 MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
 
 # Identifier of the month/months, with suffixes
-IDENTIFIER <- createIdentifier(MONTH, YEAR, MONTH_AS_CHARACTER, suffix_multiple_months, suffix)
+IDENTIFIER <- createIdentifier(
+  MONTH,
+  YEAR,
+  MONTH_AS_CHARACTER,
+  suffix_multiple_months,
+  suffix
+)
 
 # Path where the files of the month and year will be stored.
 PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
@@ -107,9 +114,18 @@ PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 
 # list with the common fields used in all tables
-BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
-                 "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE",
-                 "TIPO_MUE")
+BASE_FIELDS <- c(
+  "COD_ID",
+  "COD_PUERTO",
+  "PUERTO",
+  "LOCODE",
+  "FECHA_MUE",
+  "COD_BARCO",
+  "BARCO",
+  "ESTRATO_RIM",
+  "COD_TIPO_MUE",
+  "TIPO_MUE"
+)
 
 # path to store errors files
 PATH_ERRORS <- file.path(PATH_FILES, "errors")
@@ -121,12 +137,14 @@ PATH_BACKUP <- file.path(PATH_FILES, "backup")
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
 # files to backup
-FILES_TO_BACKUP <- c("rim_post_dump.R",
-                     "rim_post_dump_functions.R",
-                     "rim_check.R",
-                     "oab_check.R",
-                     "especies_sujetas_a_posible_confusion_taxonomica.csv",
-                     "especies_no_permitidas.csv")
+FILES_TO_BACKUP <- c(
+  "rim_post_dump.R",
+  "rim_post_dump_functions.R",
+  "rim_check.R",
+  "oab_check.R",
+  "especies_sujetas_a_posible_confusion_taxonomica.csv",
+  "especies_no_permitidas.csv"
+)
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 
@@ -148,10 +166,23 @@ NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
 ESP_TAXONOMIC_CONFUSION <- read.csv(
   "especies_sujetas_a_posible_confusion_taxonomica.csv",
   sep = ";",
-  colClasses = c("factor","factor","factor","factor","factor","factor","character","character"))
+  colClasses = c(
+    "factor",
+    "factor",
+    "factor",
+    "factor",
+    "factor",
+    "factor",
+    "character",
+    "character"
+  )
+)
 
 # Get the CFPO
-CFPO <- read.xlsx(file.path(PATH_PRIVATE_FILES, cfpo_to_use), detectDates=TRUE)
+CFPO <- read.xlsx(
+  file.path(PATH_PRIVATE_FILES, cfpo_to_use),
+  detectDates = TRUE
+)
 CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
 colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
 
@@ -165,11 +196,12 @@ muestreos_up <- importRIMFiles(
   lengths = FILENAME_TAL,
   path = PATH_FILES
   # ,  by_month = MONTH
-  )
+)
 
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
+
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
@@ -181,18 +213,19 @@ errors <- rim_check(muestreos_up)
 # All the errors in a single data frame:
 # errors_complete <- Reduce( function(x, y) { merge(x, y, all=TRUE)}, errors)
 
-
 # EXPORT ERRORS ----------------------------------------------------------------
 # by influence area
 exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 # complete
-write.xlsx(errors_complete, file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx")))
+write.xlsx(
+  errors_complete,
+  file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx"))
+)
 
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # errors_cod_id <- checkCodId(muestreos_up$catches)
-
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
 copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
@@ -221,23 +254,15 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
-                          AREA_INF = c("AC",
-                                       "GC",
-                                       "GN",
-                                       "GS"),
-                          LINK = c("",
-                                   "",
-                                   "",
-                                   ""),
-                          NOTES = c("",
-                                    "",
-                                    "",
-                                    "")
-                            )
+  AREA_INF = c("AC", "GC", "GN", "GS"),
+  LINK = c("", "", "", ""),
+  NOTES = c("", "", "", "")
+)
 
 
-sendErrorsByEmail(accesory_email_info = accesory_email_info,
-                  contacts = CONTACTS,
-                  credentials_file = "credentials",
-                  identification_sampling = IDENTIFIER)
-
+sendErrorsByEmail(
+  accesory_email_info = accesory_email_info,
+  contacts = CONTACTS,
+  credentials_file = "credentials",
+  identification_sampling = IDENTIFIER
+)
