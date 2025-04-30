@@ -1,11 +1,9 @@
-rim_check_annual <- function (samples_imported) {
-
+rim_check_annual <- function(samples_imported) {
   tryCatch({
-
     #filter by sample type
     sample_types <- c(1, 2, 6)
 
-    samples_imported <- lapply(samples_imported, function(x){
+    samples_imported <- lapply(samples_imported, function(x) {
       out <- x[x[["COD_TIPO_MUE"]] %in% sample_types, ]
       return(out)
     })
@@ -45,8 +43,14 @@ rim_check_annual <- function (samples_imported) {
     # err$metier_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "METIER_DCF")
     # err$caladero_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "CALADERO_DCF")
 
-    err$empty_fields_in_variables_catches <- emptyFieldsInVariables(catches, "RIM_CATCHES")
-    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(lengths_sampled, "RIM_LENGTHS")
+    err$empty_fields_in_variables_catches <- emptyFieldsInVariables(
+      catches,
+      "RIM_CATCHES"
+    )
+    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(
+      lengths_sampled,
+      "RIM_LENGTHS"
+    )
 
     # ---- IN HEADER ----
 
@@ -54,7 +58,10 @@ rim_check_annual <- function (samples_imported) {
 
     err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches, "RIM")
 
-    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches, "RIM")
+    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(
+      catches,
+      "RIM"
+    )
 
     # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
@@ -68,11 +75,9 @@ rim_check_annual <- function (samples_imported) {
 
     err$multiple_ship_code <- checkMultipleShipCode(catches)
 
-
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
-
-    err$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
+    err$errors_ships_not_in_cfpo <- shipsNotInCFPO(catches)
 
     # no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
     #   filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
@@ -97,7 +102,10 @@ rim_check_annual <- function (samples_imported) {
 
     err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts(catches)
 
-    err$checkSampleInCharge <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
+    err$checkSampleInCharge <- checkVariableFilled(
+      catches,
+      "RESPONSABLE_MUESTREO"
+    )
 
     err$shipWhithoutCODSGPM <- shipWhithoutCODSGPM(catches)
 
@@ -114,13 +122,19 @@ rim_check_annual <- function (samples_imported) {
 
     err$sampled_species_doubtful <- doubtfulSampledSpecies(catches)
 
-    err$not_allowed_category_species <- notAllowedCategorySpecies(catches_in_lengths)
+    err$not_allowed_category_species <- notAllowedCategorySpecies(
+      catches_in_lengths
+    )
 
     err$doubtful_category_species <- doubtfulCategorySpecies(catches_in_lengths)
 
-    err$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight(catches_in_lengths)
+    err$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight(
+      catches_in_lengths
+    )
 
-    err$categories_with_repeated_sexes <- categoriesWithRepeatedSexes(catches_in_lengths)
+    err$categories_with_repeated_sexes <- categoriesWithRepeatedSexes(
+      catches_in_lengths
+    )
 
     err$lenghts_weights_sample <- checkTALL.PESO(catches)
 
@@ -128,25 +142,35 @@ rim_check_annual <- function (samples_imported) {
 
     err$sexed_species <- checkSexedSpecies(lengths_sampled)
 
-    err$taxonomic_specie_confusion <- taxonomicSpecieConfusion(catches, catches_in_lengths)
+    err$taxonomic_specie_confusion <- taxonomicSpecieConfusion(
+      catches,
+      catches_in_lengths
+    )
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
 
-
     # ---- IN WEIGHTS ----
 
-    err$same_sampled_weight <- allCategoriesWithSameSampledWeights(catches_in_lengths)
+    err$same_sampled_weight <- allCategoriesWithSameSampledWeights(
+      catches_in_lengths
+    )
 
-    err$sampled_weight_zero <- weightSampledZeroWithLengthsSampled(catches_in_lengths)
+    err$sampled_weight_zero <- weightSampledZeroWithLengthsSampled(
+      catches_in_lengths
+    )
 
     err$weight_landed_zero <- weightLandedZero(catches)
 
-    err$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled(catches_in_lengths)
+    err$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled(
+      catches_in_lengths
+    )
 
     err$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
 
-    err$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
+    err$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(
+      catches
+    )
 
     err$sop_zero <- sopZero(catches_in_lengths)
 
@@ -154,7 +178,9 @@ rim_check_annual <- function (samples_imported) {
 
     err$sop_mayor_peso_vivo <- sopGreaterPesVivo(catches_in_lengths)
 
-    err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
+    err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(
+      catches_in_lengths
+    )
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
@@ -165,11 +191,14 @@ rim_check_annual <- function (samples_imported) {
     # err$capturas_percentil_99 <- checkCatchesP99(catches)
 
     # ---- IN LENGTHS ----
-    err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
+    err$all_categories_measured <- allCategoriesMeasured(
+      catches,
+      lengths_sampled
+    )
 
-    err$check_measures <- checkMeasures(lengths_sampled)
-    
-    err$check_middle_measures <- checkMiddleMeasures(lengths_sampled)
+    err$check_cm_measures <- checkCmMeasures(lengths_sampled)
+
+    err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
 
     # comment in annual:
     # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
@@ -193,6 +222,5 @@ rim_check_annual <- function (samples_imported) {
     combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = T)
 
     return(combined_errors)
-
   })
 }
