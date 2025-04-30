@@ -167,7 +167,9 @@ rim_check_annual <- function (samples_imported) {
     # ---- IN LENGTHS ----
     err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
 
-    err$half_centimeter <- halfCentimeter(lengths_sampled)
+    err$check_measures <- checkMeasures(lengths_sampled)
+    
+    err$check_middle_measures <- checkMiddleMeasures(lengths_sampled)
 
     # comment in annual:
     # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
