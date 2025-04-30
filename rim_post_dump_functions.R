@@ -1370,41 +1370,126 @@ emptyFieldsInVariables <- function(df, type_file = c("RIM_CATCHES", "RIM_LENGTHS
 
 }
 
-#' Check code:1076
-#' Function to check if species Sardina Pilchardus (10152) and Engraulis
-#' encrasicolus (10156) where measured in the correct way, at middle centimeter
-#' (1/2 cm).
+#' Function to process length's RIM file for the functions checkMiddleMeasures() and
+#' checkMeasures()
 #' @param lengths: lengths data frame returned by the importRIMLengths() or
 #' importRIMFiles() functions.
-#' @return A data frame where the species were measured centimeter to centimeter.
-halfCentimeter <- function(lengths){
+#' @return a processed dataframe to work with it in the mentioned functions 
+#' at the description.
 
-  #Fields: species, Sardina Pilchardus (10152) and Engraulis encrasicolus (10156)
-  especies <- c("10152", "10156")
-  #Fields: columns
-  col_filter <- c("COD_ID", "FECHA_MUE", "COD_ESP_MUE", "COD_BARCO", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")
+processLengthFileForCheckMeasures <- function(lengths){
+  
+  # Work columns 
+  
+  columns <- c(BASE_FIELDS, "COD_ESP_MUE", "COD_ESP_CAT", "COD_CATEGORIA", "TALLA")
+  
+  lengths <- lengths[, columns]
+  
+  # Count the number of measurement registers 
+  
+  lengths_register <-  lengths %>% 
+    group_by(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_CAT) %>%
+    mutate(REGISTROS = n_distinct(TALLA))
+  
+  # Count the number of half centimeter measurements done
+  
+  lengths_middle <- lengths %>% 
+    group_by(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_CAT) %>%
+    filter(grepl("\\.5$", TALLA)) %>% 
+    mutate(TALLAS_MED = n_distinct(TALLA)) %>%
+    select(-TALLA) %>%
+    unique()
+  
+  # Merge both dataframes 
+  
+  lengths <- merge(lengths_register,
+                   lengths_middle,
+                   all.x = TRUE)
+  
+  # Clean up NA values, make them zero
+  
+  lengths[is.na(lengths)] <- 0
+  
+  return(lengths)
+  
+}
 
-  #Filter where we have more than one register
-  lengths <- lengths[lengths$COD_ESP_MUE %in% especies, col_filter] %>%
-    group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>%
-    mutate(Registros = n()) %>%
-    filter(Registros>1)
+#' Check code:1075
+#' Function to check if species where measured in the correct way, at centimeter.
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @param midSpecies: default parameter that is the vector with the specie code 
+#' for species which are measured at the middle centimenter and measured at the
+#' milimeter level: Sardina Pilchardus (10152), Engraulis encrasicolus (10156),
+#' and all crustacean (which code starts by "2")
+#' @return A data frame where the species were measured wrong.
 
-  #Count the middle centimeter measures
-  midCentTrue <- grepl("^.*.5$", lengths$TALLA)
+checkMeasures <- function(lengths){
+  
+  lengths <- processLengthFileForCheckMeasures(lengths)
+  
+  # Extract all the crustacean codes present
+  
+  crustacean <- unique(lengths$COD_ESP_MUE[grepl("^2", lengths$COD_ESP_MUE)])
+  
+  crustacean <- as.character(crustacean)
+  
+  # Add crustacean codes to "middleCentimeter" fish
+  
+  midSpecies <- c("10152", "10156", crustacean)
+    
+  #' Check if not both Sardina Pilchardus or Engraulis encrasicolus 
+  #' species where measured in the wrong way (middle centimeter)
+  
+  error <- lengths[!(lengths$COD_ESP_MUE %in% midSpecies) & 
+                     lengths$TALLAS_MED != 0, ]
+  
+  # Add Error message to the respective dataframe
+  
+  if (nrow(error) > 0) {
+    
+    error <- addTypeOfError(error, "ERROR: Especie medida erróneamente al 1/2 cm")
+  } 
+  
+  return(error)
+  
+}
 
-  lengths <- lengths[midCentTrue, ] %>%
-    group_by(COD_ID, FECHA_MUE, COD_ESP_MUE, COD_BARCO, COD_ESP_CAT, COD_CATEGORIA) %>%
-    mutate(TALLAS_MED = n_distinct(TALLA))
 
-  err <- lengths[lengths$TALLAS_MED==0,]
+#' Check code:1076
+#' Function to check if species where measured in the correct way, at middle centimeter
+#' (1/2 cm) in the case of Sardina Pilchardus (10152) and Engraulis
+#' encrasicolus (10156).
+#' @param lengths: lengths data frame returned by the importRIMLengths() or
+#' importRIMFiles() functions.
+#' @param midSpecies: default parameter that is the vector with the specie code 
+#' for species which are measured at the middle centimenter: 
+#' Sardina Pilchardus (10152), Engraulis encrasicolus (10156)
+#' @return A data frame where the species were measured wrong.
 
-  #Parameters: count 0 elements
-  if(nrow(err)!=0){
-    errors <- addTypeOfError(err, "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
-    return(errors)
-  }
-
+checkMiddleMeasures <- function(lengths){
+  
+  midSpecies <-  c("10152", "10156")
+  
+  lengths <- processLengthFileForCheckMeasures(lengths)
+  
+  #' Check if both Sardina Pilchardus or Engraulis encrasicolus where measured
+  #' wrong (not middle centimeter)
+  
+  error <- lengths[lengths$COD_ESP_MUE %in% midSpecies & 
+                     lengths$TALLAS_MED == 0 & 
+                     lengths$REGISTROS > 1, ]
+  
+  # Add Warning/Error message to the respective dataframe
+  
+  if(nrow(error) > 0){
+    
+    error <- addTypeOfError(error, 
+                            "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm")
+  } 
+  
+  return(error)
+  
 }
 
 
