@@ -1,11 +1,9 @@
-rim_check_annual_nvdp_matched <- function (samples_imported) {
-
+rim_check_annual_nvdp_matched <- function(samples_imported) {
   tryCatch({
-
     #filter by sample type
     sample_types <- c(1, 2, 6)
 
-    samples_imported <- lapply(samples_imported, function(x){
+    samples_imported <- lapply(samples_imported, function(x) {
       out <- x[x[["COD_TIPO_MUE"]] %in% sample_types, ]
       return(out)
     })
@@ -103,10 +101,22 @@ rim_check_annual_nvdp_matched <- function (samples_imported) {
 
     # This errors must be used only in annual, when the Fishing Ground and DCF
     # Metier is filled:
-    err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
-    err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
-    err$emptyFishingGround <- checkEmptyValuesInVariables(catches, "CALADERO_DCF", "catches")
-    err$emptyMetier <- checkEmptyValuesInVariables(catches, "METIER_DCF", "catches")
+    err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(
+      catches
+    )
+    err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(
+      catches
+    )
+    err$emptyFishingGround <- checkEmptyValuesInVariables(
+      catches,
+      "CALADERO_DCF",
+      "catches"
+    )
+    err$emptyMetier <- checkEmptyValuesInVariables(
+      catches,
+      "METIER_DCF",
+      "catches"
+    )
     err$errors_cod_id <- checkCodId(muestreos_up$catches)
 
     # ---- IN SPECIES ----
@@ -168,17 +178,23 @@ rim_check_annual_nvdp_matched <- function (samples_imported) {
     # # err$capturas_percentil_99 <- checkCatchesP99(catches)
     #
     #
-    # # ---- IN LENGTHS ----
+    # ---- IN LENGTHS ----
     # err$all_categories_measured <- allCategoriesMeasured(catches, lengths_sampled)
-    # err$half_centimeter <- halfCentimeter(lengths_sampled)
-    # err$check_priority_species_sampled <- checkPrioritySpeciesSampled(muestreos_up$catches, muestreos_up$lengths)
+    #
+    # err$check_cm_measures <- checkCmMeasures(lengths_sampled)
+    #
+    # err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
     #
     # # comment in annual:
     # # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
+    #
+    # # comment in annual:
     # # err$size_range <- checkSizeRangeByFishingGround(muestreos_up$lengths)
+    # # err$g1SpeciesNotMeasured <- g1SpeciesNotMeasured(catches, lengths_sampled)
+    # # err$g2SpeciesNotMeasured <- g2SpeciesNotMeasured(catches, lengths_sampled)
     #
     # # ---- COD_ID ----
-    # # This check is usefull in the anual review. When the data is dumped in
+    # # This check is useful in the annual review. When the data is dumped in
     # # SIRENO, COD_ID is automatically filled. But, if later someone add a new
     # # sample, the COD_ID doesn't fill and is saved as empty.
     # err$cod_id_filled_catches <- checkCodId(catches)
@@ -191,6 +207,5 @@ rim_check_annual_nvdp_matched <- function (samples_imported) {
     combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = T)
 
     return(combined_errors)
-
   })
 }
