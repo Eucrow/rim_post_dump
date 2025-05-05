@@ -185,6 +185,8 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
     #
+    # err$sampling_is_checked <- sampling_is_checked(lengths_sampled)
+    #
     # # comment in annual:
     # # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
     #
