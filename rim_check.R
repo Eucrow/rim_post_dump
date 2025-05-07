@@ -1,6 +1,6 @@
 rim_check <- function(samples_imported) {
   tryCatch({
-    #filter by sample type
+    # filter by sample type
     sample_types <- c(1, 2, 4, 6)
 
     samples_imported <- lapply(samples_imported, function(x) {
@@ -200,9 +200,9 @@ rim_check <- function(samples_imported) {
     err$check_cm_measures <- checkCmMeasures(lengths_sampled)
 
     err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
-    
-    # uncomment in annual checks 
-    # err$sampling_is_checked <- sampling_is_checked(lengths_sampled)
+
+    # uncomment in annual checks
+    # err$unchecked_sampligs <- getUncheckedSamplings(lengths_sampled)
 
     # comment in annual:
     err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
@@ -222,7 +222,7 @@ rim_check <- function(samples_imported) {
 
     # ---- COMBINE ERRORS ----
 
-    #separated by influence area
+    # separated by influence area
     combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = T)
 
     return(combined_errors)
