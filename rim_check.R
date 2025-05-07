@@ -200,6 +200,9 @@ rim_check <- function(samples_imported) {
     err$check_cm_measures <- checkCmMeasures(lengths_sampled)
 
     err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
+    
+    # uncomment in annual checks 
+    # err$sampling_is_checked <- sampling_is_checked(lengths_sampled)
 
     # comment in annual:
     err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
