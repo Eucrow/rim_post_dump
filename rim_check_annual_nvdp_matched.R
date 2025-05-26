@@ -185,8 +185,6 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$check_half_cm_measures <- checkHalfCmMeasures(lengths_sampled)
     #
-    # err$unchecked_sampligs <- getUncheckedSamplings(lengths_sampled)
-    #
     # # comment in annual:
     # # err$with_historical_size_range <- checkRangeInHistorical(muestreos_up$lengths)
     #
@@ -202,6 +200,11 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     # err$cod_id_filled_catches <- checkCodId(catches)
     # err$cod_id_filled_catches_in_lengths <- checkCodId(catches_in_lengths)
     # err$cod_id_filled_lengths <- checkCodId(lengths_sampled)
+    
+    # ---- CHEQUEADO ----
+    # This check is useful in the annual review if any trip was
+    # not checked during the year
+    # err$unchecked_trip <- tripIsChecked(catches)
 
     # ---- COMBINE ERRORS ----
 
