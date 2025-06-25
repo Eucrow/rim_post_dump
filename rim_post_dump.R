@@ -3,6 +3,18 @@
 
 # INSTRUCTIONS -----------------------------------------------------------------
 
+# The default folder organization is:
+#   - data
+#     - YYYY  (year with four digits)
+#       - YYYY_MM  (MM is the month with two digits: 01, 02, ..., 12)
+#          - originals (folder with the files obtained from the subcontracted
+#                       company)
+#          - backup (folder with the backup of the scripts, files used in the
+#                     process and final files)
+#          - errors (folder with the errors found in the data)
+#          - finals (folder with the final files to dump in SIRENO database)
+#   - private (folder with sensitive information, like contacts, cfpo, etc.)
+#
 # To use this script:
 # - Make sure the file "revision_volcado_functions.R" is located in the same
 # directory that this file.
@@ -18,7 +30,6 @@
 # The contacs file must have a comma separated format with two fields: ROLE and
 # EMAIL. The first line must contain the name of the variables.
 # - A CFPO file must be stored in private folder.
-# - Make sure report files tallas_x_up from SIRENO are in PATH_FILES.
 # - Run all the script
 # - A file by influence area is generated in "errors" directory.
 
