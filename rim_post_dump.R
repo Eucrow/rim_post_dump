@@ -22,27 +22,33 @@
 # - Run all the script
 # - A file by influence area is generated in "errors" directory.
 
-# YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
+# Name of the folder where the input files must be stored.
+DATA_FOLDER_NAME <- "input"
 
-# Name of the subfolder where will be stored the errors generated in this script.
-ERRORS_SUBFOLDER_NAME <- "errors"
+# Name of the folder where will be stored the errors generated in this script.
+ERRORS_FOLDER_NAME <- "errors"
+
+# Name of the folder where will be stored the backup files generated in this
+BACKUP_FOLDER_NAME <- "backup"
 
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
 #Note: main computer path
-PATH_SHARE_FOLDER <- "C:/Users/ieoma/Nextcloud/SAP_RIM/RIM_data_review"
+PATH_SHARE_FOLDER <- "C:/Users/IEO_Marco/Nextcloud/SAP_RIM/RIM_data_review"
+
+# YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOT_2024_03_18.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTAL_2024_03_18.TXT"
-FILENAME_TAL <- "IEOUPMUETAL_2024_03_18.TXT"
+FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_04_2025_ices.TXT"
+FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_04_2025_ices.TXT"
+FILENAME_TAL <- "IEOUPMUETALSIRENO_04_2025_ices.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(1:12)
+MONTH <- c(4)
 
 # YEAR
-YEAR <- 2024
+YEAR <- 2025
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
@@ -50,7 +56,7 @@ suffix_multiple_months <- "annual_nvdp_matched"
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "b"
+suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -127,12 +133,12 @@ BASE_FIELDS <- c(
   "TIPO_MUE"
 )
 
+# path where the input files must be stored.
+PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
 # path to store errors files
-PATH_ERRORS <- file.path(PATH_FILES, "errors")
+PATH_ERRORS <- file.path(PATH_FILES, ERRORS_FOLDER_NAME)
 # path to store files as backup
-PATH_BACKUP <- file.path(PATH_FILES, "backup")
-
-
+PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
 # path to shared folder
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
@@ -194,7 +200,7 @@ muestreos_up <- importRIMFiles(
   catches = FILENAME_DES_TOT,
   catches_in_lengths = FILENAME_DES_TAL,
   lengths = FILENAME_TAL,
-  path = PATH_FILES
+  path = PATH_INPUT_FILES
   # ,  by_month = MONTH
 )
 
@@ -217,10 +223,10 @@ errors <- rim_check(muestreos_up)
 # by influence area
 exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 # complete
-write.xlsx(
-  errors_complete,
-  file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx"))
-)
+# write.xlsx(
+#   errors_complete,
+#   file.path(PATH_ERRORS, paste0(ERRORS_FILENAME, ".xlsx"))
+# )
 
 
 # CHECK CODE_ID ----------------------------------------------------------------
