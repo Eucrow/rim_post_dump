@@ -7,7 +7,7 @@
 #   - data
 #     - YYYY  (year with four digits)
 #       - YYYY_MM  (MM is the month with two digits: 01, 02, ..., 12)
-#          - originals (folder with the files obtained from the subcontracted
+#          - input (folder with the files obtained from the subcontracted
 #                       company)
 #          - backup (folder with the backup of the scripts, files used in the
 #                     process and final files)

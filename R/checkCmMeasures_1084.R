@@ -24,6 +24,10 @@ checkCmMeasures <- function(lengths) {
   ]
 
   if (nrow(errors) > 0) {
+  # Only return a row by species instead of a row by length.
+    errors <- errors[, colnames(errors) != "TALLA"]
+    errors <- unique(errors)
+
     errors <- addTypeOfError(
       errors,
       "ERROR: Especie medida erróneamente al 1/2 cm"
