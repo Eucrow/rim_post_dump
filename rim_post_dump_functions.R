@@ -25,22 +25,6 @@ coherenceEstratoRimGear <- function(df, specification) {
 }
 
 
-# Function to search errors in number of ships (empty field, =0 or >2)
-numberOfShips <- function(catches) {
-  errors <- catches[
-    catches["N_BARCOS"] == 0 |
-      catches["N_BARCOS"] > 2 |
-      is.null(catches["N_BARCOS"]),
-    c(BASE_FIELDS, "N_BARCOS")
-  ]
-  errors <- addTypeOfError(
-    errors,
-    "WARNING: número de barcos igual a 0 o mayor de 2"
-  )
-  return(errors)
-}
-
-
 # Function to search errors in number of rejects (only empty, nas or null)
 numberOfRejections <- function(catches) {
   errors <- catches %>%
