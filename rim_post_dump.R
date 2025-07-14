@@ -45,25 +45,43 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
-#Note: main computer path
-PATH_SHARE_FOLDER <- "C:/Users/IEO_Marco/Nextcloud/SAP_RIM/RIM_data_review"
+# Path to private folder
+PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
+
+# Import cvs with path share folder
+
+PATH_SHARE_FOLDER <- read.csv(paste0(PATH_PRIVATE_FILES, 
+                                     "/path_share_folder.csv"))
+
+PATH_SHARE_FOLDER <- as.list(PATH_SHARE_FOLDER)
+
+# Path share folder 
+PATH_SHARE_FOLDER <- as.character(PATH_SHARE_FOLDER["SHARE_PATH"])
 
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
 # Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_04_2025_ices.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_04_2025_ices.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_04_2025_ices.TXT"
+
+FILE_NAMES <- read.csv(paste0(PATH_PRIVATE_FILES, 
+                              "/file_rim_names.csv"),
+                       sep = ";")
+
+FILENAME_DES_TOT <- as.character(FILE_NAMES["DES_TOT"])
+
+FILENAME_DES_TAL <- as.character(FILE_NAMES["DES_TAL"])
+
+FILENAME_TAL <- as.character(FILE_NAMES["TAL"])
+
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(4)
+MONTH <- c(3)
 
 # YEAR
 YEAR <- 2025
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual_nvdp_matched"
+suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
@@ -126,9 +144,6 @@ IDENTIFIER <- createIdentifier(
 
 # Path where the files of the month and year will be stored.
 PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
-
-# Path where private files are stored.
-PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 
 # list with the common fields used in all tables
 BASE_FIELDS <- c(

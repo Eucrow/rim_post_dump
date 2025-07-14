@@ -65,7 +65,9 @@ rim_check_annual <- function(samples_imported) {
 
     # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
-    err$number_of_ships <- numberOfShips(catches)
+    err$check_no_ships <- checkNoShips(catches)
+    
+    err$check_several_ships <- checkSeveralShips(catches)
 
     err$number_of_rejections <- numberOfRejections(catches)
 
@@ -90,7 +92,7 @@ rim_check_annual <- function(samples_imported) {
 
     err$errors_multiple_arte <- checkMultipleGear(catches)
 
-    err$errors_multiple_puerto <- checkMultiplePort(catches)
+    err$errors_multiple_puerto <- checkSameHaulsVariablesDifferentPorts(catches)
 
     err$errors_num_barcos_pareja <- checkShipsPairBottomTrawl(catches)
 

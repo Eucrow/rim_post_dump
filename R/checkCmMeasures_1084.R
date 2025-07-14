@@ -30,7 +30,7 @@ checkCmMeasures <- function(lengths) {
 
     errors <- addTypeOfError(
       errors,
-      "ERROR: Especie medida erróneamente al 1/2 cm"
+      "ERROR 1084: Especie medida erróneamente al 1/2 cm"
     )
   }
 
