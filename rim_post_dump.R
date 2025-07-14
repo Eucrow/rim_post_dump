@@ -53,8 +53,6 @@ PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 PATH_SHARE_FOLDER <- read.csv(paste0(PATH_PRIVATE_FILES, 
                                      "/path_share_folder.csv"))
 
-PATH_SHARE_FOLDER <- as.list(PATH_SHARE_FOLDER)
-
 # Path share folder 
 PATH_SHARE_FOLDER <- PATH_SHARE_FOLDER[["SHARE_PATH"]]
 
