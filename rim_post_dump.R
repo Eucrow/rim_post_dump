@@ -56,7 +56,7 @@ PATH_SHARE_FOLDER <- read.csv(paste0(PATH_PRIVATE_FILES,
 PATH_SHARE_FOLDER <- as.list(PATH_SHARE_FOLDER)
 
 # Path share folder 
-PATH_SHARE_FOLDER <- as.character(PATH_SHARE_FOLDER["SHARE_PATH"])
+PATH_SHARE_FOLDER <- PATH_SHARE_FOLDER[["SHARE_PATH"]]
 
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
@@ -66,11 +66,11 @@ FILE_NAMES <- read.csv(paste0(PATH_PRIVATE_FILES,
                               "/file_rim_names.csv"),
                        sep = ";")
 
-FILENAME_DES_TOT <- as.character(FILE_NAMES["DES_TOT"])
+FILENAME_DES_TOT <- FILE_NAMES[["DES_TOT"]]
 
-FILENAME_DES_TAL <- as.character(FILE_NAMES["DES_TAL"])
+FILENAME_DES_TAL <- FILE_NAMES[["DES_TAL"]]
 
-FILENAME_TAL <- as.character(FILE_NAMES["TAL"])
+FILENAME_TAL <- FILE_NAMES[["TAL"]]
 
 
 # MONTH: 1 to 12, or vector with month in numbers
