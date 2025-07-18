@@ -58,6 +58,8 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$no_ships <- checkNoShips(catches)
     #
+    # err$several_ships <- checkSeveralShips(catches)
+    #
     # err$number_of_rejections <- numberOfRejections(catches)
     #
     # err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
