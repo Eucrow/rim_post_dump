@@ -92,7 +92,7 @@ rim_check_annual <- function(samples_imported) {
 
     err$errors_multiple_arte <- checkMultipleGear(catches)
 
-    err$errors_multiple_puerto <- checkMultiplePort(catches)
+    err$errors_multiple_puerto <- checkRimFieldsPortMismatch(catches)
 
     err$errors_num_barcos_pareja <- checkShipsPairBottomTrawl(catches)
 
