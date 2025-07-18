@@ -67,6 +67,8 @@ rim_check <- function(samples_imported) {
     # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
     err$no_ships <- checkNoShips(catches)
+    
+    err$several_ships <- checkSeveralShips(catches)
 
     err$number_of_rejections <- numberOfRejections(catches)
 
