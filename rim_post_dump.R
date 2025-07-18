@@ -70,7 +70,6 @@ FILENAME_DES_TAL <- FILE_NAMES[["DES_TAL"]]
 
 FILENAME_TAL <- FILE_NAMES[["TAL"]]
 
-
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(3)
 
@@ -215,6 +214,12 @@ CFPO <- read.xlsx(
 )
 CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
 colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
+
+# Get historical sampled species
+
+historical_species_sampled <- read.csv(file.path(PATH_PRIVATE_FILES,
+                                               "historical_species_sampled.csv"),
+                                     sep = ";")
 
 # Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))

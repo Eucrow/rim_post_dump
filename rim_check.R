@@ -149,6 +149,8 @@ rim_check <- function(samples_imported) {
       catches,
       catches_in_lengths
     )
+    
+    err$new_species_sampled <- checkNewSpeciesSampled(catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
