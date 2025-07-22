@@ -23,7 +23,7 @@ checkHalfCmMeasures <- function(lengths) {
     
     errors <- addTypeOfError(
       errors,
-      "WARNING: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm"
+      "WARNING 1076: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm"
     )
   }
 

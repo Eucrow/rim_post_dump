@@ -16,7 +16,7 @@ tripIsChecked <- function(catches) {
   if (nrow(catches) > 0) {
     catches <- addTypeOfError(
       catches,
-      "WARNING: trip is not checked"
+      "WARNING 1085: trip is not checked"
     )
     return(catches)
   }

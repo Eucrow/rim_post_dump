@@ -65,7 +65,9 @@ rim_check_annual <- function(samples_imported) {
 
     # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
 
-    err$number_of_ships <- numberOfShips(catches)
+    err$no_ships <- checkNoShips(catches)
+    
+    err$several_ships <- checkSeveralShips(catches)
 
     err$number_of_rejections <- numberOfRejections(catches)
 
@@ -90,7 +92,7 @@ rim_check_annual <- function(samples_imported) {
 
     err$errors_multiple_arte <- checkMultipleGear(catches)
 
-    err$errors_multiple_puerto <- checkMultiplePort(catches)
+    err$errors_multiple_puerto <- checkRimFieldsPortMismatch(catches)
 
     err$errors_num_barcos_pareja <- checkShipsPairBottomTrawl(catches)
 
@@ -146,6 +148,8 @@ rim_check_annual <- function(samples_imported) {
       catches,
       catches_in_lengths
     )
+    
+    err$new_species_sampled <- checkNewSpeciesSampled(catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
