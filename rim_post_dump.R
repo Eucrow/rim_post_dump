@@ -45,15 +45,12 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
-#Note: main computer path
-PATH_SHARE_FOLDER <- "C:/Users/IEO_Marco/Nextcloud/SAP_RIM/RIM_data_review"
-
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
-# Name of the files obtained from SIRENO database.
-FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO_04_2025_ices.TXT"
-FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO_04_2025_ices.TXT"
-FILENAME_TAL <- "IEOUPMUETALSIRENO_04_2025_ices.TXT"
+# Name of the files obtained from SIRENO database and share path. 
+# Imported from R file user_settingg (private folvder)
+
+source('private/user_settings.R')
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(4)
