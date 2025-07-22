@@ -11,3 +11,4 @@ IMP_ENVIAR_MARCO_BACKUP_FINAL.txt
 #confidential files
 /data/
 /private/
+/.vscode/
