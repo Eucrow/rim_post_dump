@@ -20,7 +20,7 @@ checkHalfCmMeasures <- function(lengths) {
     # Only return a row by species instead of a row by length.
     errors <- errors[, colnames(errors) != "TALLA"]
     errors <- unique(errors)
-    
+
     errors <- addTypeOfError(
       errors,
       "WARNING 1076: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm"
