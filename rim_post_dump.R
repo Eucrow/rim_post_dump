@@ -69,7 +69,6 @@ suffix <- ""
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
 
-
 # PACKAGES ---------------------------------------------------------------------
 
 library(plyr)
