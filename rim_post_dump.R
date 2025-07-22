@@ -52,7 +52,6 @@ PRIVATE_FOLDER_NAME <- "private"
 
 source('private/user_settings.R')
 
-
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(4)
 
