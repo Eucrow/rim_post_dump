@@ -33,6 +33,8 @@
 # - Run all the script
 # - A file by influence area is generated in "errors" directory.
 
+
+# FOLDER STRUCTURE -------------------------------------------------------------
 # Name of the folder where the input files must be stored.
 DATA_FOLDER_NAME <- "input"
 
@@ -45,12 +47,22 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
+# USER SETTINGS -------------------------------------------------------------
+# This file contains the user settings:
+# - FILENAME_DES_TOT: name of the file with the total catches data.
+# - FILENAME_DES_TAL: name of the file with the total lengths data.
+# - FILENAME_TAL: name of the file with the lengths data.
+# - PATH_SHARE_FOLDER: path of cloud service where the files will be shared.
+source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
+
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
-# Name of the files obtained from SIRENO database and share path. 
-# Imported from R file user_settingg (private folvder)
-
-source('private/user_settings.R')
+# Name of the files obtained from SIRENO database and share path.
+# By default, this file names are stored in the user_settings.R file. You can override
+# them here if you want to use different names.
+# FILENAME_DES_TOT <- "IEOUPMUEDESTOTSIRENO.TXT"
+# FILENAME_DES_TAL <- "IEOUPMUEDESTALSIRENO.TXT"
+# FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(4)
@@ -68,7 +80,6 @@ suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
-
 
 # PACKAGES ---------------------------------------------------------------------
 
