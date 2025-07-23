@@ -226,7 +226,7 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-
+test <- checkNewSpeciesSampled(muestreos_up$catches_in_lengths)
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
