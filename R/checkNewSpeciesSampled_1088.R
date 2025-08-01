@@ -15,7 +15,7 @@ checkNewSpeciesSampled <- function(catches_in_lengths){
                  historical_species_sampled,
                  all.x = TRUE)
   
-  error <- error[is.na(error_test$TEST), ]
+  error <- error[is.na(error$TEST), ]
   
   if(nrow(error)>0){
     error <- addTypeOfError(error,

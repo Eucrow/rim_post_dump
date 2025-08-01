@@ -14,7 +14,7 @@ checkPortMismatchForSameTrip <- function(catches) {
     filter(DIST_PORTS != 1)
   
   if(nrow(errors) > 1){
-    errors <- addTypeOferrors(errors,
+    errors <- addTypeOfError(errors,
                             "ERROR 1051: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO")
   }
   
