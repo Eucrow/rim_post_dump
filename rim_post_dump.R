@@ -65,14 +65,14 @@ source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(4)
+MONTH <- c(5)
 
 # YEAR
 YEAR <- 2025
 
 # Suffix to add to path. Use only in case MONTH is a vector of months. This
 # suffix will be added to the end of the path with a "_" as separation.
-suffix_multiple_months <- "annual_nvdp_matched"
+suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
@@ -187,6 +187,10 @@ sampled_spe_no_mixed <- especies_no_mezcla
 # Get the not allowed species data set.
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
 
+# Get the historical sampled species dataset
+historical_species_sampled <- read.csv("historical_species_sampled.csv", 
+                                       sep = ";")
+
 # Get the species susceptible to taxonomic confusion data set.
 ESP_TAXONOMIC_CONFUSION <- read.csv(
   "especies_sujetas_a_posible_confusion_taxonomica.csv",
@@ -226,7 +230,6 @@ muestreos_up <- importRIMFiles(
 
 ##TODO: create a coherence check rim_stratum-origin??
 # SEARCHING ERRORS -------------------------------------------------------------
-test <- checkNewSpeciesSampled(muestreos_up$catches_in_lengths)
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
@@ -280,8 +283,14 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", "", "", ""),
-  NOTES = c("", "", "", "")
+  LINK = c("", 
+           "", 
+           "", 
+           ""),
+  NOTES = c("", 
+            "", 
+            "", 
+            "")
 )
 
 
