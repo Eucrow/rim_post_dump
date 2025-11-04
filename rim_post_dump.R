@@ -16,7 +16,7 @@
 #   - private (folder with sensitive information, like contacts, cfpo, etc.)
 #
 # To use this script:
-# - Make sure the file "revision_volcado_functions.R" is located in the same
+# - Make sure the file "rim_post_dump_functions.R" is located in the same
 # directory that this file.
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
 # script.
@@ -27,7 +27,7 @@
 #   - GC, GS, GN and AC: the supervisors of the influence areas.
 #   - sender: person responsible for sending the files.
 #   - cc: related people to whom the email should also be sent.
-# The contacs file must have a comma separated format with two fields: ROLE and
+# The contacts file must have a comma separated format with two fields: ROLE and
 # EMAIL. The first line must contain the name of the variables.
 # - A CFPO file must be stored in private folder.
 # - Run all the script
@@ -65,7 +65,7 @@ source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(4)
 
 # YEAR
 YEAR <- 2025
@@ -152,11 +152,11 @@ BASE_FIELDS <- c(
   "TIPO_MUE"
 )
 
-# path where the input files must be stored.
+# path where the input files must be stored
 PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
 # path to store errors files
 PATH_ERRORS <- file.path(PATH_FILES, ERRORS_FOLDER_NAME)
-# path to store files as backup
+# path to store backup files
 PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
 # path to shared folder
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
@@ -188,7 +188,7 @@ sampled_spe_no_mixed <- especies_no_mezcla
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
 
 # Get the historical sampled species dataset
-historical_species_sampled <- read.csv("historical_species_sampled.csv", 
+historical_species_sampled <- read.csv("historical_species_sampled.csv",
                                        sep = ";")
 
 # Get the species susceptible to taxonomic confusion data set.
@@ -281,22 +281,22 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
-accesory_email_info <- data.frame(
-  AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
-           "", 
-           "", 
-           ""),
-  NOTES = c("", 
-            "", 
-            "", 
-            "")
-)
-
-
-sendErrorsByEmail(
-  accesory_email_info = accesory_email_info,
-  contacts = CONTACTS,
-  credentials_file = "credentials",
-  identification_sampling = IDENTIFIER
-)
+# accesory_email_info <- data.frame(
+#   AREA_INF = c("AC", "GC", "GN", "GS"),
+#   LINK = c("",
+#            "",
+#            "",
+#            ""),
+#   NOTES = c("",
+#             "",
+#             "",
+#             "")
+# )
+#
+#
+# sendErrorsByEmail(
+#   accesory_email_info = accesory_email_info,
+#   contacts = CONTACTS,
+#   credentials_file = "credentials",
+#   identification_sampling = IDENTIFIER
+# )
