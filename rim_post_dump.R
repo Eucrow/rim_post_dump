@@ -35,6 +35,9 @@
 
 
 # FOLDER STRUCTURE -------------------------------------------------------------
+
+
+
 # Name of the folder where the input files must be stored.
 DATA_FOLDER_NAME <- "input"
 
@@ -65,7 +68,7 @@ source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(7)
 
 # YEAR
 YEAR <- 2025
@@ -76,7 +79,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "c"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -99,21 +102,32 @@ library(sapmuebase)
 
 # FUNCTIONS --------------------------------------------------------------------
 
-source('rim_post_dump_auxiliary_functions.R')
-source('rim_post_dump_functions.R')
-source('R/rim_post_dump_functions_final.R')
+# Get the complete path for all function's files 
+function_files <- list.files(file.path(getwd(), 
+                                       "R"), 
+                             full.names = TRUE, 
+                             recursive = TRUE)
 
-# function to check the rim files:
-source('rim_check.R')
+# Import all functions 
 
-# function to check the annual rim files:
-source('rim_check_annual.R')
+sapply(function_files,
+       function(x){
+         tryCatch({
+           
+           source(x)
+           
+         }, error = function(e){
+           
+           cat("An error occurred:", conditionMessage(e), "\n")
+           
+         }, warning = function(w){
+           
+           cat("A warning occurred:", conditionMessage(w), "\n")
+           
+         }
+         )
+       })
 
-# function to check the annual rim files:
-source('rim_check_annual_nvdp_matched.R')
-
-# function to check the oab files:
-source('oab_check.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
 
@@ -175,6 +189,30 @@ ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
+# CREATE WORK FOLDERS ----------------------------------------------------------
+
+folders_work_list <- list(backup = PATH_BACKUP,
+                          errors = PATH_ERRORS,
+                          input = PATH_INPUT_FILES,
+                          share_errors = PATH_SHARE_ERRORS)
+
+lapply(folders_work_list,
+       manage_work_folder)
+
+# MOVE FILES FROM DOWNLOAD TO INPUT DIRECTORY-----------------------------------
+
+# By default, SIRENO store the downloaded data in a C: directory with the same 
+# name
+STORE_FILE_PATH <- "C:/sireno"
+
+list_files <- list(des_tal = FILENAME_DES_TAL,
+                   des_tot = FILENAME_DES_TOT,
+                   tal = FILENAME_TAL)
+
+lapply(list_files, 
+       move_file,
+       STORE_FILE_PATH,
+       PATH_INPUT_FILES)
 
 # IMPORT DATA ------------------------------------------------------------------
 
@@ -234,6 +272,11 @@ errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
+# errors[["GC"]] <- NULL
+# errors[["GS"]] <- NULL
+# errors[["GN"]] <- NULL
+# errors[["AC"]] <- errors[["AC"]][errors[["AC"]]$COD_PUERTO == "1418", ]
+
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
 # errors <- oab_check(muestreos_up)
@@ -283,13 +326,13 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
+  LINK = c("https://saco.csic.es/index.php/f/610892323", 
            "", 
-           "", 
+           "https://saco.csic.es/index.php/f/610892371", 
            ""),
-  NOTES = c("", 
+  NOTES = c("IMPORTANTE: Este es el análisis del errores post-volcado SIRENO del puerto de Llanes del 04-11-2025", 
             "", 
-            "", 
+            "IMPORTANTE: Este es el análisis del errores post-volcado SIRENO del puerto de Coruña del 04-11-2025", 
             "")
 )
 
