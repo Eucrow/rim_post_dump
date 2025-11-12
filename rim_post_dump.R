@@ -35,9 +35,6 @@
 
 
 # FOLDER STRUCTURE -------------------------------------------------------------
-
-
-
 # Name of the folder where the input files must be stored.
 DATA_FOLDER_NAME <- "input"
 
@@ -49,6 +46,7 @@ BACKUP_FOLDER_NAME <- "backup"
 
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
+
 
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
@@ -79,7 +77,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "c"
+suffix <- "TEST"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -172,6 +170,17 @@ PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
 PATH_ERRORS <- file.path(PATH_FILES, ERRORS_FOLDER_NAME)
 # path to store files as backup
 PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
+
+
+# create work folders
+
+work_folders <- list(backup = PATH_BACKUP,
+                     errors = PATH_ERRORS,
+                     input = PATH_INPUT_FILES)
+
+lapply(work_folders, 
+       manage_work_folder)
+
 # path to shared folder
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
@@ -189,15 +198,6 @@ ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
-# CREATE WORK FOLDERS ----------------------------------------------------------
-
-folders_work_list <- list(backup = PATH_BACKUP,
-                          errors = PATH_ERRORS,
-                          input = PATH_INPUT_FILES,
-                          share_errors = PATH_SHARE_ERRORS)
-
-lapply(folders_work_list,
-       manage_work_folder)
 
 # MOVE FILES FROM DOWNLOAD TO INPUT DIRECTORY-----------------------------------
 
@@ -272,11 +272,6 @@ errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
-# errors[["GC"]] <- NULL
-# errors[["GS"]] <- NULL
-# errors[["GN"]] <- NULL
-# errors[["AC"]] <- errors[["AC"]][errors[["AC"]]$COD_PUERTO == "1418", ]
-
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
 # errors <- oab_check(muestreos_up)
@@ -326,13 +321,13 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("https://saco.csic.es/index.php/f/610892323", 
+  LINK = c("https://saco.csic.es/index.php/f/620605879", 
            "", 
-           "https://saco.csic.es/index.php/f/610892371", 
+           "", 
            ""),
-  NOTES = c("IMPORTANTE: Este es el análisis del errores post-volcado SIRENO del puerto de Llanes del 04-11-2025", 
+  NOTES = c("IMPORTANTE: Errores puerto Avilés mes de julio post reenvío mareas faltantes.", 
             "", 
-            "IMPORTANTE: Este es el análisis del errores post-volcado SIRENO del puerto de Coruña del 04-11-2025", 
+            "", 
             "")
 )
 
