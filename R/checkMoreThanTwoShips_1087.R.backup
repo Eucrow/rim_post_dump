@@ -4,7 +4,7 @@
 #' or importRIMFiles() functions.
 #' @return Data frame whit errors.
 
-check_more_than_two_ships <- function(catches) {
+checkMoreThanTwoShips <- function(catches) {
   
   catches <- catches[, c(BASE_FIELDS, "N_BARCOS")]
   
@@ -14,7 +14,7 @@ check_more_than_two_ships <- function(catches) {
                       catches$N_BARCOS > 2, ]
   
   if (nrow(errors) > 0) {
-    errors <- add_type_of_error(
+    errors <- addTypeOfError(
       errors,
       "WARNING 1087: number of vessels is greater than 2."
     )

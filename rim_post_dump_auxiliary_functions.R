@@ -16,7 +16,7 @@ backup_files <- function(){
 }
 
 # function to add variable with type of error to a dataframe
-addTypeOfError <- function(df, ...){
+add_type_of_error <- function(df, ...){
 
   arguments <- list(...)
 
@@ -39,7 +39,7 @@ addTypeOfError <- function(df, ...){
 # - remove empty columns in every area dataframe
 # the separate_by_ia = FALSE generate one dataframe without separate by influence
 # area, but with the AREA_INF variable
-formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
+format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 
   # Combine all the dataframes of ERRORS list:
   # Reduce uses a binary function to successively combine the elements of a
@@ -103,7 +103,7 @@ formatErrorsList <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 # same COD_ID variable.
 # This does not work: Always in row 23 the color is always the same.
 # Instead of color the rows, I put a line between different cod_id rows
-exportErrorsList <- function (list, filename, separation = "") {
+export_errors_list <- function (list, filename, separation = "") {
 
   # Create errors subdirectory in case it doesn't exists:
   if (!file.exists(file.path(PATH_ERRORS))){
@@ -188,7 +188,7 @@ exportErrorsList <- function (list, filename, separation = "") {
 
 # Export to google drive
 # Export the dataframes contained in a list to google drive
-exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation = ""){
+export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separation = ""){
 
   #check if package openxlsx is instaled:
   if (!requireNamespace("googlesheets", quietly = TRUE)) {
@@ -244,7 +244,7 @@ exportListToGoogleSheet <- function(list, prefix = "", suffix = "", separation =
 
 #' Copy all the error files generated to a shared folder.
 #' Used to copy errors files generated to the shared folder
-copyFilesToFolder <- function (path_errors_from, path_errors_to){
+copy_files_to_folder <- function (path_errors_from, path_errors_to){
 
   # test if path_errors_from exists
   ifelse(!file.exists(path_errors_from), stop(paste("Folder", path_errors_from, "does not exists.")), FALSE)
@@ -278,7 +278,7 @@ copyFilesToFolder <- function (path_errors_from, path_errors_to){
 #' in the names of files.
 #' @param month month or months used.
 #' @param suffix_multiple_month Suffix used when multiple months are used.
-createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffix_multiple_months){
+create_month_as_character <- function(month = MONTH, suffix_multiple_months = suffix_multiple_months){
 
   if (length(month) == 1 && month %in% seq(1:12)){
     return(sprintf("%02d", month))
@@ -301,7 +301,7 @@ createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffi
 #' @param suffix_multiple_months Suffix used when multiple months are used.
 #' @param suffix Suffix used at the end of the file name. Usefull to have multiple error
 #' detections of the same month or year.
-createIdentifier <- function(month,
+create_identifier <- function(month,
                                  year,
                                  month_as_character,
                                  suffix_multiple_months,
@@ -348,10 +348,10 @@ createIdentifier <- function(month,
 #' line must contain the name of the variables.
 #'
 #' @require
-sendErrorsByEmail <- function(accesory_email_info, contacts, credentials_file,
+send_errors_by_email <- function(accessory_email_info, contacts, credentials_file,
                               identification_sampling){
 
-  apply(accesory_email_info, 1, function(x){
+  apply(accessory_email_info, 1, function(x){
 
     if(x[["LINK"]] != ""){
 

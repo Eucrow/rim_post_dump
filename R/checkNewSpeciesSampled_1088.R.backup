@@ -4,7 +4,7 @@
 #' or importRIMFiles() functions.
 #' @return dataframe with erroneous samples
 
-check_new_species_sampled <- function(catches_in_lengths){
+checkNewSpeciesSampled <- function(catches_in_lengths){
   
   error <- catches_in_lengths[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", 
                                   "COD_ESP_CAT", "ESP_CAT")]
@@ -18,7 +18,7 @@ check_new_species_sampled <- function(catches_in_lengths){
   error <- error[is.na(error$TEST), ]
   
   if(nrow(error)>0){
-    error <- add_type_of_error(error,
+    error <- addTypeOfError(error,
                             "WARNING 1088: especie no muestreada en el histórico 2021-2024")
   }
   
