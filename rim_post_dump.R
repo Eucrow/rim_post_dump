@@ -65,7 +65,7 @@ source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(9)
 
 # YEAR
 YEAR <- 2025
@@ -96,6 +96,10 @@ library(openxlsx) # to read directly CFPO from a excel file
 
 library(sapmuebase)
 
+# install archive package 
+# install.package("archive")
+
+library(archive)
 
 # FUNCTIONS --------------------------------------------------------------------
 
@@ -255,9 +259,6 @@ exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # errors_cod_id <- checkCodId(muestreos_up$catches)
 
-# SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
-
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
 # first save all files opened
@@ -265,6 +266,13 @@ rstudioapi::documentSaveAll()
 # and the backup the scripts and files:
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
+# SAVE FILES TO SHARED FOLDER --------------------------------------------------
+
+lapply(list(PATH_INPUT_FILES, PATH_BACKUP, PATH_ERRORS), 
+copyFilesToFolder, 
+PATH_SHARE_ERRORS)
+
+copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
@@ -283,10 +291,10 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accesory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
-           "", 
-           "", 
-           ""),
+  LINK = c("https://saco.csic.es/index.php/f/625892378", 
+           "https://saco.csic.es/index.php/f/625892370", 
+           "https://saco.csic.es/index.php/f/625892384", 
+           "https://saco.csic.es/index.php/f/625892374"),
   NOTES = c("", 
             "", 
             "", 
