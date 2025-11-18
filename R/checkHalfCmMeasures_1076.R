@@ -6,8 +6,8 @@
 #' @return A data frame with warnings of Sardina pilchardus and Engraulis
 #' encrasicolus measured at the centimeter.
 
-checkHalfCmMeasures <- function(lengths) {
-  lengths <- prepareLengthsForCheckMeasures(lengths)
+check_half_cm_measures <- function(lengths) {
+  lengths <- prepare_lengths_for_check_measures(lengths)
 
   middle_species <- c("10152", "10156")
 
@@ -21,7 +21,7 @@ checkHalfCmMeasures <- function(lengths) {
     errors <- errors[, colnames(errors) != "TALLA"]
     errors <- unique(errors)
 
-    errors <- addTypeOfError(
+    errors <- add_type_of_error(
       errors,
       "WARNING 1076: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm"
     )

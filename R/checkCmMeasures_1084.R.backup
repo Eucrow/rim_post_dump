@@ -7,8 +7,8 @@
 #' @return A data frame with species measured at the middle centimeter instead of
 #' the centimeter.
 
-check_cm_measures <- function(lengths) {
-  lengths <- prepare_lengths_for_check_measures(lengths)
+checkCmMeasures <- function(lengths) {
+  lengths <- prepareLengthsForCheckMeasures(lengths)
 
   #Extract all the crustacean codes present
   crustacean <- unique(lengths$COD_ESP_MUE[grepl("^2", lengths$COD_ESP_MUE)])
@@ -28,7 +28,7 @@ check_cm_measures <- function(lengths) {
     errors <- errors[, colnames(errors) != "TALLA"]
     errors <- unique(errors)
 
-    errors <- add_type_of_error(
+    errors <- addTypeOfError(
       errors,
       "ERROR 1084: Especie medida erróneamente al 1/2 cm"
     )

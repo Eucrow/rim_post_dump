@@ -4,7 +4,7 @@
 #' or importRIMFiles() functions.
 #' @return Data frame whit errors.
 
-check_no_ships <- function(catches) {
+checkNoShips <- function(catches) {
   
   catches <- catches[, c(BASE_FIELDS, "N_BARCOS")]
   
@@ -14,7 +14,7 @@ check_no_ships <- function(catches) {
                       is.na(catches$N_BARCOS), ]
   
   if (nrow(errors) > 0) {
-    errors <- add_type_of_error(
+    errors <- addTypeOfError(
       errors,
       "ERROR 1021: number of vessels is 0 or NA."
     )

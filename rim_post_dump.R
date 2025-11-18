@@ -65,7 +65,7 @@ source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(4)
 
 # YEAR
 YEAR <- 2025
@@ -121,10 +121,10 @@ source('oab_check.R')
 ERRORS <- list()
 
 # Month as character
-MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
+MONTH_AS_CHARACTER <- create_month_as_character(MONTH, suffix_multiple_months)
 
 # Identifier of the month/months, with suffixes
-IDENTIFIER <- createIdentifier(
+IDENTIFIER <- create_identifier(
   MONTH,
   YEAR,
   MONTH_AS_CHARACTER,
@@ -182,7 +182,7 @@ EMAIL_TEMPLATE <- "errors_email.Rmd"
 mixed_species <- especies_mezcla
 
 # Get the no mixed species data set.
-sampled_spe_no_mixed <- especies_no_mezcla
+sampled_species_no_mixed <- especies_no_mezcla
 
 # Get the not allowed species data set.
 NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
@@ -243,7 +243,7 @@ errors <- rim_check(muestreos_up)
 
 # EXPORT ERRORS ----------------------------------------------------------------
 # by influence area
-exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
+export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # complete
 # write.xlsx(
 #   errors_complete,
@@ -253,10 +253,10 @@ exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe
-# errors_cod_id <- checkCodId(muestreos_up$catches)
+# errors_cod_id <- check_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
+copy_files_to_folder(PATH_ERRORS, PATH_SHARE_ERRORS)
 
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
@@ -281,7 +281,7 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
-accesory_email_info <- data.frame(
+accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
   LINK = c("", 
            "", 
@@ -294,8 +294,8 @@ accesory_email_info <- data.frame(
 )
 
 
-sendErrorsByEmail(
-  accesory_email_info = accesory_email_info,
+send_errors_by_email(
+  accessory_email_info = accessory_email_info,
   contacts = CONTACTS,
   credentials_file = "credentials",
   identification_sampling = IDENTIFIER

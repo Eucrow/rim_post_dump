@@ -3,7 +3,7 @@ oab_check <- function (samples_imported) {
   err <- list()
 
   # this check must be done before filter by sample type:
-  err$multiple_tipo_muestreo <- multipleTypeSample(samples_imported$catches)
+  err$multiple_tipo_muestreo <- multiple_type_sample(samples_imported$catches)
 
 
   tryCatch({
@@ -46,149 +46,149 @@ oab_check <- function (samples_imported) {
 
     # this is new... I don't know if can be applied in oab in rim samples:
     # TODO: test it.
-    err$estrato_rim_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "ESTRATO_RIM")
-    err$puerto_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_PUERTO")
-    err$origen_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ORIGEN")
-    err$arte_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "COD_ARTE")
-    err$metier_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "METIER_DCF")
-    err$caladero_dcf_prescriptions <- checkVariableWithRimMt2PrescriptionsPost(catches, "CALADERO_DCF")
+    err$estrato_rim_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
+    err$puerto_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
+    err$origen_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
+    err$arte_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ARTE")
+    err$metier_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "METIER_DCF")
+    err$caladero_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "CALADERO_DCF")
 
-    err$empty_fields_in_variables_catches <- emptyFieldsInVariables(catches, "RIM_CATCHES")
-    err$empty_fields_in_variables_lengths <- emptyFieldsInVariables(lengths_sampled, "RIM_LENGTHS")
+    err$empty_fields_in_variables_catches <- empty_fields_in_variables(catches, "RIM_CATCHES")
+    err$empty_fields_in_variables_lengths <- empty_fields_in_variables(lengths_sampled, "RIM_LENGTHS")
 
 
     # ---- IN HEADER ----
 
-    # err$errors_mt2b_rim_stratum <- checkMt2bRimStratum(catches)
+    # err$errors_mt2b_rim_stratum <- check_mt2b_rim_stratum(catches)
 
-    err$coherence_estrato_rim_gear <- coherenceEstratoRimGear(catches)
+    err$coherence_estrato_rim_gear <- coherence_rim_stratum_gear(catches)
 
-    err$coherence_estrato_rim_origin <- checkCoherenceEstratoRimOrigin(catches)
+    err$coherence_estrato_rim_origin <- check_coherence_rim_stratum_origin(catches)
 
-    # err$coherence_rim_mt2_prescriptions <- coherenceRimMt2PrescriptionsPost(catches)
+    # err$coherence_rim_mt2_prescriptions <- coherence_rim_mt2_prescriptions_post(catches)
 
-    err$number_of_ships <- numberOfShips(catches)
+    err$number_of_ships <- number_of_ships(catches)
 
-    # err$number_of_rejections <- numberOfRejections(catches)
+    # err$number_of_rejections <- number_of_rejections(catches)
 
     err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
 
     err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
 
-    err$multiple_ship_code <- checkMultipleShipCode(catches)
+    err$multiple_ship_code <- check_multiple_ship_code(catches)
 
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
-    err$errors_ships_not_in_cfpo <-shipsNotInCFPO(catches)
+    err$errors_ships_not_in_cfpo <-ships_not_in_cfpo(catches)
 
     # no_en_cfpo <- err$errors_ships_not_in_cfpo %>%
     #   filter(!grepl("^8\\d{5}",COD_BARCO) & COD_BARCO != 0) %>%
     #   select(COD_BARCO, BARCO, COD_PUERTO, PUERTO)%>%
     #   unique()
 
-    err$errors_ships_not_registered <- shipsNotRegistered(catches)
+    err$errors_ships_not_registered <- ships_not_registered(catches)
 
-    err$errors_multiple_estrato_rim <- checkMultipleEstratoRIM(catches)
+    err$errors_multiple_estrato_rim <- check_multiple_rim_stratum(catches)
 
-    err$errors_multiple_arte <- checkMultipleGear(catches)
+    err$errors_multiple_arte <- check_multiple_gear(catches)
 
-    err$errors_multiple_puerto <- checkMultiplePort(catches)
+    err$errors_multiple_puerto <- check_multiple_port(catches)
 
-    err$errors_num_barcos_pareja <- checkShipsPairBottomTrawl(catches)
+    err$errors_num_barcos_pareja <- check_ships_pair_bottom_trawl(catches)
 
-    err$estrategia <- checkStrategy(catches)
+    err$estrategia <- check_strategy(catches)
 
     # this is done before filter by type sample:
-    # err$multiple_tipo_muestreo <- multipleTypeSample(catches)
+    # err$multiple_tipo_muestreo <- multiple_type_sample(catches)
 
     err$tiempo_transcurrido <- check_elapsed_days(catches)
 
-    err$checkSameTripInVariousPorts <- checkSameTripInVariousPorts(catches)
+    err$check_same_trip_in_various_ports <- check_same_trip_in_various_ports(catches)
 
-    err$checkSample_In_Charge <- checkVariableFilled(catches, "RESPONSABLE_MUESTREO")
+    err$checkSample_In_Charge <- check_variable_filled(catches, "RESPONSABLE_MUESTREO")
 
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
 
-    # err$coherenceDCFFishingGroundRimStratumOrigin <- coherenceDCFFishingGroundRimStratumOrigin(catches)
+    # err$coherence_dcf_fishing_ground_rim_stratum_origin <- coherence_dcf_fishing_ground_rim_stratum_origin(catches)
     #
-    # err$coherenceDCFMetierRimStratumOrigin <- coherenceDCFMetierRimStratumOrigin(catches)
+    # err$coherence_dcf_metier_rim_stratum_origin <- coherence_dcf_metier_rim_stratum_origin(catches)
 
     # ---- IN SPECIES ----
 
-    err$mixed_species_category <- mixedSpeciesInCategory(catches_in_lengths)
+    err$mixed_species_category <- mixed_species_in_category(catches_in_lengths)
 
-    err$not_allowed_sampled_species <- notAllowedSampledSpecies(catches)
+    err$not_allowed_sampled_species <- not_allowed_sampled_species(catches)
 
-    err$sampled_species_doubtful <- doubtfulSampledSpecies(catches)
+    err$sampled_species_doubtful <- doubtful_sampled_species(catches)
 
-    err$not_allowed_category_species <- notAllowedCategorySpecies(catches_in_lengths)
+    err$not_allowed_category_species <- not_allowed_category_species(catches_in_lengths)
 
-    err$doubtful_category_species <- doubtfulCategorySpecies(catches_in_lengths)
+    err$doubtful_category_species <- doubtful_category_species(catches_in_lengths)
 
-    err$sexes_with_same_sampled_weight <- sexesWithSameSampledWeight(catches_in_lengths)
+    err$sexes_with_same_sampled_weight <- sexes_with_same_sampled_weight(catches_in_lengths)
 
-    err$categories_with_repeated_sexes <- categoriesWithRepeatedSexes(catches_in_lengths)
+    err$categories_with_repeated_sexes <- categories_with_repeated_sexes(catches_in_lengths)
 
-    err$lenghts_weights_sample <- checkTALL.PESO(catches)
+    err$lenghts_weights_sample <- check_length_weight_variable(catches)
 
-    err$no_sexed_species <- checkNoSexedSpecies(lengths_sampled)
+    err$no_sexed_species <- check_no_sexed_species(lengths_sampled)
 
-    err$sexed_species <- checkSexedSpecies(lengths_sampled)
+    err$sexed_species <- check_sexed_species(lengths_sampled)
 
-    err$taxonomic_specie_confusion <- taxonomicSpecieConfusion(catches, catches_in_lengths)
+    err$taxonomic_specie_confusion <- taxonomic_specie_confusion(catches, catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- checkVariableFilled(catches, "A3_ESP_MUE")
+    # err$a3CodeFilled <- check_variable_filled(catches, "A3_ESP_MUE")
 
 
     # ---- IN WEIGHTS ----
 
-    err$same_sampled_weight <- allCategoriesWithSameSampledWeights(catches_in_lengths)
+    err$same_sampled_weight <- all_categories_with_same_sampled_weights(catches_in_lengths)
 
-    err$sampled_weight_zero <- weightSampledZeroWithLengthsSampled(catches_in_lengths)
+    err$sampled_weight_zero <- weight_sampled_zero_with_lengths_sampled(catches_in_lengths)
 
-    err$weight_landed_zero <- weightLandedZero(catches)
+    err$weight_landed_zero <- weight_landed_zero(catches)
 
-    err$weight_sampled_without_length_sampled <- weightSampledWithoutLengthsSampled(catches_in_lengths)
+    err$weight_sampled_without_length_sampled <- weight_sampled_without_lengths_sampled(catches_in_lengths)
 
-    err$pes_mue_desem_zero <- pesMueDesemZero(catches_in_lengths)
+    err$pes_mue_desem_zero <- pes_mue_desem_zero(catches_in_lengths)
 
-    err$especies_con_categorias_igual_peso_desembarcado <- speciesWithCategoriesWithSameWeightLanding(catches)
+    err$especies_con_categorias_igual_peso_desembarcado <- species_with_categories_with_same_weight_landing(catches)
 
-    err$sop_zero <- sopZero(catches_in_lengths)
+    err$sop_zero <- sop_zero(catches_in_lengths)
 
-    err$sop_greater_pes_mue_vivo <- sopGreaterPesMueVivo(catches_in_lengths)
+    err$sop_greater_pes_mue_vivo <- sop_greater_pes_mue_vivo(catches_in_lengths)
 
-    err$sop_mayor_peso_vivo <- sopGreaterPesVivo(catches_in_lengths)
+    err$sop_mayor_peso_vivo <- sop_greater_pes_vivo(catches_in_lengths)
 
-    err$pes_mue_desem_mayor_pes_desem <- pesMueDesemGreaterPesDesem(catches_in_lengths)
+    err$pes_mue_desem_mayor_pes_desem <- pes_mue_desem_greater_pes_desem(catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- checkVariableFilled(catches_in_lengths, "A3_ESP_CAT")
+    # err$a3CodeFilled <- check_variable_filled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
-    # err$capturas_percentil_99 <- checkCatchesP99(catches)
+    # err$capturas_percentil_99 <- check_catches_p99(catches)
 
 
     # ---- IN LENGTHS ----
-    err$with_historical_size_range <- checkRangeInHistorical(lengths_sampled)
-    err$size_range <- checkSizeRangeByFishingGround(lengths_sampled)
+    err$with_historical_size_range <- check_range_in_historical(lengths_sampled)
+    err$size_range <- check_size_range_by_fishing_ground(lengths_sampled)
 
 
     # ---- COD_ID ----
     # This check is usefull in the anual review. When the data is dumped in
     # SIRENO, COD_ID is automatically filled. But, if later someone add a new
     # sample, the COD_ID doesn't fill and is saved as empty.
-    err$cod_id_filled_catches <- checkCodId(catches)
-    err$cod_id_filled_catches_in_lengths <- checkCodId(catches_in_lengths)
-    err$cod_id_filled_lengths <- checkCodId(lengths_sampled)
+    err$cod_id_filled_catches <- check_cod_id(catches)
+    err$cod_id_filled_catches_in_lengths <- check_cod_id(catches_in_lengths)
+    err$cod_id_filled_lengths <- check_cod_id(lengths_sampled)
 
     # ---- COMBINE ERRORS ----
 
     #separated by influence area
-    combined_errors <- formatErrorsList(errors_list = err, separate_by_ia = F)
+    combined_errors <- format_errors_list(errors_list = err, separate_by_ia = F)
 
     # ---- ADD COMMENTS VARIABLE (in comments is where the original trip code of
     # the trip are stored.)

@@ -4,7 +4,7 @@
 #' importRIMFiles() functions.
 #' @return a data frame ready to be used in the functions described below.
 
-prepareLengthsForCheckMeasures <- function(lengths) {
+prepare_lengths_for_check_measures <- function(lengths) {
   lengths <- lengths[, c(
     BASE_FIELDS,
     "COD_ESP_MUE",

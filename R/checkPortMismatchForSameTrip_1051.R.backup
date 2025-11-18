@@ -5,7 +5,7 @@
 #' or importRIMFiles() functions.
 #' @return dataframe with erroneous samples
 
-check_port_mismatch_for_same_trip <- function(catches) {
+checkPortMismatchForSameTrip <- function(catches) {
   
   errors <- catches[, BASE_FIELDS] %>% 
     unique() %>% 
@@ -14,7 +14,7 @@ check_port_mismatch_for_same_trip <- function(catches) {
     filter(DIST_PORTS != 1)
   
   if(nrow(errors) > 1){
-    errors <- add_type_of_error(errors,
+    errors <- addTypeOfError(errors,
                             "ERROR 1051: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO")
   }
   

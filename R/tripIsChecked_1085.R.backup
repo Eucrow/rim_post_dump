@@ -5,7 +5,7 @@
 #' or importRIMFiles() functions.
 #' @return Data frame whit errors.
 
-trip_is_checked <- function(catches) {
+tripIsChecked <- function(catches) {
   BASE_FIELDS <- c(BASE_FIELDS, "CHEQUEADO")
   
   catches <- catches[
@@ -14,7 +14,7 @@ trip_is_checked <- function(catches) {
   ]
   
   if (nrow(catches) > 0) {
-    catches <- add_type_of_error(
+    catches <- addTypeOfError(
       catches,
       "WARNING 1085: trip is not checked"
     )
