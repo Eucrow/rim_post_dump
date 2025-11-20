@@ -25,12 +25,14 @@ coherence_rim_stratum_gear <- function(df, specification) {
 
     return(errors)
   }
+  
+  return(NULL)
 }
 
 
 #' Detect errors in number of ships (empty field, = 0 or > 2)
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 number_of_ships <- function(catches) {
   errors <- catches[
     catches["N_BARCOS"] == 0 |
@@ -38,30 +40,40 @@ number_of_ships <- function(catches) {
       is.null(catches["N_BARCOS"]),
     c(BASE_FIELDS, "N_BARCOS")
   ]
-  errors <- add_type_of_error(
-    errors,
-    "WARNING: número de barcos igual a 0 o mayor de 2"
-  )
-  return(errors)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "WARNING: número de barcos igual a 0 o mayor de 2"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect number of rejects (only empty, nas or null)
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 number_of_rejections <- function(catches) {
   errors <- catches %>%
     filter(N_RECHAZOS == "" | is.na(N_RECHAZOS) | is.null(N_RECHAZOS)) %>%
     select(one_of(BASE_FIELDS)) %>%
     unique()
-  errors <- add_type_of_error(errors, "ERROR: número de rechazos sin rellenar")
-  return(errors)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: número de rechazos sin rellenar")
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect samples with SOP > P_MUE_VIVO
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 sop_greater_pes_mue_vivo <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -79,14 +91,19 @@ sop_greater_pes_mue_vivo <- function(catches_in_lengths) {
     mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO) %>%
     mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO, 2)) %>%
     filter(DIF_SOP_P_MUE_VIVO > 0.01)
-  errors <- add_type_of_error(errors, "ERROR: SOP mayor que peso muestreado vivo")
-  return(errors)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: SOP mayor que peso muestreado vivo")
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect samples with SOP = 0
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 sop_zero <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -102,13 +119,18 @@ sop_zero <- function(catches_in_lengths) {
   errors <- catches_in_lengths %>%
     select(one_of(fields_to_select)) %>%
     filter(SOP == 0)
-  errors <- add_type_of_error(errors, "ERROR: SOP igual a 0")
-  return(errors)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: SOP igual a 0")
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with P_MUE_DESEM = 0 or NA
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 pes_mue_desem_zero <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -124,15 +146,18 @@ pes_mue_desem_zero <- function(catches_in_lengths) {
     filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
     select(one_of(fields_to_select))
 
-  errors <- add_type_of_error(errors, "ERROR: Peso muestreado es 0")
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: Peso muestreado es 0")
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect samples with p_desem <= p_mue_desem
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 pes_mue_desem_greater_pes_desem <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -153,18 +178,21 @@ pes_mue_desem_greater_pes_desem <- function(catches_in_lengths) {
     select(one_of(fields_to_select)) %>%
     unique()
 
-  errors <- add_type_of_error(
-    errors,
-    "ERROR: Peso muestreado mayor al peso desembarcado"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "ERROR: Peso muestreado mayor al peso desembarcado"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect samples with SOP > P_VIVO
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 sop_greater_pes_vivo <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -185,18 +213,21 @@ sop_greater_pes_vivo <- function(catches_in_lengths) {
     filter(DIF_SOP_P_VIVO > 0.01) %>%
     select(one_of(fields_to_select))
 
-  errors <- add_type_of_error(
-    errors,
-    "ERROR: SOP mayor que peso vivo desembarcado"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "ERROR: SOP mayor que peso vivo desembarcado"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect categories with equal species weight landings
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 species_with_categories_with_same_weight_landing <- function(catches) {
   catches <- catches[, c(
     BASE_FIELDS,
@@ -211,17 +242,22 @@ species_with_categories_with_same_weight_landing <- function(catches) {
     group_by_at(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "P_DESEM")) %>%
     summarise(n = n()) %>%
     filter(n > 1)
-  colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
-  errors <- add_type_of_error(
-    errors,
-    "WARNING: varias categorías con igual peso desembarcado"
-  )
-  return(errors)
+  
+  if (nrow(errors) > 0) {
+    colnames(errors)[names(errors) == "n"] <- "NUM_OCU_CAT_MISMO_PESO_DESEM"
+    errors <- add_type_of_error(
+      errors,
+      "WARNING: varias categorías con igual peso desembarcado"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with categories which all of this species has the same sampled weight
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 all_categories_with_same_sampled_weights <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -234,19 +270,26 @@ all_categories_with_same_sampled_weights <- function(catches_in_lengths) {
     "SEXO"
   )
 
-  by_category <- catches_in_lengths %>%
+  errors <- catches_in_lengths %>%
     group_by_at(selected_fields) %>%
     summarise(NUM_ESP_CAT_MISMO_PESO_MUE = n()) %>%
-    filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1) %>%
-    add_type_of_error(
+    filter(NUM_ESP_CAT_MISMO_PESO_MUE > 1)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "WARNING: varias especies de la categorías con igual peso muestreado"
     )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with doubtful species of the category where
 #' the genus finished in -formes, -dae, - spp and - sp.
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 doubtful_category_species <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -269,18 +312,21 @@ doubtful_category_species <- function(catches_in_lengths) {
     select(one_of(selected_fields))
   errors <- unique(genus_not_allowed)
 
-  errors <- add_type_of_error(
-    errors,
-    "WARNING: ¿seguro que es esa especie en Especies de la Categoría?"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "WARNING: ¿seguro que es esa especie en Especies de la Categoría?"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with not allowed species of the category
 #' This function use the not allowed species dataframe of SAPMUEBASE.
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 not_allowed_category_species <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -304,41 +350,50 @@ not_allowed_category_species <- function(catches_in_lengths) {
   # remove duplicates
   errors <- unique(not_allowed)
 
-  errors <- add_type_of_error(
-    errors,
-    "ERROR: muestreos con especies no permitidos en Especies de la Categor?a"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "ERROR: muestreos con especies no permitidos en Especies de la Categor?a"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect foreign ships in MT1 samples
 #' @param df Data frame with RIM data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_foreing_ships_MT1 <- function(df) {
   ships <- df %>%
     select(one_of(BASE_FIELDS)) %>%
     filter(grepl("^8\\d{5}", COD_BARCO), COD_TIPO_MUE == "1") %>%
     unique()
 
-  ships <- add_type_of_error(ships, "ERROR: MT1 con barco extranjero")
-
-  return(ships)
+  if (nrow(ships) > 0) {
+    ships <- add_type_of_error(ships, "ERROR: MT1 con barco extranjero")
+    return(ships)
+  }
+  
+  return(NULL)
 }
 
 #' Detect foreign ships in MT2 samples
 #' @param df Data frame with RIM data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 check_foreing_ships_MT2 <- function(df) {
   ships <- df %>%
     select(one_of(BASE_FIELDS)) %>%
     filter(grepl("^8\\d{5}", COD_BARCO), COD_TIPO_MUE == "2") %>%
     unique()
 
-  ships <- add_type_of_error(ships, "WARNING: MT2 con barco extranjero")
-
-  return(ships)
+  if (nrow(ships) > 0) {
+    ships <- add_type_of_error(ships, "WARNING: MT2 con barco extranjero")
+    return(ships)
+  }
+  
+  return(NULL)
 }
 
 
@@ -396,12 +451,14 @@ ships_not_in_cfpo <- function(df, cfpo = CFPO) {
     errors <- cbind(errors, "TIPO_ERROR" = text_type_of_error)
     return(errors)
   }
+  
+  return(NULL)
 }
 
 #' Detect if all mt2b has CERCO_GC or BACA_GC strata
 #' Only useful in COD_TIPO_MUE = 4
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_mt2b_rim_stratum <- function(catches) {
   # select all the mt2b samples
 
@@ -411,15 +468,20 @@ check_mt2b_rim_stratum <- function(catches) {
 
   err_stratum <- unique(err_stratum)
 
-  err_stratum <- add_type_of_error(
-    err_stratum,
-    "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC"
-  )
+  if (nrow(err_stratum) > 0) {
+    err_stratum <- add_type_of_error(
+      err_stratum,
+      "ERROR: MT2B con estrato rim distinto a CERCO_GC y BACA_GC"
+    )
+    return(err_stratum)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with weight sampled = 0 with lengths
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 weight_sampled_zero_with_lengths_sampled <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -437,13 +499,19 @@ weight_sampled_zero_with_lengths_sampled <- function(catches_in_lengths) {
   )
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0) %>%
-    select(one_of(selected_fields)) %>%
-    add_type_of_error("ERROR: peso muestra 0 con tallas muestreadas")
+    select(one_of(selected_fields))
+  
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(err, "ERROR: peso muestra 0 con tallas muestreadas")
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with weight landed = 0 or NA
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 weight_landed_zero <- function(catches) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -456,14 +524,19 @@ weight_landed_zero <- function(catches) {
   )
   err <- catches %>%
     filter(P_DESEM == 0 | is.na(P_DESEM)) %>%
-    select(one_of(selected_fields)) %>%
-    add_type_of_error("ERROR: peso desembarcado = 0")
-  return(err)
+    select(one_of(selected_fields))
+  
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(err, "ERROR: peso desembarcado = 0")
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples without lengths but with weight sampled
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -480,11 +553,17 @@ weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
   )
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS))) %>%
-    select(one_of(selected_fields)) %>%
-    add_type_of_error(
+    select(one_of(selected_fields))
+  
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(
+      err,
       "ERROR: especie sin tallas muestreadas pero con peso muestra"
     )
-  return(err)
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 
@@ -492,7 +571,7 @@ weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
 #' Samples with COD_TIPO_MUE as MT2 and without any length
 #' @param catches Data frame with catches data
 #' @param lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_false_mt2 <- function(catches, lengths_sampled) {
   #Select all the samples with COD_TIPO_MUE = MT2
   mt2 <- catches[
@@ -514,16 +593,20 @@ check_false_mt2 <- function(catches, lengths_sampled) {
     by = c("FECHA_MUE", "COD_BARCO")
   ) %>%
     unique()
-  false_mt2 <- add_type_of_error(false_mt2, "ERROR: MT2 sin tallas")
-
-  return(false_mt2)
+  
+  if (nrow(false_mt2) > 0) {
+    false_mt2 <- add_type_of_error(false_mt2, "ERROR: MT2 sin tallas")
+    return(false_mt2)
+  }
+  
+  return(NULL)
 }
 
 #' Detect false mt1 samples
 #' Samples with COD_TIPO_MUE as MT1A and lengths
 #' @param catches Data frame with catches data
 #' @param lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_false_mt1 <- function(catches, lengths_sampled) {
   #Select all the samples with COD_TIPO_MUE = MT1
 
@@ -539,15 +622,19 @@ check_false_mt1 <- function(catches, lengths_sampled) {
   # check if all the samples keyed as MT1 hasn't lenghts
   false_mt1 <- merge(x = mt1, y = mt1_with_lenghts, by = BASE_FIELDS) %>%
     unique()
-  false_mt1 <- add_type_of_error(false_mt1, "ERROR: MT1 con tallas")
-
-  return(false_mt1)
+  
+  if (nrow(false_mt1) > 0) {
+    false_mt1 <- add_type_of_error(false_mt1, "ERROR: MT1 con tallas")
+    return(false_mt1)
+  }
+  
+  return(NULL)
 }
 
 #' Detect mixed species keyed as non mixed species
 #' In COD_ESP_MUE there are codes from non mixed species
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_mixed_as_no_mixed <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
   non_mixed <- merge(
@@ -557,17 +644,22 @@ check_mixed_as_no_mixed <- function(catches) {
     by.y = "COD_ESP_CAT"
   )
   non_mixed <- non_mixed[, c(selected_fields)]
-  non_mixed <- add_type_of_error(
-    non_mixed,
-    "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo"
-  )
-  return(non_mixed)
+  
+  if (nrow(non_mixed) > 0) {
+    non_mixed <- add_type_of_error(
+      non_mixed,
+      "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo"
+    )
+    return(non_mixed)
+  }
+  
+  return(NULL)
 }
 
 #' Detect no mixed species keyed as mixed species
 #' In COD_ESP_MUE there are codes from mixed species
 #' @param lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_no_mixed_as_mixed <- function(lengths_sampled) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -586,11 +678,16 @@ check_no_mixed_as_mixed <- function(lengths_sampled) {
   )
   non_mixed <- non_mixed[, c(selected_fields)]
   non_mixed <- unique(non_mixed)
-  non_mixed <- add_type_of_error(
-    non_mixed,
-    "ERROR: especie no de mezcla agrupada en Especies del Muestreo"
-  )
-  return(non_mixed)
+  
+  if (nrow(non_mixed) > 0) {
+    non_mixed <- add_type_of_error(
+      non_mixed,
+      "ERROR: especie no de mezcla agrupada en Especies del Muestreo"
+    )
+    return(non_mixed)
+  }
+  
+  return(NULL)
 }
 
 #' Detect grouped species in Species of the Category
@@ -625,11 +722,13 @@ mixed_species_in_category <- function(catches_in_lengths) {
     errors,
     "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría"
   )
+  
+  return(errors)
 }
 
 #' Detect doubtful species in Sampling Species
 #' @param catches Data frame with catches data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 doubtful_sampled_species <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
 
@@ -661,18 +760,21 @@ doubtful_sampled_species <- function(catches) {
   # remove duplicates
   errors <- unique(genus_not_allowed)
 
-  errors <- add_type_of_error(
-    errors,
-    "WARNING: ¿seguro que es esa especie en Especies del Muestreo?"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "WARNING: ¿seguro que es esa especie en Especies del Muestreo?"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect if there are not allowed species in Sampling Species
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 not_allowed_sampled_species <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
 
@@ -688,17 +790,20 @@ not_allowed_sampled_species <- function(catches) {
   # remove duplicates
   errors <- unique(sampling_species_not_allowed)
 
-  errors <- add_type_of_error(
-    errors,
-    "ERROR: muestreo con especie no permitida en Especies del Muestreo"
-  )
-
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "ERROR: muestreo con especie no permitida en Especies del Muestreo"
+    )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect sexes with exactly the same sampled weight
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 sexes_with_same_sampled_weight <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -714,16 +819,23 @@ sexes_with_same_sampled_weight <- function(catches_in_lengths) {
   errors <- catches_in_lengths %>%
     group_by_at(selected_fields) %>%
     summarise(NUM_SEXOS_MISMO_P_MUE_DESEM = n()) %>%
-    filter(NUM_SEXOS_MISMO_P_MUE_DESEM > 1) %>%
-    add_type_of_error(
+    filter(NUM_SEXOS_MISMO_P_MUE_DESEM > 1)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "WARNING: Sexos de una misma especie tienen exactamente el mismo peso muestra"
     )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
 #' Detect categories with various equal sexes (both of them male or female)
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 categories_with_repeated_sexes <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -739,10 +851,17 @@ categories_with_repeated_sexes <- function(catches_in_lengths) {
     filter(SEXO != "U") %>%
     group_by_at(selected_fields) %>%
     summarise(NUM_MISMOS_SEXOS = n()) %>%
-    filter(NUM_MISMOS_SEXOS != 1) %>%
-    add_type_of_error(
+    filter(NUM_MISMOS_SEXOS != 1)
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "categorías con varios sexos iguales (la misma especie con varias distribuciones de machos o hembras"
     )
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 # check if the COD_ID variable is filled
@@ -759,8 +878,7 @@ check_cod_id <- function(df) {
 
     errors <- add_type_of_error(
       errors,
-      "ERROR: COD_ID variable is empty. This error only
-                   can be resolved by IT services in Madrid."
+      "ERROR: variable COD_ID vacía. Este error solo puede ser resuelto por los servicios informáticos de Madrid."
     )
 
     return(errors)
@@ -791,15 +909,20 @@ fix_length_weight_variable <- function(df) {
 #' weight samples.
 #' We allways work with lengths samples so all of them must be TRUE.
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_length_weight_variable <- function(catches) {
   if ("TALL.PESO" %in% colnames(catches)) {
     errors <- catches %>%
       select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
       filter(TALL.PESO != "T" | is.na(TALL.PESO) | is.null(TALL.PESO)) %>%
-      unique() %>%
-      add_type_of_error("ERROR: Muestreo no metido como muestreo de talla")
-    return(errors)
+      unique()
+    
+    if (nrow(errors) > 0) {
+      errors <- add_type_of_error(errors, "ERROR: Muestreo no metido como muestreo de talla")
+      return(errors)
+    }
+    
+    return(NULL)
   } else {
     stop("TALL.PESO doesn't exists in catches")
   }
@@ -809,7 +932,7 @@ check_length_weight_variable <- function(catches) {
 #' Detect samples with no sexed species that must be sexed
 #' Sexed species must have the variable SEXO as M (male) or H (female).
 #' @param lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_sexed_species <- function(lengths_sampled) {
   errors <- lengths_sampled %>%
     select(one_of(c(
@@ -850,16 +973,20 @@ check_sexed_species <- function(lengths_sampled) {
       "ESP_CAT",
       "SEXO"
     ))) %>%
-    unique() %>%
-    add_type_of_error("ERROR: especie que debería ser sexada")
+    unique()
 
-  return(errors)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: especie que debería ser sexada")
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect samples with sexed species that must not be sexed
 #' No sexed species must have the variable SEXO as U.
 #' @param lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_no_sexed_species <- function(lengths_sampled) {
   # Subset especies_sexadas dataframe only with required?? variables:
   sexed_species <- especies_sexadas[, c("COD_ESP", "COD_PUERTO")]
@@ -902,12 +1029,17 @@ check_no_sexed_species <- function(lengths_sampled) {
   errors <- rbind(
     errors_species_must_not_be_sexed,
     errors_species_must_be_sexed_only_in_some_ports
-  ) %>%
-    add_type_of_error(
+  )
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "WARNING: especie que NO debería ser sexada. Es posible que el SOP de estos muestreos sea 0, por lo que se ha de comprobar."
     )
-
-  return(errors)
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
@@ -915,7 +1047,7 @@ check_no_sexed_species <- function(lengths_sampled) {
 #' ESTRATO_RIM variable.
 #'
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_rim_stratum <- function(catches) {
   errors <- catches %>%
     select(one_of(BASE_FIELDS)) %>%
@@ -933,19 +1065,24 @@ check_multiple_rim_stratum <- function(catches) {
     mutate(num_estrato_rim = n_distinct(ESTRATO_RIM)) %>%
     ungroup() %>%
     # summarise(num_estrato_rim = n_distinct(ESTRATO_RIM)) %>%
-    filter(num_estrato_rim != 1) %>%
-    add_type_of_error(
+    filter(num_estrato_rim != 1)
+
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "ERROR: mismo puerto/fecha/barco/tipo_muestreo con distinto ESTRATO_RIM"
     )
-
-  return(errors)
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect multiple gear in the same trip: samples with same date, vessel,
 #' ESTRATO_RIM, TIPO_MUE, and port but with different gear variable.
 #'
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_gear <- function(catches) {
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
@@ -964,18 +1101,23 @@ check_multiple_gear <- function(catches) {
     mutate(num_arte = n_distinct(COD_ARTE)) %>%
     ungroup() %>%
     # summarise(num_Estrato_RIM = n_distinct(ESTRATO_RIM)) %>%
-    filter(num_arte != 1) %>%
-    add_type_of_error(
+    filter(num_arte != 1)
+
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "ERROR: mismo puerto/fecha/barco/estrato_rim con distinto ARTE"
     )
-
-  return(errors)
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detecth multiple COD_PUERTO in the same trip: samples with same date,
 #' vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different port variable.
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous samples
+#' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_port <- function(catches) {
   # errors <- catches %>%
   #   select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
@@ -990,12 +1132,17 @@ check_multiple_port <- function(catches) {
     unique() %>%
     group_by(FECHA_MUE, COD_BARCO, ESTRATO_RIM, COD_TIPO_MUE) %>%
     mutate(num_puerto = n()) %>%
-    filter(num_puerto != 1) %>%
-    add_type_of_error(
+    filter(num_puerto != 1)
+
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "ERROR: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO"
     )
-
-  return(errors)
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 
@@ -1025,13 +1172,15 @@ check_coherence_rim_stratum_origin <- function(catches, specification) {
     )
     return(errors)
   }
+  
+  return(NULL)
 }
 
 #' Detect ESTRATO_RIM and gear of trips with 2 ships
 #' Exception with Santa Eugenia de Ribeira port, that usually only one ship is
 #' sampled
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous trips
+#' @return A data frame with erroneous trips if found, NULL otherwise
 check_ships_pair_bottom_trawl <- function(catches) {
   errors <- catches %>%
     select(one_of(BASE_FIELDS), N_BARCOS) %>%
@@ -1044,9 +1193,14 @@ check_ships_pair_bottom_trawl <- function(catches) {
           N_BARCOS != 3 &
           N_BARCOS != 4 &
           ESTRATO_RIM == "PAREJA_CN")
-    ) %>%
-    add_type_of_error("ERROR: número de barcos no coherente con el estrato rim")
-  return(errors)
+    )
+  
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: número de barcos no coherente con el estrato rim")
+    return(errors)
+  }
+  
+  return(NULL)
   #errors <- addInfluenceAreaVariable(errors, "COD_PUERTO")
   #write.csv(errors, file = "parejas_num_barcos_1.csv")
 }
@@ -1054,7 +1208,7 @@ check_ships_pair_bottom_trawl <- function(catches) {
 #' Check code: 1052
 #' Detect lengths out of the size range of species in the rango_tallas_historico_caladero dataset.
 #' @param lengths_data Data frame with lengths data
-#' @return A data frame with warnings lengths
+#' @return A data frame with warnings lengths if found, NULL otherwise
 check_size_range_by_fishing_ground <- function(lengths_data) {
   lengths_data <- merge(
     x = lengths_data,
@@ -1080,24 +1234,29 @@ check_size_range_by_fishing_ground <- function(lengths_data) {
       TALLA_MIN,
       TALLA_MAX
     ) %>%
-    filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX) %>%
+    filter(TALLA < TALLA_MIN | TALLA > TALLA_MAX)
+  
+  if (nrow(warningsOutOfRange) > 0) {
     # it's not possible use add_type_of_error here, I don't know why
-    mutate(
-      TIPO_ERROR = paste(
-        "WARNING: Talla fuera del rango histórico de tallas por caladero:",
-        TALLA_MIN,
-        "-",
-        TALLA_MAX
-      )
-    ) %>%
-    humanizeVariable("COD_ESP_CAT")
-
-  return(warningsOutOfRange)
+    warningsOutOfRange <- warningsOutOfRange %>%
+      mutate(
+        TIPO_ERROR = paste(
+          "WARNING: Talla fuera del rango histórico de tallas por caladero:",
+          TALLA_MIN,
+          "-",
+          TALLA_MAX
+        )
+      ) %>%
+      humanizeVariable("COD_ESP_CAT")
+    return(warningsOutOfRange)
+  }
+  
+  return(NULL)
 }
 #' Check code: 1065
 #' Detect species without historical range by fishing ground.
 #' @param lengths_data Data frame with lengths data
-#' @return A data frame with warnings.
+#' @return A data frame with warnings if found, NULL otherwise
 check_range_in_historical <- function(lengths_data) {
   warningsIsRanged <- lengths_data %>%
     select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA) %>%
@@ -1108,14 +1267,19 @@ check_range_in_historical <- function(lengths_data) {
       all.x = T
     ) %>%
     filter(is.na(TALLA_MIN) | is.na((TALLA_MAX))) %>%
-    unique() %>%
-    add_type_of_error(
-      "WARNING: esta especie no se encuentra en el maestro histórico por caladero de tallas mínimas y máximas."
-    ) %>%
-    humanizeVariable("COD_ESP_CAT") %>%
-    select(-c(TALLA_MIN, TALLA_MAX))
-
-  return(warningsIsRanged)
+    unique()
+  
+  if (nrow(warningsIsRanged) > 0) {
+    warningsIsRanged <- warningsIsRanged %>%
+      add_type_of_error(
+        "WARNING: esta especie no se encuentra en el maestro histórico por caladero de tallas mínimas y máximas."
+      ) %>%
+      humanizeVariable("COD_ESP_CAT") %>%
+      select(-c(TALLA_MIN, TALLA_MAX))
+    return(warningsIsRanged)
+  }
+  
+  return(NULL)
 }
 
 
@@ -1123,7 +1287,7 @@ check_range_in_historical <- function(lengths_data) {
 #' Uses the p99_capturas_historico dataset to detect if the total catch
 #' of a species in an stratum exceed the 99th percentile of historical catches.
 #' @param catches Data frame with catches data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 check_catches_p99 <- function(catches) {
   warnings <- catches %>%
     select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
@@ -1136,31 +1300,33 @@ check_catches_p99 <- function(catches) {
       by.y = c("ESTRATO_RIM", "COD_ESP"),
       all.x = T
     ) %>%
-    filter(P_DESEM_TOT > P99) %>%
-    mutate(
-      '% dif respecto al histórico de capturas' = round(
-        ((P_DESEM_TOT - P99) * 100 / P_DESEM_TOT)
+    filter(P_DESEM_TOT > P99)
+  
+  if (nrow(warnings) > 0) {
+    warnings <- warnings %>%
+      mutate(
+        '% dif respecto al histórico de capturas' = round(
+          ((P_DESEM_TOT - P99) * 100 / P_DESEM_TOT)
+        )
+      ) %>%
+      add_type_of_error(
+        "WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 99 del histórico de capturas 2014 al 2018 por estrato rim."
       )
-    ) %>%
-    add_type_of_error(
-      "WARNING: Captura de la especie (de todas las categorías de la especie) superior al percentil 99 del histórico de capturas 2014 al 2018 por estrato rim."
-    )
 
-  warnings[['P99']] <- round(warnings[['P99']], 1)
-
-  return(warnings)
+    warnings[['P99']] <- round(warnings[['P99']], 1)
+    return(warnings)
+  }
+  
+  return(NULL)
 }
 
 #' Detect incoherence between ESTRATEGIA and COD_TIPO_MUE
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_strategy <- function(catches) {
   error_strategy <- catches %>%
     select(one_of(c(BASE_FIELDS, "ESTRATEGIA"))) %>%
-    anti_join(y = tipo_muestreo, by = c("COD_TIPO_MUE", "ESTRATEGIA")) %>%
-    add_type_of_error(
-      "ERROR: No concuerda el campo ESTRATEGIA con el campo TIPO DE MUESTREO"
-    )
+    anti_join(y = tipo_muestreo, by = c("COD_TIPO_MUE", "ESTRATEGIA"))
 
   # MT2 samples of VORACERA_GC must be "En base a especie", so remove it of
   # the errors dataframe
@@ -1171,32 +1337,44 @@ check_strategy <- function(catches) {
     ),
   ]
 
-  return(error_strategy)
+  if (nrow(error_strategy) > 0) {
+    error_strategy <- add_type_of_error(
+      error_strategy,
+      "ERROR: No concuerda el campo ESTRATEGIA con el campo TIPO DE MUESTREO"
+    )
+    return(error_strategy)
+  }
+  
+  return(NULL)
 }
 
 #' Detect trips with the same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 multiple_type_sample <- function(catches) {
   error <- catches %>%
     select(COD_ID, COD_PUERTO, COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
     unique() %>%
     group_by(COD_BARCO, FECHA_MUE) %>%
     mutate(number_type_sample = n_distinct(COD_TIPO_MUE, COD_BARCO)) %>%
-    filter(number_type_sample > 1) %>%
-    add_type_of_error(
-      "ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos"
-    )
+    filter(number_type_sample > 1)
 
-  error <- humanize(error)
-
-  return(error)
+  if (nrow(error) > 0) {
+    error <- error %>%
+      add_type_of_error(
+        "ERROR: Para un mismo barco y fecha, hay muestreos de varios tipos"
+      )
+    error <- humanize(error)
+    return(error)
+  }
+  
+  return(NULL)
 }
 
 #' Detect elapsed days between landing date and sampling date greater
 #' than 3 or minor than 0
 #' @param catches Data frame with catches data
-#' @return A data frame with erroneous trips
+#' @return A data frame with erroneous trips if found, NULL otherwise
 check_elapsed_days <- function(catches) {
   catches$FECHA_MUE <- as.POSIXlt(catches$FECHA_MUE, format = "%d-%m-%y")
 
@@ -1226,12 +1404,17 @@ check_elapsed_days <- function(catches) {
   errors <- catches %>%
     select(one_of(c(BASE_FIELDS), "FECHA_DESEM", "elapsed_days")) %>%
     filter(elapsed_days > 3 | elapsed_days < (-1)) %>%
-    unique() %>%
-    add_type_of_error(
+    unique()
+
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
       "WARNING: tiempo transcurrido entre la fecha de desembarco y la de muestreo mayor que 3 días o menor que 0 días"
     )
-
-  return(errors)
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Detect species which can have problems with taxonomic confusion
@@ -1240,7 +1423,7 @@ check_elapsed_days <- function(catches) {
 #' in the data set ESP_TAXONOMIC_CONFUSION.
 #' @param catches Data frame with catches data
 #' @param catches_in_lengths Data frame with catches and lengths data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
   err_catches <- catches %>%
     select(one_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_MUE", "ESP_MUE"))) %>%
@@ -1271,7 +1454,11 @@ taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
 
   colnames(err)[colnames(err) == "COMENTARIOS"] <- "COMENTARIO ESPECIE"
 
-  return(err)
+  if (nrow(err) > 0) {
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 
@@ -1280,7 +1467,7 @@ taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
 #' COD_BARCO, ESTRATO_RIM, COD_TIPO_MUE. But this checkSameTripInVariousPorts
 #' ignore ESTRATO_RIM and COD_TIPO_MUE variables.
 #' @param catches Data frame with catches data
-#' @return A data frame with warnings
+#' @return A data frame with warnings if found, NULL otherwise
 check_same_trip_in_various_ports <- function(catches) {
   err <- catches %>%
     select(COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
@@ -1288,12 +1475,17 @@ check_same_trip_in_various_ports <- function(catches) {
     group_by(FECHA_MUE, COD_BARCO) %>%
     mutate(n_ports_per_trip = n_distinct(COD_PUERTO)) %>%
     filter(n_ports_per_trip > 1) %>%
-    humanize() %>%
-    add_type_of_error(
+    humanize()
+
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(
+      err,
       "ERROR: Un mismo barco ha descargado en varios puertos en la misma fecha. Es posible que el puerto pertenezca a un área de influencia distinta."
     )
-
-  return(err)
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 
@@ -1331,7 +1523,7 @@ check_variable_filled <- function(df, var) {
 #' @param df Data frame with RIM data
 #' @param variable one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
 #' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
-#' @return A data frame with samples containing erroneous variables
+#' @return A data frame with samples containing erroneous variables if found, NULL otherwise
 check_variable_with_master <- function(df, variable) {
   if (
     variable != "ESTRATO_RIM" &&
@@ -1369,22 +1561,25 @@ check_variable_with_master <- function(df, variable) {
     select(one_of(fields_to_filter)) %>%
     unique()
 
-  text_type_of_error <- paste0(
-    "ERROR: el campo ",
-    variable_formatted,
-    " no concuerda con los maestros de este script."
-  )
-  errors <- add_type_of_error(errors, text_type_of_error)
-
-  #return
-  return(errors)
+  if (nrow(errors) > 0) {
+    text_type_of_error <- paste0(
+      "ERROR: el campo ",
+      variable_formatted,
+      " no concuerda con los maestros de este script."
+    )
+    errors <- add_type_of_error(errors, text_type_of_error)
+    #return
+    return(errors)
+  }
+  
+  return(NULL)
 }
 
 #' Check code: 1061
 #' Detect if there are samples with the same name vessel but with different
 #' SIRENO codification or SGPM codification.
 #' @param catches Data frame with catches data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_multiple_ship_code <- function(catches) {
   # find the ship names with more than one COD_BARCO and COD_SGPM
   dsn <- catches %>%
@@ -1400,18 +1595,22 @@ check_multiple_ship_code <- function(catches) {
 
   err <- err[, BASE_FIELDS]
   err <- unique(err)
-  err <- add_type_of_error(
-    err,
-    "WARNING: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?"
-  )
-
-  return(err)
+  
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(
+      err,
+      "WARNING: Hay varios muestreos que tienen este mismo nombre de barco, pero con distinto código SIRENO o distinto Código Secretaría. ¿Seguro que es el barco correcto?"
+    )
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 #' Check code: 1062
 #' Detect coherence between DCF Metier, Rim Stratum and Origin.
 #' @param df Data frame with RIM data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 coherence_dcf_metier_rim_stratum_origin <- function(df) {
   metier_caladero_dcf_clean <- metier_caladero_dcf[, c(
     "ESTRATO_RIM",
@@ -1438,18 +1637,21 @@ coherence_dcf_metier_rim_stratum_origin <- function(df) {
 
   err <- err[which(err$VALID != TRUE | is.na(err$VALID)), ]
 
-  err <- add_type_of_error(
-    err,
-    "Metier DCF does not match with Rim Stratum and Origin"
-  )
-
-  return(err)
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(
+      err,
+      "El Metier DCF no concuerda con el estrato RIM y el origen"
+    )
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 #' Check code: 1063
 #' Detect coherence between DCF Fishing Ground, Rim Stratum and Origin.
 #' @param df Data frame with RIM data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 coherence_dcf_fishing_ground_rim_stratum_origin <- function(df) {
   metier_caladero_dcf_clean <- metier_caladero_dcf[, c(
     "ESTRATO_RIM",
@@ -1477,12 +1679,15 @@ coherence_dcf_fishing_ground_rim_stratum_origin <- function(df) {
 
   err <- err[which(err$VALID != TRUE | is.na(err$VALID)), ]
 
-  err <- add_type_of_error(
-    err,
-    "Fishing Ground DCF does not match with Rim Stratum and Origin"
-  )
-
-  return(err)
+  if (nrow(err) > 0) {
+    err <- add_type_of_error(
+      err,
+      "El Caladero DCF no concuerda con el estrato RIM y el origen"
+    )
+    return(err)
+  }
+  
+  return(NULL)
 }
 
 #' Check code: 1064
@@ -1490,7 +1695,7 @@ coherence_dcf_fishing_ground_rim_stratum_origin <- function(df) {
 #' warning.
 #' @param df_catches Data frame with catches data
 #' @param df_lengths_sampled Data frame with lengths sampled data
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 all_categories_measured <- function(df_catches, df_lengths_sampled) {
   # Some categories never are measured, so must be ignored
   regex_to_ignore <- c(
@@ -1561,13 +1766,15 @@ all_categories_measured <- function(df_catches, df_lengths_sampled) {
   if (nrow(errors) > 0) {
     errors <- add_type_of_error(
       errors,
-      "WARNING: some categories of the species are measured but others are not"
+      "WARNING: algunas categorías de la especie están muestreadas pero otras no"
     )
 
     errors <- errors[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", "TIPO_ERROR")]
 
     return(errors)
   }
+  
+  return(NULL)
 }
 
 
@@ -1577,7 +1784,7 @@ all_categories_measured <- function(df_catches, df_lengths_sampled) {
 #' @param df Dataframe where the variable to check is.
 #' @param variable Variable to check as character. Allowed variables:
 #' ESTRATO_RIM, COD_PUERTO, COD_ORIGEN, COD_ARTE, METIER_DCF and CALADERO_DCF.
-#' @return A data frame with errors
+#' @return A data frame with errors if found, NULL otherwise
 check_variable_with_rim_mt2_prescriptions_post <- function(df, variable) {
   valid_variables = c(
     "ESTRATO_RIM",
@@ -1611,16 +1818,18 @@ check_variable_with_rim_mt2_prescriptions_post <- function(df, variable) {
 
     df[["TIPO_ERROR"]] <- apply(df, 1, function(x) {
       paste0(
-        "The ",
+        "La variable ",
         variable,
         " ",
         x[[variable]],
-        " is not in actual MT2 prescriptions."
+        " no está en las prescripciones MT2 actuales."
       )
     })
 
     return(df)
   }
+  
+  return(NULL)
 }
 
 
@@ -1628,7 +1837,7 @@ check_variable_with_rim_mt2_prescriptions_post <- function(df, variable) {
 #' Detect if the variables "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM",
 #' "METIER_DCF" and "CALADERO_DCF" are coherent with MT2 rim prescriptions.
 #' @param df Data frame with RIM data
-#' @return A data frame with errors, if there are any
+#' @return A data frame with errors if found, NULL otherwise
 coherence_rim_mt2_prescriptions_post <- function(df) {
   df <- df[df[["COD_TIPO_MUE"]] == 2, ] #THIS IS DIFFERENT IN rim_pre_dump, COD_TIPO_MUE is "MT2A"
 
@@ -1672,13 +1881,18 @@ coherence_rim_mt2_prescriptions_post <- function(df) {
         "CALADERO_DCF"
       )
     ]
-    errors <- humanize(errors)
-    errors <- add_type_of_error(
-      errors,
-      "This combination of port, gear, origin, rim stratum, dcf metier and dcf fishing ground are not in 2021 MT2 RIM prescriptions."
-    )
-    return(errors)
+    
+    if (nrow(errors) > 0) {
+      errors <- humanize(errors)
+      errors <- add_type_of_error(
+        errors,
+        "Esta combinación de puerto, arte, origen, estrato rim, metier DCF y caladero DCF no está en las prescripciones MT2 RIM de 2021."
+      )
+      return(errors)
+    }
   }
+  
+  return(NULL)
 }
 
 
@@ -1732,7 +1946,7 @@ check_empty_values_in_variables <- function(df, variables, df_name) {
     error <- (df[df[[x]] == "" | is.na(df[[x]]), ])
 
     if (nrow(error) > 0) {
-      error <- add_type_of_error(error, "ERROR: Variable ", x, " empty", df_name)
+      error <- add_type_of_error(error, "ERROR: Variable ", x, " vacía", df_name)
       if (x %in% BASE_FIELDS) {
         error <- error[, c(BASE_FIELDS, "TIPO_ERROR")]
       } else {
@@ -1957,9 +2171,11 @@ g1_species_not_measured <- function(catches, lengths) {
   errors <- priority_species_not_measured(catches, lengths, "G1")
 
   if (nrow(errors) != 0) {
-    errors <- add_type_of_error(errors, "ERROR: priority G1 species not measured.")
+    errors <- add_type_of_error(errors, "ERROR: especie prioritaria G1 no muestreada.")
     return(errors)
   }
+  
+  return(NULL)
 }
 
 #' Check code: 1078
@@ -1976,10 +2192,12 @@ g2_species_not_measured <- function(catches, lengths) {
   if (nrow(errors) != 0) {
     errors <- add_type_of_error(
       errors,
-      "WARNING: priority G2 species not measured."
+      "WARNING: especie prioritaria G2 no muestreada."
     )
     return(errors)
   }
+  
+  return(NULL)
 }
 
 
@@ -1990,8 +2208,7 @@ g2_species_not_measured <- function(catches, lengths) {
 #' importRIMFiles() functions
 #' @param shipFishingGearMaster master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022
-#' @return Data frame with those ships no presents in our working data, labeled
-#' with a WARNING message
+#' @return Data frame with those ships no presents in our working data if found, NULL otherwise
 check_ship_no_master_fishing_gear <- function(catches, shipFishingGearMaster) {
   #Step 1: filter the necessary columns from the catches df and pass from level to normal data
 
@@ -2014,11 +2231,13 @@ check_ship_no_master_fishing_gear <- function(catches, shipFishingGearMaster) {
       catchesNoMasterShip,
       "WARNING: Barco no presente en el maestro"
     )
+    
+    catchesNoMasterShip <- unique(catchesNoMasterShip)
+    
+    return(catchesNoMasterShip)
   }
-
-  catchesNoMasterShip <- unique(catchesNoMasterShip)
-
-  return(catchesNoMasterShip)
+  
+  return(NULL)
 }
 
 #' Check code: 1080 NOT IMPLEMENTED --> FALTA CREAR EL MAESTRO
@@ -2028,9 +2247,7 @@ check_ship_no_master_fishing_gear <- function(catches, shipFishingGearMaster) {
 #' importRIMFiles() functions
 #' @param shipFishingGearMaster master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022
-#' @return Data frame that mark those ships where there is not coincidence between the
-#' ESTRATO_RIM from our ships' masterdata and the working data, specifying those what does not
-#' match with a Warning message
+#' @return Data frame that mark those ships where there is not coincidence if found, NULL otherwise
 check_ship_different_fishing_gear <- function(catches, shipFishingGearMaster) {
   #Step 1: add the "Testigo" column to shipFishingGearMaster and convert "COD_BARCO" and "ESTRATO_RIM" as parameter
 
@@ -2111,15 +2328,17 @@ check_ship_different_fishing_gear <- function(catches, shipFishingGearMaster) {
       catchesNaValues$ESTRATOS
     )
     catchesNaValues$TIPO_ERROR <- message
+    
+    #Note: making a little fix in the columns of the catchesNaValues
+
+    catchesNaValues <- catchesNaValues[, c(BASE_FIELDS, "TIPO_ERROR")]
+
+    catchesNaValues <- unique(catchesNaValues)
+
+    return(catchesNaValues)
   }
-
-  #Note: making a little fix in the columns of the catchesNaValues
-
-  catchesNaValues <- catchesNaValues[, c(BASE_FIELDS, "TIPO_ERROR")]
-
-  catchesNaValues <- unique(catchesNaValues)
-
-  return(catchesNaValues)
+  
+  return(NULL)
 }
 
 
@@ -2127,7 +2346,7 @@ check_ship_different_fishing_gear <- function(catches, shipFishingGearMaster) {
 #' Detect ships with "COD_SGPM" value empty, "0" or NA.
 #' @param catches catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions
-#' @return Data frame with errors
+#' @return Data frame with errors if found, NULL otherwise
 ship_without_cod_sgpm <- function(catches) {
   catches <- catches[
     catches$COD_SGPM == "0" | catches$COD_SGPM == "" | is.na(catches$COD_SGPM),
@@ -2142,6 +2361,8 @@ ship_without_cod_sgpm <- function(catches) {
     )
     return(catches)
   }
+  
+  return(NULL)
 }
 
 #' Check code: 1082
@@ -2150,7 +2371,7 @@ ship_without_cod_sgpm <- function(catches) {
 #' in '99' can only be assigned to one of those sample types.
 #' @param catches catches data frame returned by the importRIMCatches() or
 #' importRIMFiles() functions
-#' @return Data frame with errors
+#' @return Data frame with errors if found, NULL otherwise
 categories_99_not_in_mt2b <- function(catches) {
   catches <- catches[
     !(catches$COD_TIPO_MUE %in% c("4", "6")) &
@@ -2166,6 +2387,8 @@ categories_99_not_in_mt2b <- function(catches) {
 
     return(catches)
   }
+  
+  return(NULL)
 }
 
 
@@ -2175,7 +2398,7 @@ categories_99_not_in_mt2b <- function(catches) {
 #' with FALSE or NA values).
 #' @param lengths catches data frame returned by the importRIMCatchesInLengths() 
 #' or importRIMFiles() functions
-#' @return Data frame with errors
+#' @return Data frame with errors if found, NULL otherwise
 sampling_is_checked <- function(lengths){
   
   # Base work columns
@@ -2195,5 +2418,7 @@ sampling_is_checked <- function(lengths){
     )
     return(lengths)
   }
+  
+  return(NULL)
 }
 
