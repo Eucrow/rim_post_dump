@@ -76,7 +76,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "TEST"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -268,11 +268,11 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
 
-lapply(list(PATH_INPUT_FILES, PATH_BACKUP, PATH_ERRORS), 
-copyFilesToFolder, 
-PATH_SHARE_ERRORS)
+# lapply(list(PATH_INPUT_FILES, PATH_BACKUP, PATH_ERRORS), 
+# copyFilesToFolder, 
+# PATH_SHARE_ERRORS)
 
-copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
+copyFilesToFolder(PATH_FILES, PATH_SHARE_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
