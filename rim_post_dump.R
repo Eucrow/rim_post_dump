@@ -76,7 +76,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "TEST"
+suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -92,14 +92,9 @@ library(openxlsx) # to read directly CFPO from a excel file
 # install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
-#install_github("eucrow/sapmuebase")
+# install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
-
-# install archive package 
-# install.package("archive")
-
-library(archive)
 
 # FUNCTIONS --------------------------------------------------------------------
 
@@ -267,10 +262,6 @@ rstudioapi::documentSaveAll()
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-
-# lapply(list(PATH_INPUT_FILES, PATH_BACKUP, PATH_ERRORS), 
-# copyFilesToFolder, 
-# PATH_SHARE_ERRORS)
 
 copyFilesToFolder(PATH_FILES, PATH_SHARE_ERRORS)
 

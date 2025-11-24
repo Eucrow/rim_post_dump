@@ -278,10 +278,10 @@ copyFilesToFolder <- function (path_files_from, path_files_to){
   # test if there are files with the same name in folder. In this case,
   # nothing is saved.
   files_list_to <- list.files(path_files_to,
-                             recursive = TRUE)
+                              recursive = TRUE)
 
   files_list_from <- list.files(path_files_from,
-                             recursive = TRUE)
+                                recursive = TRUE)
     
   if(any(files_list_from %in% files_list_to)){
     ae <- which(files_list_from %in% files_list_to)
@@ -326,8 +326,6 @@ createMonthAsCharacter <- function(month = MONTH, suffix_multiple_months = suffi
   }
 
 }
-
-
 
 
 #' Create identifier of the month/months, with suffix. Used to create the filenames
