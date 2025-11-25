@@ -523,11 +523,12 @@ weight_landed_zero <- function(catches) {
     "P_VIVO"
   )
   errors <- catches %>%
-    filter(P_DESEM == 0 | is.na(P_DESEM)) %>%
-    select(one_of(selected_fields))
+    filter(P_DESEM == 0 | is.na(P_DESEM))
   
   if (nrow(errors) > 0) {
-    errors <- add_type_of_error(errors, "ERROR: peso desembarcado = 0")
+    errors %>%
+    select(one_of(selected_fields)) %>%
+    add_type_of_error("ERROR: peso desembarcado = 0")
     return(errors)
   }
   
@@ -552,12 +553,12 @@ weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
     "EJEM_MEDIDOS"
   )
   err <- catches_in_lengths %>%
-    filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS))) %>%
-    select(one_of(selected_fields))
+    filter(P_MUE_DESEM != 0 & (EJEM_MEDIDOS == 0 | is.na(EJEM_MEDIDOS)))
   
   if (nrow(err) > 0) {
-    err <- add_type_of_error(
-      err,
+    err %>%
+    select(one_of(selected_fields)) %>%
+    add_type_of_error(
       "ERROR: especie sin tallas muestreadas pero con peso muestra"
     )
     return(err)
@@ -676,10 +677,12 @@ check_no_mixed_as_mixed <- function(lengths_sampled) {
     by.x = "COD_ESP_MUE",
     by.y = "COD_ESP"
   )
-  non_mixed <- non_mixed[, c(selected_fields)]
-  non_mixed <- unique(non_mixed)
+
   
   if (nrow(non_mixed) > 0) {
+    non_mixed <- non_mixed[, c(selected_fields)]
+    non_mixed <- unique(non_mixed)
+
     non_mixed <- add_type_of_error(
       non_mixed,
       "ERROR: especie no de mezcla agrupada en Especies del Muestreo"
@@ -718,10 +721,12 @@ mixed_species_in_category <- function(catches_in_lengths) {
     by.y = "COD_ESP_MUE"
   )
 
-  errors <- add_type_of_error(
-    errors,
-    "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría"
-  )
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(
+      errors,
+      "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría"
+    )
+  }
   
   return(errors)
 }
@@ -756,11 +761,10 @@ doubtful_sampled_species <- function(catches) {
   # remove other allowed species
   # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
   #  select(one_of(selected_fields))
-
-  # remove duplicates
-  errors <- unique(genus_not_allowed)
+  
 
   if (nrow(errors) > 0) {
+    errors <- unique(genus_not_allowed)
     errors <- add_type_of_error(
       errors,
       "WARNING: ¿seguro que es esa especie en Especies del Muestreo?"
@@ -911,7 +915,6 @@ fix_length_weight_variable <- function(df) {
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_length_weight_variable <- function(catches) {
-  if ("TALL.PESO" %in% colnames(catches)) {
     errors <- catches %>%
       select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
       filter(TALL.PESO != "T" | is.na(TALL.PESO) | is.null(TALL.PESO)) %>%
@@ -923,9 +926,6 @@ check_length_weight_variable <- function(catches) {
     }
     
     return(NULL)
-  } else {
-    stop("TALL.PESO doesn't exists in catches")
-  }
 }
 
 
@@ -962,7 +962,10 @@ check_sexed_species <- function(lengths_sampled) {
       "PUERTO" = PUERTO.x,
       "LOCODE" = LOCODE.x,
       "ESP_MUE" = ESP_MUE.x
-    ) %>%
+    )
+
+  if (nrow(errors) > 0) {
+    errors %>%
     select(one_of(c(
       BASE_FIELDS,
       "COD_ESP_MUE",
@@ -973,10 +976,8 @@ check_sexed_species <- function(lengths_sampled) {
       "ESP_CAT",
       "SEXO"
     ))) %>%
-    unique()
-
-  if (nrow(errors) > 0) {
-    errors <- add_type_of_error(errors, "ERROR: especie que debería ser sexada")
+    unique() %>%
+    add_type_of_error("ERROR: especie que debería ser sexada")
     return(errors)
   }
   
@@ -1475,7 +1476,7 @@ check_same_trip_in_various_ports <- function(catches) {
     group_by(FECHA_MUE, COD_BARCO) %>%
     mutate(n_ports_per_trip = n_distinct(COD_PUERTO)) %>%
     filter(n_ports_per_trip > 1) %>%
-    humanize()
+    sapmuebase::humanize()
 
   if (nrow(err) > 0) {
     err <- add_type_of_error(
