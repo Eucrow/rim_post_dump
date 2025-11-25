@@ -59,7 +59,7 @@ number_of_ships <- function(catches) {
 number_of_rejections <- function(catches) {
   errors <- catches %>%
     filter(N_RECHAZOS == "" | is.na(N_RECHAZOS) | is.null(N_RECHAZOS)) %>%
-    select(one_of(BASE_FIELDS)) %>%
+    select(any_of(BASE_FIELDS)) %>%
     unique()
   
   if (nrow(errors) > 0) {
@@ -87,7 +87,7 @@ sop_greater_pes_mue_vivo <- function(catches_in_lengths) {
     "SOP"
   )
   errors <- catches_in_lengths %>%
-    select(one_of(selected_fields)) %>%
+    select(any_of(selected_fields)) %>%
     mutate(DIF_SOP_P_MUE_VIVO = SOP - P_MUE_VIVO) %>%
     mutate(DIF_SOP_P_MUE_VIVO = round(DIF_SOP_P_MUE_VIVO, 2)) %>%
     filter(DIF_SOP_P_MUE_VIVO > 0.01)
@@ -117,7 +117,7 @@ sop_zero <- function(catches_in_lengths) {
     "SOP"
   )
   errors <- catches_in_lengths %>%
-    select(one_of(fields_to_select)) %>%
+    select(any_of(fields_to_select)) %>%
     filter(SOP == 0)
   
   if (nrow(errors) > 0) {
@@ -144,7 +144,7 @@ pes_mue_desem_zero <- function(catches_in_lengths) {
   )
   errors <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0 | is.na(P_MUE_DESEM)) %>%
-    select(one_of(fields_to_select))
+    select(any_of(fields_to_select))
 
   if (nrow(errors) > 0) {
     errors <- add_type_of_error(errors, "ERROR: Peso muestreado es 0")
@@ -175,7 +175,7 @@ pes_mue_desem_greater_pes_desem <- function(catches_in_lengths) {
   errors <- catches_in_lengths %>%
     mutate(DIF_P_MUE_DESEM_P_DESEM = P_MUE_DESEM - P_DESEM) %>%
     filter(DIF_P_MUE_DESEM_P_DESEM > 0) %>%
-    select(one_of(fields_to_select)) %>%
+    select(any_of(fields_to_select)) %>%
     unique()
 
   if (nrow(errors) > 0) {
@@ -211,7 +211,7 @@ sop_greater_pes_vivo <- function(catches_in_lengths) {
     mutate(DIF_SOP_P_VIVO = SOP - P_VIVO) %>%
     mutate(DIF_SOP_P_VIVO = round(DIF_SOP_P_VIVO, 2)) %>%
     filter(DIF_SOP_P_VIVO > 0.01) %>%
-    select(one_of(fields_to_select))
+    select(any_of(fields_to_select))
 
   if (nrow(errors) > 0) {
     errors <- add_type_of_error(
@@ -309,7 +309,7 @@ doubtful_category_species <- function(catches_in_lengths) {
   )
 
   genus_not_allowed <- catches_in_lengths[to_check_genus, ] %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
   errors <- unique(genus_not_allowed)
 
   if (nrow(errors) > 0) {
@@ -345,7 +345,7 @@ not_allowed_category_species <- function(catches_in_lengths) {
     by.x = "COD_ESP_CAT",
     by.y = "COD_ESP"
   ) %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
 
   # remove duplicates
   errors <- unique(not_allowed)
@@ -367,7 +367,7 @@ not_allowed_category_species <- function(catches_in_lengths) {
 #' @return A data frame with errors if found, NULL otherwise
 check_foreing_ships_MT1 <- function(df) {
   ships <- df %>%
-    select(one_of(BASE_FIELDS)) %>%
+    select(any_of(BASE_FIELDS)) %>%
     filter(grepl("^8\\d{5}", COD_BARCO), COD_TIPO_MUE == "1") %>%
     unique()
 
@@ -384,7 +384,7 @@ check_foreing_ships_MT1 <- function(df) {
 #' @return A data frame with warnings if found, NULL otherwise
 check_foreing_ships_MT2 <- function(df) {
   ships <- df %>%
-    select(one_of(BASE_FIELDS)) %>%
+    select(any_of(BASE_FIELDS)) %>%
     filter(grepl("^8\\d{5}", COD_BARCO), COD_TIPO_MUE == "2") %>%
     unique()
 
@@ -499,7 +499,7 @@ weight_sampled_zero_with_lengths_sampled <- function(catches_in_lengths) {
   )
   err <- catches_in_lengths %>%
     filter(P_MUE_DESEM == 0) %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
   
   if (nrow(err) > 0) {
     err <- add_type_of_error(err, "ERROR: peso muestra 0 con tallas muestreadas")
@@ -527,7 +527,7 @@ weight_landed_zero <- function(catches) {
   
   if (nrow(errors) > 0) {
     errors %>%
-    select(one_of(selected_fields)) %>%
+    select(any_of(selected_fields)) %>%
     add_type_of_error("ERROR: peso desembarcado = 0")
     return(errors)
   }
@@ -557,7 +557,7 @@ weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
   
   if (nrow(err) > 0) {
     err %>%
-    select(one_of(selected_fields)) %>%
+    select(any_of(selected_fields)) %>%
     add_type_of_error(
       "ERROR: especie sin tallas muestreadas pero con peso muestra"
     )
@@ -712,7 +712,7 @@ mixed_species_in_category <- function(catches_in_lengths) {
     unique()
 
   clean_catches_in_lenghts <- catches_in_lengths %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
 
   errors <- merge(
     x = clean_catches_in_lenghts,
@@ -754,13 +754,13 @@ doubtful_sampled_species <- function(catches) {
     !(genus_not_allowed[["COD_ESP_MUE"]] %in%
       unique(mixed_species[["COD_ESP_MUE"]])),
   ] %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
 
   # this is obsolete: when was allowed Loligo spp an Allotheuthis spp saved in
   # 'especies de la categoría':
   # remove other allowed species
   # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
-  #  select(one_of(selected_fields))
+  #  select(any_of(selected_fields))
   
 
   if (nrow(errors) > 0) {
@@ -789,7 +789,7 @@ not_allowed_sampled_species <- function(catches) {
     by.x = "COD_ESP_MUE",
     by.y = "COD_ESP"
   ) %>%
-    select(one_of(selected_fields))
+    select(any_of(selected_fields))
 
   # remove duplicates
   errors <- unique(sampling_species_not_allowed)
@@ -916,7 +916,7 @@ fix_length_weight_variable <- function(df) {
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_length_weight_variable <- function(catches) {
     errors <- catches %>%
-      select(one_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
+      select(any_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
       filter(TALL.PESO != "T" | is.na(TALL.PESO) | is.null(TALL.PESO)) %>%
       unique()
     
@@ -935,7 +935,7 @@ check_length_weight_variable <- function(catches) {
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_sexed_species <- function(lengths_sampled) {
   errors <- lengths_sampled %>%
-    select(one_of(c(
+    select(any_of(c(
       BASE_FIELDS,
       "COD_ESP_MUE",
       "ESP_MUE",
@@ -966,7 +966,7 @@ check_sexed_species <- function(lengths_sampled) {
 
   if (nrow(errors) > 0) {
     errors %>%
-    select(one_of(c(
+    select(any_of(c(
       BASE_FIELDS,
       "COD_ESP_MUE",
       "ESP_MUE",
@@ -994,7 +994,7 @@ check_no_sexed_species <- function(lengths_sampled) {
 
   # Subset sexed especies sampled
   sexed_species_sampled <- lengths_sampled %>%
-    select(one_of(c(
+    select(any_of(c(
       BASE_FIELDS,
       "COD_ESP_MUE",
       "ESP_MUE",
@@ -1051,7 +1051,7 @@ check_no_sexed_species <- function(lengths_sampled) {
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_rim_stratum <- function(catches) {
   errors <- catches %>%
-    select(one_of(BASE_FIELDS)) %>%
+    select(any_of(BASE_FIELDS)) %>%
     unique() %>%
     group_by(
       COD_PUERTO,
@@ -1086,7 +1086,7 @@ check_multiple_rim_stratum <- function(catches) {
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_gear <- function(catches) {
   errors <- catches %>%
-    select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+    select(any_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
     group_by(
       COD_PUERTO,
@@ -1121,7 +1121,7 @@ check_multiple_gear <- function(catches) {
 #' @return A data frame with erroneous samples if found, NULL otherwise
 check_multiple_port <- function(catches) {
   # errors <- catches %>%
-  #   select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+  #   select(any_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
   #   unique() %>%
   #   group_by(COD_ID, COD_PUERTO, PUERTO, LOCODE, FECHA_MUE, COD_BARCO, BARCO, ESTRATO_RIM, COD_TIPO_MUE, TIPO_MUE) %>%
   #   mutate(num_puerto = n_distinct(COD_PUERTO))%>%
@@ -1129,7 +1129,7 @@ check_multiple_port <- function(catches) {
   #   filter(num_puerto != 1) %>%
   #   add_type_of_error("ERROR: mismo fecha/barco/estrato_rim/tipo_muestre con distinto PUERTO")
   errors <- catches %>%
-    select(one_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
+    select(any_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
     unique() %>%
     group_by(FECHA_MUE, COD_BARCO, ESTRATO_RIM, COD_TIPO_MUE) %>%
     mutate(num_puerto = n()) %>%
@@ -1184,7 +1184,7 @@ check_coherence_rim_stratum_origin <- function(catches, specification) {
 #' @return A data frame with erroneous trips if found, NULL otherwise
 check_ships_pair_bottom_trawl <- function(catches) {
   errors <- catches %>%
-    select(one_of(BASE_FIELDS), N_BARCOS) %>%
+    select(any_of(BASE_FIELDS), N_BARCOS) %>%
     unique() %>%
     filter(COD_PUERTO != "0917") %>% #This is an execption: only one ship is sampled in Ribeira pair bottom trails
     filter(
@@ -1228,7 +1228,7 @@ check_size_range_by_fishing_ground <- function(lengths_data) {
 
   warningsOutOfRange <- lengths_data %>%
     select(
-      one_of(BASE_FIELDS),
+      any_of(BASE_FIELDS),
       COD_ESP_CAT,
       COD_CATEGORIA,
       TALLA,
@@ -1260,7 +1260,7 @@ check_size_range_by_fishing_ground <- function(lengths_data) {
 #' @return A data frame with warnings if found, NULL otherwise
 check_range_in_historical <- function(lengths_data) {
   warningsIsRanged <- lengths_data %>%
-    select(one_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA) %>%
+    select(any_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA) %>%
     merge(
       y = rango_tallas_historico_caladero,
       by.x = c("COD_ESP_CAT"),
@@ -1291,7 +1291,7 @@ check_range_in_historical <- function(lengths_data) {
 #' @return A data frame with warnings if found, NULL otherwise
 check_catches_p99 <- function(catches) {
   warnings <- catches %>%
-    select(one_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
+    select(any_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
     group_by_at(c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")) %>%
     summarise(P_DESEM_TOT = sum(P_DESEM)) %>%
     merge(
@@ -1326,7 +1326,7 @@ check_catches_p99 <- function(catches) {
 #' @return A data frame with errors if found, NULL otherwise
 check_strategy <- function(catches) {
   error_strategy <- catches %>%
-    select(one_of(c(BASE_FIELDS, "ESTRATEGIA"))) %>%
+    select(any_of(c(BASE_FIELDS, "ESTRATEGIA"))) %>%
     anti_join(y = tipo_muestreo, by = c("COD_TIPO_MUE", "ESTRATEGIA"))
 
   # MT2 samples of VORACERA_GC must be "En base a especie", so remove it of
@@ -1403,7 +1403,7 @@ check_elapsed_days <- function(catches) {
   catches[["FECHA_DESEM"]] <- as.POSIXct(catches[["FECHA_DESEM"]])
 
   errors <- catches %>%
-    select(one_of(c(BASE_FIELDS), "FECHA_DESEM", "elapsed_days")) %>%
+    select(any_of(c(BASE_FIELDS), "FECHA_DESEM", "elapsed_days")) %>%
     filter(elapsed_days > 3 | elapsed_days < (-1)) %>%
     unique()
 
@@ -1427,7 +1427,7 @@ check_elapsed_days <- function(catches) {
 #' @return A data frame with warnings if found, NULL otherwise
 taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
   err_catches <- catches %>%
-    select(one_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_MUE", "ESP_MUE"))) %>%
+    select(any_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_MUE", "ESP_MUE"))) %>%
     unique %>%
     merge(,
       y = ESP_TAXONOMIC_CONFUSION,
@@ -1439,7 +1439,7 @@ taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
     )
 
   err_catches_in_lengths <- catches_in_lengths %>%
-    select(one_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_CAT", "ESP_CAT"))) %>%
+    select(any_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_CAT", "ESP_CAT"))) %>%
     unique %>%
     merge(,
       y = ESP_TAXONOMIC_CONFUSION,
@@ -1559,7 +1559,7 @@ check_variable_with_master <- function(df, variable) {
   fields_to_filter <- c(BASE_FIELDS, variable, variable_formatted)
 
   errors <- errors %>%
-    select(one_of(fields_to_filter)) %>%
+    select(any_of(fields_to_filter)) %>%
     unique()
 
   if (nrow(errors) > 0) {
@@ -2422,4 +2422,5 @@ sampling_is_checked <- function(lengths){
   
   return(NULL)
 }
+
 
