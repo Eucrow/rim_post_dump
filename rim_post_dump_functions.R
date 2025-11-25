@@ -522,13 +522,13 @@ weight_landed_zero <- function(catches) {
     "P_DESEM",
     "P_VIVO"
   )
-  err <- catches %>%
+  errors <- catches %>%
     filter(P_DESEM == 0 | is.na(P_DESEM)) %>%
     select(one_of(selected_fields))
   
-  if (nrow(err) > 0) {
-    err <- add_type_of_error(err, "ERROR: peso desembarcado = 0")
-    return(err)
+  if (nrow(errors) > 0) {
+    errors <- add_type_of_error(errors, "ERROR: peso desembarcado = 0")
+    return(errors)
   }
   
   return(NULL)
