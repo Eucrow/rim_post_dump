@@ -1,9 +1,9 @@
-#' Check code: 1085
-#' Detect unvalidated samples (column "CHEQUEADO" from catches dataframe
-#' with FALSE or NA values).
-#' @param catches: catches data frame returned by the importRIMCatchesInLengths()
-#' or importRIMFiles() functions.
-#' @return Data frame whit errors.
+#' Detect unvalidated samples
+#' @details Column "CHEQUEADO" from catches dataframe with FALSE or NA values
+#' @param catches catches data frame returned by the importRIMCatchesInLengths()
+#' or importRIMFiles() functions
+#' @return Data frame with errors
+#' @note Check code: 1085
 
 trip_is_checked <- function(catches) {
   BASE_FIELDS <- c(BASE_FIELDS, "CHEQUEADO")

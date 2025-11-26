@@ -1,13 +1,14 @@
-#' Check code: 1084
 #' Function to check whether species were measured at the mid-centimeter instead
-#' of the centimeter. Used in all species except Sardina pilchardus, Engraulis
-#' encrasicolus and crustaceans.
+#' of the centimeter
+#' @details Used in all species except Sardina pilchardus, Engraulis
+#' encrasicolus and crustaceans
 #' @param lengths Lengths data frame returned by the importRIMLengths() or
-#' importRIMFiles() functions.
+#' importRIMFiles() functions
 #' @return A data frame with species measured at the middle centimeter instead of
-#' the centimeter.
+#' the centimeter
+#' @note Check code: 1084
 
-check_cm_measures <- function(lengths) {
+incorrect_cm_measures <- function(lengths) {
   lengths <- prepare_lengths_for_check_measures(lengths)
 
   #Extract all the crustacean codes present

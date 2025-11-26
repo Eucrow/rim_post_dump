@@ -1,12 +1,12 @@
-#' Check code: 1076
 #' Function to check Sardina Pilchardus (10152) and Engraulis encrasicolus (10156)
-#' are measured at the middle centimeter (1/2 cm).
+#' are measured at the middle centimeter (1/2 cm)
 #' @param lengths Lengths data frame returned by the importRIMLengths() or
-#' importRIMFiles() functions.
+#' importRIMFiles() functions
 #' @return A data frame with warnings of Sardina pilchardus and Engraulis
-#' encrasicolus measured at the centimeter.
+#' encrasicolus measured at the centimeter
+#' @note Check code: 1076
 
-check_half_cm_measures <- function(lengths) {
+incorrect_half_cm_measures <- function(lengths) {
   lengths <- prepare_lengths_for_check_measures(lengths)
 
   middle_species <- c("10152", "10156")
