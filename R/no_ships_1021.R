@@ -4,7 +4,7 @@
 #' @return Data frame with errors
 #' @note Check code: 1021
 
-check_no_ships <- function(catches) {
+no_ships <- function(catches) {
   
   catches <- catches[, c(BASE_FIELDS, "N_BARCOS")]
   

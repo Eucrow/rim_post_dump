@@ -6,7 +6,7 @@
 #' encrasicolus measured at the centimeter
 #' @note Check code: 1076
 
-check_half_cm_measures <- function(lengths) {
+incorrect_half_cm_measures <- function(lengths) {
   lengths <- prepare_lengths_for_check_measures(lengths)
 
   middle_species <- c("10152", "10156")

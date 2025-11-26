@@ -8,7 +8,7 @@
 #' the centimeter
 #' @note Check code: 1084
 
-check_cm_measures <- function(lengths) {
+incorrect_cm_measures <- function(lengths) {
   lengths <- prepare_lengths_for_check_measures(lengths)
 
   #Extract all the crustacean codes present

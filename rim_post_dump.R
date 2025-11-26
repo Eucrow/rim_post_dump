@@ -253,7 +253,7 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe
-# errors_cod_id <- check_cod_id(muestreos_up$catches)
+# errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
 copy_files_to_folder(PATH_ERRORS, PATH_SHARE_ERRORS)
