@@ -5,7 +5,7 @@
 #' @return dataframe with erroneous samples
 #' @note Check code: 1051
 
-check_port_mismatch_for_same_trip <- function(catches) {
+port_mismatch_for_same_trip <- function(catches) {
   
   errors <- catches[, BASE_FIELDS] %>% 
     unique() %>% 

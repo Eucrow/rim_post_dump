@@ -4,7 +4,7 @@
 #' @return Data frame with errors
 #' @note Check code: 1087
 
-check_more_than_two_ships <- function(catches) {
+more_than_two_ships <- function(catches) {
   
   catches <- catches[, c(BASE_FIELDS, "N_BARCOS")]
   
