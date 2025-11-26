@@ -1,6 +1,8 @@
 
 
-# function to make a backup of the errors files
+#' Make a backup of the errors files
+#' @return NULL (creates backup directory and copies files)
+#' @details Creates a timestamped backup directory and copies all CSV files from PATH_ERRORS to it
 backup_files <- function(){
   date <- Sys.time();
   date <- as.POSIXlt(date);
@@ -15,7 +17,10 @@ backup_files <- function(){
   lapply(as.list(files), function(x){ file.copy(x, directory_backup)})
 }
 
-# function to add variable with type of error to a dataframe
+#' Add variable with type of error to a dataframe
+#' @param df Data frame to add error type to
+#' @param ... Character strings to concatenate as error type
+#' @return Data frame with added TIPO_ERROR column
 add_type_of_error <- function(df, ...){
 
   arguments <- list(...)
@@ -29,16 +34,11 @@ add_type_of_error <- function(df, ...){
   return(df)
 }
 
-# function to format the errors produced
-# This function combine all the dataframes of the errors_list (a list of dataframes)
-# and format it:
-# - combine all dataframes in one
-# - order columns
-# - separate the dataframe by influence area
-# - order every area dataframe
-# - remove empty columns in every area dataframe
-# the separate_by_ia = FALSE generate one dataframe without separate by influence
-# area, but with the AREA_INF variable
+#' Format the errors list
+#' @param errors_list List of error dataframes (default: ERRORS)
+#' @param separate_by_ia Logical indicating whether to separate by influence area (default: TRUE)
+#' @return List of formatted error dataframes, optionally separated by influence area
+#' @details Combines all dataframes, orders columns, separates by influence area, and removes empty columns
 format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 
   # Combine all the dataframes of ERRORS list:
@@ -98,11 +98,12 @@ format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 
 
 
-# Export error list
-# This is an improvement of exportListToXlsx, with colorization of rows with the
-# same COD_ID variable.
-# This does not work: Always in row 23 the color is always the same.
-# Instead of color the rows, I put a line between different cod_id rows
+#' Export error list to Excel files
+#' @param list List of error dataframes to export
+#' @param filename Base filename for export (without extension)
+#' @param separation Separator character (unused in current implementation)
+#' @return NULL (creates Excel files in PATH_ERRORS directory)
+#' @details Creates Excel files with formatting, including borders between different COD_ID values
 export_errors_list <- function (list, filename, separation = "") {
 
   # Create errors subdirectory in case it doesn't exists:
@@ -186,8 +187,13 @@ export_errors_list <- function (list, filename, separation = "") {
 }
 
 
-# Export to google drive
-# Export the dataframes contained in a list to google drive
+#' Export error list to Google Sheets
+#' @param list List of error dataframes to export
+#' @param prefix Prefix for file names (default: "")
+#' @param suffix Suffix for file names (default: "")
+#' @param separation Separator between prefix/suffix and name (default: "")
+#' @return NULL (uploads files to Google Drive)
+#' @details Exports dataframes as CSV files locally, then uploads them as Google Sheets to specified Google Drive path
 export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separation = ""){
 
   #check if package openxlsx is instaled:
@@ -242,8 +248,11 @@ export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separati
 }
 
 
-#' Copy all the error files generated to a shared folder.
-#' Used to copy errors files generated to the shared folder
+#' Copy all the error files generated to a shared folder
+#' @param path_errors_from Source path of error files
+#' @param path_errors_to Destination path for error files
+#' @return NULL (copies files from source to destination)
+#' @details Used to copy errors files generated to the shared folder. Tests if source path exists and has files, creates destination folder if needed, and prevents overwriting existing files
 copy_files_to_folder <- function (path_errors_from, path_errors_to){
 
   # test if path_errors_from exists
@@ -274,10 +283,10 @@ copy_files_to_folder <- function (path_errors_from, path_errors_to){
 }
 
 
-#' Create character with month, months, or any other tag to name the months used
-#' in the names of files.
-#' @param month month or months used.
-#' @param suffix_multiple_month Suffix used when multiple months are used.
+#' Create character with month, months, or any other tag to name the months used in the names of files
+#' @param month Month or months used (default: MONTH)
+#' @param suffix_multiple_months Suffix used when multiple months are used
+#' @return Character string representing the month(s)
 create_month_as_character <- function(month = MONTH, suffix_multiple_months = suffix_multiple_months){
 
   if (length(month) == 1 && month %in% seq(1:12)){
@@ -293,14 +302,13 @@ create_month_as_character <- function(month = MONTH, suffix_multiple_months = su
 
 
 
-#' Create identifier of the month/months, with suffix. Used to create the filenames
-#' and folders.
-#' @param month month or months used.
-#' @param year year used.
-#' @param month_as_character month as character.
-#' @param suffix_multiple_months Suffix used when multiple months are used.
-#' @param suffix Suffix used at the end of the file name. Usefull to have multiple error
-#' detections of the same month or year.
+#' Create identifier of the month/months with suffix, used to create filenames and folders
+#' @param month Month or months used
+#' @param year Year used
+#' @param month_as_character Month as character
+#' @param suffix_multiple_months Suffix used when multiple months are used
+#' @param suffix Suffix used at the end of the file name (useful to have multiple error detections of the same month or year)
+#' @return Character string with the identifier in format YYYY_MM or YYYY_suffix
 create_identifier <- function(month,
                                  year,
                                  month_as_character,
@@ -321,15 +329,15 @@ create_identifier <- function(month,
 
 }
 
-#' Send errors files by email.
-#' @param accesory_email_info: df with two variables: AREA_INF (with the values GC,
-#' GS, GN and AC) and INTERNAL_LINK, with the link to the file.
-#' @param contacts: contacts data frame.
-#' @param credentials_file: file created with the function creds_file() from
-#' blastula package. Stored in private folder.
+#' Send errors files by email
+#' @param accessory_email_info Data frame with two variables: AREA_INF (with the values GC, GS, GN and AC) and INTERNAL_LINK, with the link to the file
+#' @param contacts Contacts data frame
+#' @param credentials_file File created with the function creds_file() from blastula package (stored in private folder)
+#' @param identification_sampling Identification string for the sampling period
+#' @return NULL (sends emails via SMTP)
 #' @details
-#' The internal_links data frame must have two variables:
-#' - AREA_INF: influence área with the values GC, GS, GN and AC, of the
+#' The accessory_email_info data frame must have two variables:
+#' - AREA_INF: influence area with the values GC, GS, GN and AC
 #' - LINK: with the link to the error file in its AREA_INF. If there
 #' aren't any error file of a certain AREA_INF, the LINK must be set
 #' to "" or NA.
@@ -346,8 +354,6 @@ create_identifier <- function(month,
 #' due to the confidential information contained in it. The contacts.csv file
 #' must have a comma separated format with two fields: ROLE and EMAIL. The first
 #' line must contain the name of the variables.
-#'
-#' @require
 send_errors_by_email <- function(accessory_email_info, contacts, credentials_file,
                               identification_sampling){
 
