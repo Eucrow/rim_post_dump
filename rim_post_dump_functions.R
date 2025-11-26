@@ -2,6 +2,7 @@
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param specification Specification parameter
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1019
 coherence_rim_stratum_gear <- function(catches, specification) {
   estrato_rim_arte$VALID <- TRUE
 
@@ -33,6 +34,7 @@ coherence_rim_stratum_gear <- function(catches, specification) {
 #' Detect errors in number of ships (empty field, = 0 or > 2)
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1021
 number_of_ships <- function(catches) {
   errors <- catches[
     catches["N_BARCOS"] == 0 |
@@ -56,6 +58,7 @@ number_of_ships <- function(catches) {
 #' Detect number of rejects (only empty, nas or null)
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1023
 number_of_rejections <- function(catches) {
   errors <- catches %>%
     filter(N_RECHAZOS == "" | is.na(N_RECHAZOS) | is.null(N_RECHAZOS)) %>%
@@ -74,6 +77,7 @@ number_of_rejections <- function(catches) {
 #' Detect samples with SOP > P_MUE_VIVO
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1043
 sop_greater_pes_mue_vivo <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -104,6 +108,7 @@ sop_greater_pes_mue_vivo <- function(catches_in_lengths) {
 #' Detect samples with SOP = 0
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1042
 sop_zero <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -131,6 +136,7 @@ sop_zero <- function(catches_in_lengths) {
 #' Detect samples with P_MUE_DESEM = 0 or NA
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1040
 pes_mue_desem_zero <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -158,6 +164,7 @@ pes_mue_desem_zero <- function(catches_in_lengths) {
 #' Detect samples with p_desem <= p_mue_desem
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1045
 pes_mue_desem_greater_pes_desem <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -193,6 +200,7 @@ pes_mue_desem_greater_pes_desem <- function(catches_in_lengths) {
 #' Detect samples with SOP > P_VIVO
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1044
 sop_greater_pes_vivo <- function(catches_in_lengths) {
   fields_to_select <- c(
     BASE_FIELDS,
@@ -228,6 +236,7 @@ sop_greater_pes_vivo <- function(catches_in_lengths) {
 #' Detect categories with equal species weight landings
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1041
 species_with_categories_with_same_weight_landing <- function(catches) {
   catches <- catches[, c(
     BASE_FIELDS,
@@ -258,6 +267,7 @@ species_with_categories_with_same_weight_landing <- function(catches) {
 #' Detect samples with categories which all of this species has the same sampled weight
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1036
 all_categories_with_same_sampled_weights <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -287,9 +297,10 @@ all_categories_with_same_sampled_weights <- function(catches_in_lengths) {
 }
 
 #' Detect samples with doubtful species of the category where
-#' the genus finished in -formes, -dae, - spp and - sp.
+#' the genus finished in -formes, -dae, - spp and - sp
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1031
 doubtful_category_species <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -324,9 +335,10 @@ doubtful_category_species <- function(catches_in_lengths) {
 }
 
 #' Detect samples with not allowed species of the category
-#' This function use the not allowed species dataframe of SAPMUEBASE.
+#' @details This function use the not allowed species dataframe of SAPMUEBASE
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1030
 not_allowed_category_species <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -365,6 +377,7 @@ not_allowed_category_species <- function(catches_in_lengths) {
 #' Detect foreign ships in MT1 samples
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1089
 check_foreing_ships_MT1 <- function(catches) {
   ships <- catches %>%
     select(any_of(BASE_FIELDS)) %>%
@@ -382,6 +395,7 @@ check_foreing_ships_MT1 <- function(catches) {
 #' Detect foreign ships in MT2 samples
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1024
 check_foreing_ships_MT2 <- function(catches) {
   ships <- catches %>%
     select(any_of(BASE_FIELDS)) %>%
@@ -397,13 +411,13 @@ check_foreing_ships_MT2 <- function(catches) {
 }
 
 
-#' Check code: 1026
 #' Ships registered in CFPO in removal state ("Baja Definitiva" and "Baja
 #' Provisional")
 #' @details Require a valid CFPO file.
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param cfpo: valid CFPO file.
 #' @return A dataframe with errors.
+#' @note Check code: 1026
 ships_not_registered <- function(catches, cfpo = CFPO) {
   catches <- unique(catches[, c(BASE_FIELDS, "COD_SGPM")])
   catches[, "CFR"] <- sprintf("ESP%09d", as.numeric(as.character(catches[["COD_SGPM"]])))
@@ -426,12 +440,12 @@ ships_not_registered <- function(catches, cfpo = CFPO) {
 }
 
 
-#' Check code: 1025
 #' Ships not in CFPO
 #' @details Require a valid CFPO file.
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param cfpo: valid CFPO file.
 #' @return A dataframe with errors.
+#' @note Check code: 1025
 ships_not_in_cfpo <- function(catches, cfpo = CFPO) {
   catches <- unique(catches[, c(BASE_FIELDS, "COD_SGPM")])
 
@@ -456,9 +470,10 @@ ships_not_in_cfpo <- function(catches, cfpo = CFPO) {
 }
 
 #' Detect if all mt2b has CERCO_GC or BACA_GC strata
-#' Only useful in COD_TIPO_MUE = 4
+#' @details Only useful in COD_TIPO_MUE = 4
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1018
 check_mt2b_rim_stratum <- function(catches) {
   # select all the mt2b samples
 
@@ -482,6 +497,7 @@ check_mt2b_rim_stratum <- function(catches) {
 #' Detect samples with weight sampled = 0 with lengths
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1037
 weight_sampled_zero_with_lengths_sampled <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -512,6 +528,7 @@ weight_sampled_zero_with_lengths_sampled <- function(catches_in_lengths) {
 #' Detect samples with weight landed = 0 or NA
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1038
 weight_landed_zero <- function(catches) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -538,6 +555,7 @@ weight_landed_zero <- function(catches) {
 #' Detect samples without lengths but with weight sampled
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1039
 weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -569,10 +587,11 @@ weight_sampled_without_lengths_sampled <- function(catches_in_lengths) {
 
 
 #' Detect false mt2 samples
-#' Samples with COD_TIPO_MUE as MT2 and without any length
+#' @details Samples with COD_TIPO_MUE as MT2 and without any length
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1017
 check_false_mt2 <- function(catches, lengths) {
   #Select all the samples with COD_TIPO_MUE = MT2
   mt2 <- catches[
@@ -604,10 +623,11 @@ check_false_mt2 <- function(catches, lengths) {
 }
 
 #' Detect false mt1 samples
-#' Samples with COD_TIPO_MUE as MT1A and lengths
+#' @details Samples with COD_TIPO_MUE as MT1A and lengths
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1016
 check_false_mt1 <- function(catches, lengths) {
   #Select all the samples with COD_TIPO_MUE = MT1
 
@@ -633,7 +653,7 @@ check_false_mt1 <- function(catches, lengths) {
 }
 
 #' Detect mixed species keyed as non mixed species
-#' In COD_ESP_MUE there are codes from non mixed species
+#' @details In COD_ESP_MUE there are codes from non mixed species
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
 check_mixed_as_no_mixed <- function(catches) {
@@ -658,9 +678,10 @@ check_mixed_as_no_mixed <- function(catches) {
 }
 
 #' Detect no mixed species keyed as mixed species
-#' In COD_ESP_MUE there are codes from mixed species
+#' @details In COD_ESP_MUE there are codes from mixed species
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1033
 check_no_mixed_as_mixed <- function(lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -696,6 +717,7 @@ check_no_mixed_as_mixed <- function(lengths) {
 #' Detect grouped species in Species of the Category
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors
+#' @note Check code: 1027
 mixed_species_in_category <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -734,6 +756,7 @@ mixed_species_in_category <- function(catches_in_lengths) {
 #' Detect doubtful species in Sampling Species
 #' @param catches Data frame with catches data
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1029
 doubtful_sampled_species <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
 
@@ -779,6 +802,7 @@ doubtful_sampled_species <- function(catches) {
 #' Detect if there are not allowed species in Sampling Species
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1028
 not_allowed_sampled_species <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
 
@@ -808,6 +832,7 @@ not_allowed_sampled_species <- function(catches) {
 #' Detect sexes with exactly the same sampled weight
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1034
 sexes_with_same_sampled_weight <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -840,6 +865,7 @@ sexes_with_same_sampled_weight <- function(catches_in_lengths) {
 #' Detect categories with various equal sexes (both of them male or female)
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1035
 categories_with_repeated_sexes <- function(catches_in_lengths) {
   selected_fields <- c(
     BASE_FIELDS,
@@ -868,13 +894,14 @@ categories_with_repeated_sexes <- function(catches_in_lengths) {
   return(NULL)
 }
 
-# check if the COD_ID variable is filled
-#' The COD_ID variable is filled when the data is dumped in SIRENO. But, if
+#' Check if the COD_ID variable is filled
+#' @details The COD_ID variable is filled when the data is dumped in SIRENO. But, if
 #' a new sample is hand typed, the COD_ID it is not generated and is saved as
 #' an empty field.
-#' This function check that all the registers of COD_ID are filled.
+#' This function check that all the registers of COD_ID are filled
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
-#' @return Return a dataframe with the erroneus codes.
+#' @return Return a dataframe with the erroneus codes
+#' @note Check code: 1060
 check_cod_id <- function(lengths) {
   if (variable_exists_in_df("COD_ID", lengths)) {
     errors <- lengths[is.na(lengths[["COD_ID"]]), ]
@@ -909,12 +936,13 @@ fix_length_weight_variable <- function(lengths) {
 }
 
 
-#' Detect if the content of variable TALL.PESO is allways TRUE.
-#' This logical variable is TRUE for lenghts samples and false to
+#' Detect if the content of variable TALL.PESO is allways TRUE
+#' @details This logical variable is TRUE for lenghts samples and false to
 #' weight samples.
-#' We allways work with lengths samples so all of them must be TRUE.
+#' We allways work with lengths samples so all of them must be TRUE
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1046
 check_length_weight_variable <- function(catches) {
     errors <- catches %>%
       select(any_of(c(BASE_FIELDS, "TALL.PESO"))) %>%
@@ -931,9 +959,10 @@ check_length_weight_variable <- function(catches) {
 
 
 #' Detect samples with no sexed species that must be sexed
-#' Sexed species must have the variable SEXO as M (male) or H (female).
+#' @details Sexed species must have the variable SEXO as M (male) or H (female)
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1047
 check_sexed_species <- function(lengths) {
   errors <- lengths %>%
     select(any_of(c(
@@ -986,9 +1015,10 @@ check_sexed_species <- function(lengths) {
 }
 
 #' Detect samples with sexed species that must not be sexed
-#' No sexed species must have the variable SEXO as U.
+#' @details No sexed species must have the variable SEXO as U
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1048
 check_no_sexed_species <- function(lengths) {
   # Subset especies_sexadas dataframe only with required?? variables:
   sexed_species <- especies_sexadas[, c("COD_ESP", "COD_PUERTO")]
@@ -1046,10 +1076,10 @@ check_no_sexed_species <- function(lengths) {
 
 
 #' Detect samples with same date, vessel, gear, and port but with different
-#' ESTRATO_RIM variable.
-#'
+#' ESTRATO_RIM variable
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1049
 check_multiple_rim_stratum <- function(catches) {
   errors <- catches %>%
     select(any_of(BASE_FIELDS)) %>%
@@ -1081,10 +1111,10 @@ check_multiple_rim_stratum <- function(catches) {
 }
 
 #' Detect multiple gear in the same trip: samples with same date, vessel,
-#' ESTRATO_RIM, TIPO_MUE, and port but with different gear variable.
-#'
+#' ESTRATO_RIM, TIPO_MUE, and port but with different gear variable
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1050
 check_multiple_gear <- function(catches) {
   errors <- catches %>%
     select(any_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
@@ -1117,9 +1147,10 @@ check_multiple_gear <- function(catches) {
 }
 
 #' Detecth multiple COD_PUERTO in the same trip: samples with same date,
-#' vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different port variable.
+#' vessel, ESTRATO_RIM, TIPO_MUE, and gear but with different port variable
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous samples if found, NULL otherwise
+#' @note Check code: 1032
 check_multiple_port <- function(catches) {
   # errors <- catches %>%
   #   select(any_of(c(BASE_FIELDS, "COD_ARTE", "ARTE"))) %>%
@@ -1148,10 +1179,11 @@ check_multiple_port <- function(catches) {
 }
 
 
-#' Detect coherence between ESTRATO_RIM and origin.
+#' Detect coherence between ESTRATO_RIM and origin
 #' @param catches Data frame with catches data
 #' @param specification Specification parameter
 #' @return A data frame with wrong coherence
+#' @note Check code: 1020
 check_coherence_rim_stratum_origin <- function(catches, specification) {
   estrato_rim_origen$VALID <- TRUE
 
@@ -1179,10 +1211,11 @@ check_coherence_rim_stratum_origin <- function(catches, specification) {
 }
 
 #' Detect ESTRATO_RIM and gear of trips with 2 ships
-#' Exception with Santa Eugenia de Ribeira port, that usually only one ship is
+#' @details Exception with Santa Eugenia de Ribeira port, that usually only one ship is
 #' sampled
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous trips if found, NULL otherwise
+#' @note Check code: 1022
 check_ships_pair_bottom_trawl <- function(catches) {
   errors <- catches %>%
     select(any_of(BASE_FIELDS), N_BARCOS) %>%
@@ -1207,10 +1240,10 @@ check_ships_pair_bottom_trawl <- function(catches) {
   #write.csv(errors, file = "parejas_num_barcos_1.csv")
 }
 
-#' Check code: 1052
-#' Detect lengths out of the size range of species in the rango_tallas_historico_caladero dataset.
+#' Detect lengths out of the size range of species in the rango_tallas_historico_caladero dataset
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with warnings lengths if found, NULL otherwise
+#' @note Check code: 1052
 check_size_range_by_fishing_ground <- function(lengths) {
   lengths <- merge(
     x = lengths,
@@ -1255,10 +1288,10 @@ check_size_range_by_fishing_ground <- function(lengths) {
   
   return(NULL)
 }
-#' Check code: 1065
-#' Detect species without historical range by fishing ground.
+#' Detect species without historical range by fishing ground
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1065
 check_range_in_historical <- function(lengths) {
   warningsIsRanged <- lengths %>%
     select(any_of(BASE_FIELDS), COD_ESP_CAT, COD_CATEGORIA) %>%
@@ -1577,11 +1610,11 @@ check_variable_with_master <- function(df, variable) {
   return(NULL)
 }
 
-#' Check code: 1061
 #' Detect if there are samples with the same name vessel but with different
-#' SIRENO codification or SGPM codification.
+#' SIRENO codification or SGPM codification
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1061
 check_multiple_ship_code <- function(catches) {
   # find the ship names with more than one COD_BARCO and COD_SGPM
   dsn <- catches %>%
@@ -1609,10 +1642,10 @@ check_multiple_ship_code <- function(catches) {
   return(NULL)
 }
 
-#' Check code: 1062
-#' Detect coherence between DCF Metier, Rim Stratum and Origin.
+#' Detect coherence between DCF Metier, Rim Stratum and Origin
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1062
 coherence_dcf_metier_rim_stratum_origin <- function(catches) {
   metier_caladero_dcf_clean <- metier_caladero_dcf[, c(
     "ESTRATO_RIM",
@@ -1650,10 +1683,10 @@ coherence_dcf_metier_rim_stratum_origin <- function(catches) {
   return(NULL)
 }
 
-#' Check code: 1063
-#' Detect coherence between DCF Fishing Ground, Rim Stratum and Origin.
+#' Detect coherence between DCF Fishing Ground, Rim Stratum and Origin
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1063
 coherence_dcf_fishing_ground_rim_stratum_origin <- function(catches) {
   metier_caladero_dcf_clean <- metier_caladero_dcf[, c(
     "ESTRATO_RIM",
@@ -1692,12 +1725,12 @@ coherence_dcf_fishing_ground_rim_stratum_origin <- function(catches) {
   return(NULL)
 }
 
-#' Check code: 1064
 #' Detect all the categories are measured. If one or more are not, return a
-#' warning.
+#' warning
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1064
 all_categories_measured <- function(catches, lengths) {
   # Some categories never are measured, so must be ignored
   regex_to_ignore <- c(
@@ -1780,13 +1813,13 @@ all_categories_measured <- function(catches, lengths) {
 }
 
 
-#' Check code: 1070 ----
-#' Detect if the value of variable is in prescriptions dataset. Use the
-#' prescriptions_rim_2021_variables dataset.
-#' @param df Dataframe where the variable to check is.
+#' Detect if the value of variable is in prescriptions dataset
+#' @details Use the prescriptions_rim_2021_variables dataset
+#' @param df Dataframe where the variable to check is
 #' @param variable Variable to check as character. Allowed variables:
-#' ESTRATO_RIM, COD_PUERTO, COD_ORIGEN, COD_ARTE, METIER_DCF and CALADERO_DCF.
+#' ESTRATO_RIM, COD_PUERTO, COD_ORIGEN, COD_ARTE, METIER_DCF and CALADERO_DCF
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1070
 check_variable_with_rim_mt2_prescriptions_post <- function(df, variable) {
   valid_variables = c(
     "ESTRATO_RIM",
@@ -1835,11 +1868,11 @@ check_variable_with_rim_mt2_prescriptions_post <- function(df, variable) {
 }
 
 
-#' Check code: 1069
 #' Detect if the variables "COD_PUERTO", "COD_ARTE", "COD_ORIGEN", "ESTRATO_RIM",
-#' "METIER_DCF" and "CALADERO_DCF" are coherent with MT2 rim prescriptions.
+#' "METIER_DCF" and "CALADERO_DCF" are coherent with MT2 rim prescriptions
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1069
 coherence_rim_mt2_prescriptions_post <- function(catches) {
   catches <- catches[catches[["COD_TIPO_MUE"]] == 2, ] #THIS IS DIFFERENT IN rim_pre_dump, COD_TIPO_MUE is "MT2A"
 
@@ -2007,16 +2040,15 @@ check_empty_values_in_variables <- function(df, variables, df_name) {
 }
 
 #' TODO: IS THIS FUNCTION USEFULL???
-#' Check code: 1071
 #' Empty fields in variables
-#' Return empty variables of a RIM dataframes imported by importRIM functions. Only
-#' variables saved in formato_variables dataset as mandatory are checked.
-#' @details Require one of the dataframes returned by importRIMFiles functions:
-#' importRIMCatches() and importRIMLengths().
-#' @param df: dataframe returned by one of the importRIM functions.
-#' @param type_file: type of the imported file according to this values:
-#' RIM_CATCHES or RIM_LENGTHS.
-#' @return A dataframe with the COD_MAREA and variables with values missing.
+#' @details Return empty variables of a RIM dataframes imported by importRIM functions. Only
+#' variables saved in formato_variables dataset as mandatory are checked. Require one of the dataframes returned by importRIMFiles functions:
+#' importRIMCatches() and importRIMLengths()
+#' @param df dataframe returned by one of the importRIM functions
+#' @param type_file type of the imported file according to this values:
+#' RIM_CATCHES or RIM_LENGTHS
+#' @return A dataframe with the COD_MAREA and variables with values missing
+#' @note Check code: 1071
 empty_fields_in_variables <- function(
   df,
   type_file = c("RIM_CATCHES", "RIM_LENGTHS")
@@ -2158,12 +2190,12 @@ priority_species_not_measured <- function(catches, lengths, group) {
   )]
 }
 
-#' Check code: 1077
-#' Detect G1 priority species with catches but not measured.
-#' Use MT2A and MT2B samples.
+#' Detect G1 priority species with catches but not measured
+#' @details Use MT2A and MT2B samples
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return Data frame with species of the priority group without samples measured
+#' @note Check code: 1077
 g1_species_not_measured <- function(catches, lengths) {
   errors <- priority_species_not_measured(catches, lengths, "G1")
 
@@ -2175,12 +2207,12 @@ g1_species_not_measured <- function(catches, lengths) {
   return(NULL)
 }
 
-#' Check code: 1078
-#' Detect G2 priority species with catches but not measured.
-#' Use MT2A and MT2B samples.
+#' Detect G2 priority species with catches but not measured
+#' @details Use MT2A and MT2B samples
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return Data frame with species of the priority group without samples measured
+#' @note Check code: 1078
 g2_species_not_measured <- function(catches, lengths) {
   errors <- priority_species_not_measured(catches, lengths, "G2")
 
@@ -2196,13 +2228,13 @@ g2_species_not_measured <- function(catches, lengths) {
 }
 
 
-#' Check code: 1079 PENDIENTE DE IMPLEMENTAR --> FALTA CREAR MAESTRO
 #' Function to check the presence of the ships from our ships' masterdata on the
 #' working data
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param shipFishingGearMaster master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022
 #' @return Data frame with those ships no presents in our working data if found, NULL otherwise
+#' @note Check code: 1079 PENDIENTE DE IMPLEMENTAR --> FALTA CREAR MAESTRO
 check_ship_no_master_fishing_gear <- function(catches, shipFishingGearMaster) {
   #Step 1: filter the necessary columns from the catches df and pass from level to normal data
 
@@ -2234,13 +2266,13 @@ check_ship_no_master_fishing_gear <- function(catches, shipFishingGearMaster) {
   return(NULL)
 }
 
-#' Check code: 1080 NOT IMPLEMENTED --> FALTA CREAR EL MAESTRO
 #' Function to check the coherence of the ESTRATO_RIM between our ships' masterdata
 #' and the working data
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param shipFishingGearMaster master dataframe with the code ships and its
 #' ESTRATO_RIM from 2020 to 2022
 #' @return Data frame that mark those ships where there is not coincidence if found, NULL otherwise
+#' @note Check code: 1080 NOT IMPLEMENTED --> FALTA CREAR EL MAESTRO
 check_ship_different_fishing_gear <- function(catches, shipFishingGearMaster) {
   #Step 1: add the "Testigo" column to shipFishingGearMaster and convert "COD_BARCO" and "ESTRATO_RIM" as parameter
 
@@ -2335,10 +2367,10 @@ check_ship_different_fishing_gear <- function(catches, shipFishingGearMaster) {
 }
 
 
-#' Check code: 1081
-#' Detect ships with "COD_SGPM" value empty, "0" or NA.
+#' Detect ships with "COD_SGPM" value empty, "0" or NA
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return Data frame with errors if found, NULL otherwise
+#' @note Check code: 1081
 ship_without_cod_sgpm <- function(catches) {
   catches <- catches[
     catches$COD_SGPM == "0" | catches$COD_SGPM == "" | is.na(catches$COD_SGPM),
@@ -2357,12 +2389,12 @@ ship_without_cod_sgpm <- function(catches) {
   return(NULL)
 }
 
-#' Check code: 1082
 #' Detect categories with code ended in '99' and its sample type is different of
-#' "MT2B(Muestreo a bordo)" or "MT3 (Muestreo dirigido)". Categories ended
-#' in '99' can only be assigned to one of those sample types.
+#' "MT2B(Muestreo a bordo)" or "MT3 (Muestreo dirigido)"
+#' @details Categories ended in '99' can only be assigned to one of those sample types
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return Data frame with errors if found, NULL otherwise
+#' @note Check code: 1082
 categories_99_not_in_mt2b <- function(catches) {
   catches <- catches[
     !(catches$COD_TIPO_MUE %in% c("4", "6")) &
@@ -2384,11 +2416,11 @@ categories_99_not_in_mt2b <- function(catches) {
 
 
 # TODO: THIS FUNCTIONS DETECT THE CHECKED SAMPLES, NOT THE VALIDATED ONES???
-#' Check code: 1083
-#' Detect samples that are not validated (column "VALIDADO" from length dataframe
-#' with FALSE or NA values).
+#' Detect samples that are not validated
+#' @details Column "VALIDADO" from length dataframe with FALSE or NA values
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return Data frame with errors if found, NULL otherwise
+#' @note Check code: 1083
 sampling_is_checked <- function(lengths){
   
   # Base work columns

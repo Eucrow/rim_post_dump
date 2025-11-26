@@ -1,8 +1,8 @@
-#' Check code: 1087
-#' Detect hauls where the number of ships is greater than two.
-#' @param catches: catches data frame returned by the importRIMCatchesInLengths() 
-#' or importRIMFiles() functions.
-#' @return Data frame whit errors.
+#' Detect hauls where the number of ships is greater than two
+#' @param catches catches data frame returned by the importRIMCatchesInLengths() 
+#' or importRIMFiles() functions
+#' @return Data frame with errors
+#' @note Check code: 1087
 
 check_more_than_two_ships <- function(catches) {
   
