@@ -28,20 +28,20 @@ rim_check <- function(samples_imported) {
 
     err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 
-    err$false_MT1 <- check_false_mt1(catches, lengths_sampled)
+    err$false_MT1 <- detect_false_mt1(catches, lengths_sampled)
 
-    err$false_MT2 <- check_false_mt2(catches, lengths_sampled)
+    err$false_MT2 <- detect_false_mt2(catches, lengths_sampled)
 
-    err$no_mixed_as_mixed <- check_no_mixed_as_mixed(lengths_sampled)
+    err$no_mixed_as_mixed <- no_mixed_as_mixed(lengths_sampled)
 
-    err$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
+    err$mixed_as_no_mixed <- mixed_as_no_mixed(catches)
 
-    # err$estrato_rim_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
-    # err$puerto_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
-    # err$origen_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
-    # err$arte_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ARTE")
-    # err$metier_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "METIER_DCF")
-    # err$caladero_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "CALADERO_DCF")
+    # err$estrato_rim_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
+    # err$puerto_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
+    # err$origen_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
+    # err$arte_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_ARTE")
+    # err$metier_dcf_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "METIER_DCF")
+    # err$caladero_dcf_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "CALADERO_DCF")
 
     err$empty_fields_in_variables_catches <- empty_fields_in_variables(
       catches,
@@ -55,28 +55,28 @@ rim_check <- function(samples_imported) {
     # ---- IN HEADER ----
 
     # TODO: I think this check must be deleted:
-    err$errors_mt2b_rim_stratum <- check_mt2b_rim_stratum(catches)
+    err$errors_mt2b_rim_stratum <- validate_mt2b_rim_stratum(catches)
 
     err$coherence_estrato_rim_gear <- coherence_rim_stratum_gear(catches, "RIM")
 
-    err$coherence_estrato_rim_origin <- check_coherence_rim_stratum_origin(
+    err$coherence_estrato_rim_origin <- coherence_rim_stratum_origin(
       catches,
       "RIM"
     )
 
     # err$coherence_rim_mt2_prescriptions <- coherence_rim_mt2_prescriptions_post(catches)
 
-    err$no_ships <- check_no_ships(catches)
+    err$no_ships <- no_ships(catches)
     
-    err$more_than_two_ships <- check_more_than_two_ships(catches)
+    err$more_than_two_ships <- more_than_two_ships(catches)
 
     err$number_of_rejections <- number_of_rejections(catches)
 
-    err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
+    err$errors_countries_mt1 <- foreign_ships_mt1(catches)
 
-    err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
+    err$errors_countries_mt2 <- foreign_ships_mt2(catches)
 
-    err$multiple_ship_code <- check_multiple_ship_code(catches)
+    err$multiple_ship_code <- multiple_ship_code(catches)
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
 
@@ -89,13 +89,13 @@ rim_check <- function(samples_imported) {
 
     err$errors_ships_not_registered <- ships_not_registered(catches)
 
-    err$errors_multiple_estrato_rim <- check_multiple_rim_stratum(catches)
+    err$errors_multiple_estrato_rim <- multiple_rim_stratum(catches)
 
-    err$errors_multiple_arte <- check_multiple_gear(catches)
+    err$errors_multiple_arte <- multiple_gear(catches)
 
-    err$errors_multiple_puerto <- check_port_mismatch_for_same_trip(catches)
+    err$errors_multiple_puerto <- port_mismatch_for_same_trip(catches)
 
-    err$errors_num_barcos_pareja <- check_ships_pair_bottom_trawl(catches)
+    err$errors_num_barcos_pareja <- ships_pair_bottom_trawl(catches)
 
     err$estrategia <- check_strategy(catches)
 
@@ -139,18 +139,18 @@ rim_check <- function(samples_imported) {
       catches_in_lengths
     )
 
-    err$lenghts_weights_sample <- check_length_weight_variable(catches)
+    err$lenghts_weights_sample <- validate_length_weight_variable(catches)
 
-    err$no_sexed_species <- check_no_sexed_species(lengths_sampled)
+    err$no_sexed_species <- no_sexed_species(lengths_sampled)
 
-    err$sexed_species <- check_sexed_species(lengths_sampled)
+    err$sexed_species <- sexed_species(lengths_sampled)
 
     err$taxonomic_specie_confusion <- taxonomic_specie_confusion(
       catches,
       catches_in_lengths
     )
     
-    err$new_species_sampled <- check_new_species_sampled(catches_in_lengths)
+    err$new_species_sampled <- new_species_sampled(catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
     # err$a3CodeFilled <- check_variable_filled(catches, "A3_ESP_MUE")
@@ -201,18 +201,18 @@ rim_check <- function(samples_imported) {
       lengths_sampled
     )
 
-    err$check_cm_measures <- check_cm_measures(lengths_sampled)
+    err$check_cm_measures <- incorrect_cm_measures(lengths_sampled)
 
-    err$check_half_cm_measures <- check_half_cm_measures(lengths_sampled)
+    err$check_half_cm_measures <- incorrect_half_cm_measures(lengths_sampled)
 
     # uncomment in annual checks
     # err$unchecked_sampligs <- getUncheckedSamplings(lengths_sampled)
 
     # comment in annual:
-    err$with_historical_size_range <- check_range_in_historical(lengths_sampled)
+    err$with_historical_size_range <- species_without_historical_range(lengths_sampled)
 
     # comment in annual:
-    err$size_range <- check_size_range_by_fishing_ground(lengths_sampled)
+    err$size_range <- lengths_outside_size_range(lengths_sampled)
     err$g1_species_not_measured <- g1_species_not_measured(catches, lengths_sampled)
     err$g2_species_not_measured <- g2_species_not_measured(catches, lengths_sampled)
 
@@ -220,9 +220,9 @@ rim_check <- function(samples_imported) {
     # This check is useful in the annual review. When the data is dumped in
     # SIRENO, COD_ID is automatically filled. But, if later someone add a new
     # sample, the COD_ID doesn't fill and is saved as empty.
-    err$cod_id_filled_catches <- check_cod_id(catches)
-    err$cod_id_filled_catches_in_lengths <- check_cod_id(catches_in_lengths)
-    err$cod_id_filled_lengths <- check_cod_id(lengths_sampled)
+    err$cod_id_filled_catches <- validate_cod_id(catches)
+    err$cod_id_filled_catches_in_lengths <- validate_cod_id(catches_in_lengths)
+    err$cod_id_filled_lengths <- validate_cod_id(lengths_sampled)
 
     # ---- COMBINE ERRORS ----
 

@@ -36,22 +36,22 @@ oab_check <- function (samples_imported) {
 
     # err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
 
-    err$false_MT1 <- check_false_mt1(catches, lengths_sampled)
+    err$false_MT1 <- detect_false_mt1(catches, lengths_sampled)
 
-    err$false_MT2 <- check_false_mt2(catches, lengths_sampled)
+    err$false_MT2 <- detect_false_mt2(catches, lengths_sampled)
 
-    err$no_mixed_as_mixed <- check_no_mixed_as_mixed(lengths_sampled)
+    err$no_mixed_as_mixed <- no_mixed_as_mixed(lengths_sampled)
 
-    err$mixed_as_no_mixed <- check_mixed_as_no_mixed(catches)
+    err$mixed_as_no_mixed <- mixed_as_no_mixed(catches)
 
     # this is new... I don't know if can be applied in oab in rim samples:
     # TODO: test it.
-    err$estrato_rim_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
-    err$puerto_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
-    err$origen_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
-    err$arte_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "COD_ARTE")
-    err$metier_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "METIER_DCF")
-    err$caladero_dcf_prescriptions <- check_variable_with_rim_mt2_prescriptions_post(catches, "CALADERO_DCF")
+    err$estrato_rim_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
+    err$puerto_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
+    err$origen_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
+    err$arte_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_ARTE")
+    err$metier_dcf_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "METIER_DCF")
+    err$caladero_dcf_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "CALADERO_DCF")
 
     err$empty_fields_in_variables_catches <- empty_fields_in_variables(catches, "RIM_CATCHES")
     err$empty_fields_in_variables_lengths <- empty_fields_in_variables(lengths_sampled, "RIM_LENGTHS")
@@ -59,11 +59,11 @@ oab_check <- function (samples_imported) {
 
     # ---- IN HEADER ----
 
-    # err$errors_mt2b_rim_stratum <- check_mt2b_rim_stratum(catches)
+    # err$errors_mt2b_rim_stratum <- validate_mt2b_rim_stratum(catches)
 
     err$coherence_estrato_rim_gear <- coherence_rim_stratum_gear(catches)
 
-    err$coherence_estrato_rim_origin <- check_coherence_rim_stratum_origin(catches)
+    err$coherence_estrato_rim_origin <- coherence_rim_stratum_origin(catches)
 
     # err$coherence_rim_mt2_prescriptions <- coherence_rim_mt2_prescriptions_post(catches)
 
@@ -71,11 +71,11 @@ oab_check <- function (samples_imported) {
 
     # err$number_of_rejections <- number_of_rejections(catches)
 
-    err$errors_countries_mt1 <- check_foreing_ships_MT1(catches)
+    err$errors_countries_mt1 <- foreign_ships_mt1(catches)
 
-    err$errors_countries_mt2 <- check_foreing_ships_MT2(catches)
+    err$errors_countries_mt2 <- foreign_ships_mt2(catches)
 
-    err$multiple_ship_code <- check_multiple_ship_code(catches)
+    err$multiple_ship_code <- multiple_ship_code(catches)
 
 
     ##### TO DO: ADD CHECKING SHIPS WITH SIRENO FILES
@@ -89,13 +89,13 @@ oab_check <- function (samples_imported) {
 
     err$errors_ships_not_registered <- ships_not_registered(catches)
 
-    err$errors_multiple_estrato_rim <- check_multiple_rim_stratum(catches)
+    err$errors_multiple_estrato_rim <- multiple_rim_stratum(catches)
 
-    err$errors_multiple_arte <- check_multiple_gear(catches)
+    err$errors_multiple_arte <- multiple_gear(catches)
 
-    err$errors_multiple_puerto <- check_multiple_port(catches)
+    err$errors_multiple_puerto <- multiple_port(catches)
 
-    err$errors_num_barcos_pareja <- check_ships_pair_bottom_trawl(catches)
+    err$errors_num_barcos_pareja <- ships_pair_bottom_trawl(catches)
 
     err$estrategia <- check_strategy(catches)
 
@@ -131,11 +131,11 @@ oab_check <- function (samples_imported) {
 
     err$categories_with_repeated_sexes <- categories_with_repeated_sexes(catches_in_lengths)
 
-    err$lenghts_weights_sample <- check_length_weight_variable(catches)
+    err$lenghts_weights_sample <- validate_length_weight_variable(catches)
 
-    err$no_sexed_species <- check_no_sexed_species(lengths_sampled)
+    err$no_sexed_species <- no_sexed_species(lengths_sampled)
 
-    err$sexed_species <- check_sexed_species(lengths_sampled)
+    err$sexed_species <- sexed_species(lengths_sampled)
 
     err$taxonomic_specie_confusion <- taxonomic_specie_confusion(catches, catches_in_lengths)
 
@@ -173,17 +173,17 @@ oab_check <- function (samples_imported) {
 
 
     # ---- IN LENGTHS ----
-    err$with_historical_size_range <- check_range_in_historical(lengths_sampled)
-    err$size_range <- check_size_range_by_fishing_ground(lengths_sampled)
+    err$with_historical_size_range <- species_without_historical_range(lengths_sampled)
+    err$size_range <- lengths_outside_size_range(lengths_sampled)
 
 
     # ---- COD_ID ----
     # This check is usefull in the anual review. When the data is dumped in
     # SIRENO, COD_ID is automatically filled. But, if later someone add a new
     # sample, the COD_ID doesn't fill and is saved as empty.
-    err$cod_id_filled_catches <- check_cod_id(catches)
-    err$cod_id_filled_catches_in_lengths <- check_cod_id(catches_in_lengths)
-    err$cod_id_filled_lengths <- check_cod_id(lengths_sampled)
+    err$cod_id_filled_catches <- validate_cod_id(catches)
+    err$cod_id_filled_catches_in_lengths <- validate_cod_id(catches_in_lengths)
+    err$cod_id_filled_lengths <- validate_cod_id(lengths_sampled)
 
     # ---- COMBINE ERRORS ----
 

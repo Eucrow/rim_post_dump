@@ -1,10 +1,10 @@
-#' Check code: 1021
-#' Detect hauls where the number of ships is zero or NA.
-#' @param catches: catches data frame returned by the importRIMCatches()
-#' or importRIMFiles() functions.
-#' @return Data frame whit errors.
+#' Detect hauls where the number of ships is zero or NA
+#' @param catches catches data frame returned by the importRIMCatches()
+#' or importRIMFiles() functions
+#' @return Data frame with errors
+#' @note Check code: 1021
 
-check_no_ships <- function(catches) {
+no_ships <- function(catches) {
   
   catches <- catches[, c(BASE_FIELDS, "N_BARCOS")]
   

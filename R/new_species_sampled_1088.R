@@ -1,10 +1,10 @@
-#' Check code: 1088
 #' Check if the sampled species are present in the historical dataset from 2021 to 2024
-#' @param catches_in_lengths: catches data frame returned by the importRIMCatchesInLengths() 
-#' or importRIMFiles() functions.
+#' @param catches_in_lengths catches data frame returned by the importRIMCatchesInLengths() 
+#' or importRIMFiles() functions
 #' @return dataframe with erroneous samples
+#' @note Check code: 1088
 
-check_new_species_sampled <- function(catches_in_lengths){
+new_species_sampled <- function(catches_in_lengths){
   
   error <- catches_in_lengths[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", 
                                   "COD_ESP_CAT", "ESP_CAT")]
