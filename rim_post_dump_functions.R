@@ -1358,7 +1358,7 @@ check_catches_p99 <- function(catches) {
 #' Detect incoherence between ESTRATEGIA and COD_TIPO_MUE
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
-check_strategy <- function(catches) {
+coherence_strategy_sample_type <- function(catches) {
   error_strategy <- catches %>%
     select(any_of(c(BASE_FIELDS, "ESTRATEGIA"))) %>%
     anti_join(y = tipo_muestreo, by = c("COD_TIPO_MUE", "ESTRATEGIA"))
@@ -1410,7 +1410,7 @@ multiple_type_sample <- function(catches) {
 #' than 3 or minor than 0
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous trips if found, NULL otherwise
-check_elapsed_days <- function(catches) {
+elapsed_days_exceeded <- function(catches) {
   catches$FECHA_MUE <- as.POSIXlt(catches$FECHA_MUE, format = "%d-%m-%y")
 
   # change the column "FECHA_DESEM" to a date format
@@ -1503,7 +1503,7 @@ taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
 #' ignore ESTRATO_RIM and COD_TIPO_MUE variables.
 #' @param catches Data frame with catches data
 #' @return A data frame with warnings if found, NULL otherwise
-check_same_trip_in_various_ports <- function(catches) {
+same_trip_in_various_ports <- function(catches) {
   err <- catches %>%
     select(COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
     unique() %>%
@@ -1529,7 +1529,7 @@ check_same_trip_in_various_ports <- function(catches) {
 #' @param df Data frame to check
 #' @param var Variable name to check
 #' @return A data frame with errors
-check_variable_filled <- function(df, var) {
+variable_not_filled <- function(df, var) {
   tryCatch(
     {
       variable_exists_in_df(var, df)
@@ -1559,7 +1559,7 @@ check_variable_filled <- function(df, var) {
 #' @param variable one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
 #' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
 #' @return A data frame with samples containing erroneous variables if found, NULL otherwise
-check_variable_with_master <- function(df, variable) {
+variable_not_in_master <- function(df, variable) {
   if (
     variable != "ESTRATO_RIM" &&
       variable != "COD_PUERTO" &&
@@ -1965,7 +1965,7 @@ variable_exists_in_df <- function(variable, df) {
 #' @return A list with a dataframe of every variable with empty values. Every
 #' dataframe contains erroneous rows.
 #' @export
-check_empty_values_in_variables <- function(df, variables, df_name) {
+empty_values_in_variables <- function(df, variables, df_name) {
   # check if all the variables are in the dataframe
   if (!all(variables %in% colnames(df))) {
     stop("Not all the variables are in the dataframe.")
@@ -2071,7 +2071,7 @@ empty_fields_in_variables <- function(
   ]
   df_mandatory <- df[, mandatory]
 
-  err <- check_empty_values_in_variables(df_mandatory, mandatory, helper_text)
+  err <- empty_values_in_variables(df_mandatory, mandatory, helper_text)
 
   # in case there aren't any errors, check_empty_values returns NULL, so:
   if (!is.null(err)) {

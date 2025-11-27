@@ -24,17 +24,17 @@ oab_check <- function (samples_imported) {
 
     # ---- REPEATED IN IPDTOSIRENO ----
 
-    err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+    err$estrato_rim <- variable_not_in_master(catches, "ESTRATO_RIM")
 
-    # err$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+    # err$puerto <- variable_not_in_master(catches, "COD_PUERTO")
 
-    err$arte <- check_variable_with_master(catches, "COD_ARTE")
+    err$arte <- variable_not_in_master(catches, "COD_ARTE")
 
-    err$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+    err$origen <- variable_not_in_master(catches, "COD_ORIGEN")
 
-    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+    err$procedencia <- variable_not_in_master(catches, "PROCEDENCIA")
 
-    # err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+    # err$tipo_muestreo <- variable_not_in_master(catches, "COD_TIPO_MUE")
 
     err$false_MT1 <- detect_false_mt1(catches, lengths_sampled)
 
@@ -97,16 +97,16 @@ oab_check <- function (samples_imported) {
 
     err$errors_num_barcos_pareja <- ships_pair_bottom_trawl(catches)
 
-    err$estrategia <- check_strategy(catches)
+    err$estrategia <- coherence_strategy_sample_type(catches)
 
     # this is done before filter by type sample:
     # err$multiple_tipo_muestreo <- multiple_type_sample(catches)
 
-    err$tiempo_transcurrido <- check_elapsed_days(catches)
+    err$tiempo_transcurrido <- elapsed_days_exceeded(catches)
 
-    err$check_same_trip_in_various_ports <- check_same_trip_in_various_ports(catches)
+    err$check_same_trip_in_various_ports <- same_trip_in_various_ports(catches)
 
-    err$checkSample_In_Charge <- check_variable_filled(catches, "RESPONSABLE_MUESTREO")
+    err$checkSample_In_Charge <- variable_not_filled(catches, "RESPONSABLE_MUESTREO")
 
     # This errors must be used only in anual, when the Fishing Ground and DCF
     # Metier is filled:
@@ -140,7 +140,7 @@ oab_check <- function (samples_imported) {
     err$taxonomic_specie_confusion <- taxonomic_specie_confusion(catches, catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches, "A3_ESP_MUE")
+    # err$a3CodeFilled <- variable_not_filled(catches, "A3_ESP_MUE")
 
 
     # ---- IN WEIGHTS ----
@@ -166,7 +166,7 @@ oab_check <- function (samples_imported) {
     err$pes_mue_desem_mayor_pes_desem <- pes_mue_desem_greater_pes_desem(catches_in_lengths)
 
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches_in_lengths, "A3_ESP_CAT")
+    # err$a3CodeFilled <- variable_not_filled(catches_in_lengths, "A3_ESP_CAT")
 
     # comment in annual:
     # err$capturas_percentil_99 <- check_catches_p99(catches)
