@@ -16,17 +16,17 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
 
     # ---- REPEATED IN IPDTOSIRENO ----
 
-    # err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+    # err$estrato_rim <- variable_not_in_master(catches, "ESTRATO_RIM")
     #
-    # err$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+    # err$puerto <- variable_not_in_master(catches, "COD_PUERTO")
     #
-    # err$arte <- check_variable_with_master(catches, "COD_ARTE")
+    # err$arte <- variable_not_in_master(catches, "COD_ARTE")
     #
-    # err$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+    # err$origen <- variable_not_in_master(catches, "COD_ORIGEN")
     #
-    # err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+    # err$procedencia <- variable_not_in_master(catches, "PROCEDENCIA")
     #
-    # err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+    # err$tipo_muestreo <- variable_not_in_master(catches, "COD_TIPO_MUE")
     #
     # err$false_MT1 <- detect_false_mt1(catches, lengths_sampled)
     #
@@ -89,15 +89,15 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$errors_num_barcos_pareja <- ships_pair_bottom_trawl(catches)
     #
-    # err$estrategia <- check_strategy(catches)
+    # err$estrategia <- coherence_strategy_sample_type(catches)
     #
     # err$multiple_tipo_muestreo <- multiple_type_sample(catches)
     #
-    # err$tiempo_transcurrido <- check_elapsed_days(catches)
+    # err$tiempo_transcurrido <- elapsed_days_exceeded(catches)
     #
-    # err$check_same_trip_in_various_ports <- check_same_trip_in_various_ports(catches)
+    # err$check_same_trip_in_various_ports <- same_trip_in_various_ports(catches)
     #
-    # err$checkSampleInCharge <- check_variable_filled(catches, "RESPONSABLE_MUESTREO")
+    # err$checkSampleInCharge <- variable_not_filled(catches, "RESPONSABLE_MUESTREO")
     #
     # err$ship_without_cod_sgpm <- ship_without_cod_sgpm(catches)
 
@@ -109,12 +109,12 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     err$coherence_dcf_metier_rim_stratum_origin <- coherence_dcf_metier_rim_stratum_origin(
       catches
     )
-    err$emptyFishingGround <- check_empty_values_in_variables(
+    err$emptyFishingGround <- empty_values_in_variables(
       catches,
       "CALADERO_DCF",
       "catches"
     )
-    err$emptyMetier <- check_empty_values_in_variables(
+    err$emptyMetier <- empty_values_in_variables(
       catches,
       "METIER_DCF",
       "catches"
@@ -148,7 +148,7 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     # err$new_species_sampled <- new_species_sampled(catches_in_lengths)
     #
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches, "A3_ESP_MUE")
+    # err$a3CodeFilled <- variable_not_filled(catches, "A3_ESP_MUE")
     #
     #
     # # ---- IN WEIGHTS ----
@@ -174,7 +174,7 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     # err$pes_mue_desem_mayor_pes_desem <- pes_mue_desem_greater_pes_desem(catches_in_lengths)
     #
     # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches_in_lengths, "A3_ESP_CAT")
+    # err$a3CodeFilled <- variable_not_filled(catches_in_lengths, "A3_ESP_CAT")
     #
     # err$categories_99_not_in_mt2b <- categories_99_not_in_mt2b(catches)
     #
