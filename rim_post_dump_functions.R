@@ -2414,8 +2414,7 @@ categories_99_not_in_mt2b <- function(catches) {
   return(NULL)
 }
 
-
-# TODO: THIS FUNCTIONS DETECT THE CHECKED SAMPLES, NOT THE VALIDATED ONES???
+# TODO: This function detects the checked samples, not the validated ones
 #' Detect samples that are not validated
 #' @details Column "VALIDADO" from length dataframe with FALSE or NA values
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()

@@ -147,7 +147,7 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$new_species_sampled <- new_species_sampled(catches_in_lengths)
     #
-    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
+    # TODO: Find a better way to check this, which adds the species name
     # err$a3CodeFilled <- variable_not_filled(catches, "A3_ESP_MUE")
     #
     #
@@ -173,7 +173,7 @@ rim_check_annual_nvdp_matched <- function(samples_imported) {
     #
     # err$pes_mue_desem_mayor_pes_desem <- pes_mue_desem_greater_pes_desem(catches_in_lengths)
     #
-    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
+    # TODO: Find a better way to check this, which adds the species name
     # err$a3CodeFilled <- variable_not_filled(catches_in_lengths, "A3_ESP_CAT")
     #
     # err$categories_99_not_in_mt2b <- categories_99_not_in_mt2b(catches)
