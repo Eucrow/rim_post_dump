@@ -16,7 +16,7 @@ more_than_two_ships <- function(catches) {
   if (nrow(errors) > 0) {
     errors <- add_type_of_error(
       errors,
-      "WARNING 1087: number of vessels is greater than 2."
+      "WARNING 1087: Número de barcos mayor que 2."
     )
   }
   

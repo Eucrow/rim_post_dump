@@ -2435,7 +2435,7 @@ sampling_is_checked <- function(lengths){
   if(nrow(lengths)>0){
     lengths <- add_type_of_error(
       lengths,
-      "WARNING: sample is not checked"
+      "WARNING: Muestra no chequeada."
     )
     return(lengths)
   }
