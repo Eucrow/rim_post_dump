@@ -6,11 +6,10 @@
 #' @note Check code: 1085
 
 trip_is_checked <- function(catches) {
-  BASE_FIELDS <- c(BASE_FIELDS, "CHEQUEADO")
   
   catches <- catches[
     is.na(catches$CHEQUEADO) | catches$CHEQUEADO == FALSE,
-    BASE_FIELDS
+    c(BASE_FIELDS, "CHEQUEADO")
   ]
   
   if (nrow(catches) > 0) {

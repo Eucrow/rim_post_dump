@@ -9,10 +9,11 @@ new_species_sampled <- function(catches_in_lengths){
   error <- catches_in_lengths[, c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE", 
                                   "COD_ESP_CAT", "ESP_CAT")]
   
-  historical_species_sampled$TEST <- "T"
+  historical_species <- historical_species_sampled
+  historical_species$TEST <- "T"
   
   error <- merge(error,
-                 historical_species_sampled,
+                 historical_species,
                  all.x = TRUE)
   
   error <- error[is.na(error$TEST), ]
