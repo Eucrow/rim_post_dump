@@ -54,7 +54,7 @@ rim_check <- function(samples_imported) {
 
     # ---- IN HEADER ----
 
-    # TODO: I think this check must be deleted:
+    # TODO: I think this check must be deleted
     err$errors_mt2b_rim_stratum <- validate_mt2b_rim_stratum(catches)
 
     err$coherence_estrato_rim_gear <- coherence_rim_stratum_gear(catches, "RIM")

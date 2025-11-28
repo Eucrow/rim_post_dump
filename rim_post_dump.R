@@ -18,11 +18,6 @@
 #   - R (folder with individual function files)
 #
 # To use this script:
-# - Required files in the same directory: rim_post_dump_functions.R,
-#   rim_post_dump_auxiliary_functions.R, rim_check.R, rim_check_annual.R,
-#   rim_check_annual_nvdp_matched.R, oab_check.R
-# - Required folders: data-raw/ (with species CSV files), private/ (with
-#   contacts.csv and CFPO file), R/ (with individual function files)
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
 #   script.
 # - A file "contacts.csv" must be stored in private folder. This data set
@@ -169,8 +164,12 @@ PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 FILES_TO_BACKUP <- c(
   "rim_post_dump.R",
   "rim_post_dump_functions.R",
+  "rim_post_dump_auxiliary_functions.R",
   "rim_check.R",
+  "rim_check_annual.R",
+  "rim_check_annual_nvdp_matched.R",
   "oab_check.R",
+  list.files("R", pattern = "\\.R$", full.names = TRUE),
   file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
   file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
@@ -234,8 +233,7 @@ muestreos_up <- importRIMFiles(
   # ,  by_month = MONTH
 )
 
-
-##TODO: create a coherence check rim_stratum-origin??
+# TODO: Create a coherence check rim_stratum-origin
 # SEARCHING ERRORS -------------------------------------------------------------
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)

@@ -45,7 +45,7 @@ oab_check <- function (samples_imported) {
     err$mixed_as_no_mixed <- mixed_as_no_mixed(catches)
 
     # this is new... I don't know if can be applied in oab in rim samples:
-    # TODO: test it.
+    # TODO: Test it
     err$estrato_rim_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "ESTRATO_RIM")
     err$puerto_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_PUERTO")
     err$origen_prescriptions <- variable_with_rim_mt2_prescriptions_post(catches, "COD_ORIGEN")
