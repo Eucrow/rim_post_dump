@@ -18,8 +18,8 @@ no_ships <- function(catches) {
       errors,
       "ERROR 1021: Número de barcos 0 o NA."
     )
+    return(errors)
   }
   
-  return(errors)
-  
+  return(NULL)
 }

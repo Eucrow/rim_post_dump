@@ -437,6 +437,8 @@ ships_not_registered <- function(catches, cfpo = CFPO) {
     errors <- cbind(errors, "TIPO_ERROR" = text_type_of_error)
     return(errors)
   }
+  
+  return(NULL)
 }
 
 
@@ -748,9 +750,10 @@ mixed_species_in_category <- function(catches_in_lengths) {
       errors,
       "ERROR: muestreo MT2 con especie de mezcla que está agrupada en Especies para la Categoría"
     )
+    return(errors)
   }
   
-  return(errors)
+  return(NULL)
 }
 
 #' Detect doubtful species in Sampling Species
@@ -1546,6 +1549,7 @@ variable_not_filled <- function(df, var) {
     },
     error = function(e) {
       print(e)
+      return(NULL)
     }
   )
 }
@@ -2077,6 +2081,8 @@ empty_fields_in_variables <- function(
   if (!is.null(err)) {
     return(err)
   }
+  
+  return(NULL)
 }
 
 #' Function to process length's RIM file for the functions checkMiddleMeasures() and
