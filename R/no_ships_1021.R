@@ -16,7 +16,7 @@ no_ships <- function(catches) {
   if (nrow(errors) > 0) {
     errors <- add_type_of_error(
       errors,
-      "ERROR 1021: number of vessels is 0 or NA."
+      "ERROR 1021: Número de barcos 0 o NA."
     )
   }
   

@@ -15,7 +15,7 @@ trip_is_checked <- function(catches) {
   if (nrow(catches) > 0) {
     catches <- add_type_of_error(
       catches,
-      "WARNING 1085: trip is not checked"
+      "WARNING 1085: Marea no chequeada."
     )
     return(catches)
   }
