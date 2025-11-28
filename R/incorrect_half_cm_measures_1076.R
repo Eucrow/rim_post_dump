@@ -25,7 +25,8 @@ incorrect_half_cm_measures <- function(lengths) {
       errors,
       "WARNING 1076: Comprobar que se hayan medido las tallas al cm en vez del 1/2 cm"
     )
+    return(errors)
   }
 
-  return(errors)
+  return(NULL)
 }

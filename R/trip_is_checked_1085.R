@@ -19,4 +19,6 @@ trip_is_checked <- function(catches) {
     )
     return(catches)
   }
+  
+  return(NULL)
 }

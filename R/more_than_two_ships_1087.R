@@ -18,8 +18,8 @@ more_than_two_ships <- function(catches) {
       errors,
       "WARNING 1087: Número de barcos mayor que 2."
     )
+    return(errors)
   }
   
-  return(errors)
-  
+  return(NULL)
 }

@@ -16,8 +16,8 @@ port_mismatch_for_same_trip <- function(catches) {
   if(nrow(errors) > 1){
     errors <- add_type_of_error(errors,
                             "ERROR 1051: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO")
+    return(errors)
   }
   
-  return(errors)
-  
+  return(NULL)
 }

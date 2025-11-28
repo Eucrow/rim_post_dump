@@ -18,11 +18,11 @@ new_species_sampled <- function(catches_in_lengths){
   
   error <- error[is.na(error$TEST), ]
   
-  if(nrow(error)>0){
+  if(nrow(error) > 0){
     error <- add_type_of_error(error,
                             "WARNING 1088: especie no muestreada en el histórico 2021-2024")
+    return(error)
   }
   
-  return(error)
-  
+  return(NULL)
 }

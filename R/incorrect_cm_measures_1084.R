@@ -33,7 +33,8 @@ incorrect_cm_measures <- function(lengths) {
       errors,
       "ERROR 1084: Especie medida erróneamente al 1/2 cm"
     )
+    return(errors)
   }
 
-  return(errors)
+  return(NULL)
 }
