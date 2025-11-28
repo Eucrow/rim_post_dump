@@ -13,13 +13,18 @@
 #                     process and final files)
 #          - errors (folder with the errors found in the data)
 #          - finals (folder with the final files to dump in SIRENO database)
+#   - data-raw (folder with reference data: species lists, taxonomic confusion, etc.)
 #   - private (folder with sensitive information, like contacts, cfpo, etc.)
+#   - R (folder with individual function files)
 #
 # To use this script:
-# - Make sure the file "revision_volcado_functions.R" is located in the same
-# directory that this file.
+# - Required files in the same directory: rim_post_dump_functions.R,
+#   rim_post_dump_auxiliary_functions.R, rim_check.R, rim_check_annual.R,
+#   rim_check_annual_nvdp_matched.R, oab_check.R
+# - Required folders: data-raw/ (with species CSV files), private/ (with
+#   contacts.csv and CFPO file), R/ (with individual function files)
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
-# script.
+#   script.
 # - A file "contacts.csv" must be stored in private folder. This data set
 # contains the different person roles and its email, used in the distribution of
 # error files.
@@ -27,7 +32,7 @@
 #   - GC, GS, GN and AC: the supervisors of the influence areas.
 #   - sender: person responsible for sending the files.
 #   - cc: related people to whom the email should also be sent.
-# The contacs file must have a comma separated format with two fields: ROLE and
+# The contacts file must have a comma separated format with two fields: ROLE and
 # EMAIL. The first line must contain the name of the variables.
 # - A CFPO file must be stored in private folder.
 # - Run all the script
@@ -47,13 +52,16 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
+# Name of the folder where are stored raw data files (species lists, etc.).
+DATA_RAW_FOLDER_NAME <- "data-raw"
+
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
 # - FILENAME_DES_TOT: name of the file with the total catches data.
 # - FILENAME_DES_TAL: name of the file with the total lengths data.
 # - FILENAME_TAL: name of the file with the lengths data.
 # - PATH_SHARE_FOLDER: path of cloud service where the files will be shared.
-source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
+source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
@@ -83,7 +91,6 @@ cfpo_to_use <- "CFPO2024 DEF.xlsx"
 
 # PACKAGES ---------------------------------------------------------------------
 
-library(plyr)
 library(dplyr)
 library(blastula) # to send emails
 library(devtools)
@@ -116,9 +123,6 @@ source('rim_check_annual_nvdp_matched.R')
 source('oab_check.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
-
-# list with all errors found in data frames:
-ERRORS <- list()
 
 # Month as character
 MONTH_AS_CHARACTER <- create_month_as_character(MONTH, suffix_multiple_months)
@@ -167,8 +171,9 @@ FILES_TO_BACKUP <- c(
   "rim_post_dump_functions.R",
   "rim_check.R",
   "oab_check.R",
-  "especies_sujetas_a_posible_confusion_taxonomica.csv",
-  "especies_no_permitidas.csv"
+  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -185,15 +190,17 @@ mixed_species <- especies_mezcla
 sampled_species_no_mixed <- especies_no_mezcla
 
 # Get the not allowed species data set.
-NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
+NOT_ALLOWED_SPECIES <- read.csv(file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"))
 
 # Get the historical sampled species dataset
-historical_species_sampled <- read.csv("historical_species_sampled.csv", 
-                                       sep = ";")
+historical_species_sampled <- read.csv(
+  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv"), 
+  sep = ";"
+)
 
 # Get the species susceptible to taxonomic confusion data set.
 ESP_TAXONOMIC_CONFUSION <- read.csv(
-  "especies_sujetas_a_posible_confusion_taxonomica.csv",
+  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   sep = ";",
   colClasses = c(
     "factor",
