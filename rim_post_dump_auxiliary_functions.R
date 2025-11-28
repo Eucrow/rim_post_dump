@@ -46,8 +46,8 @@ format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
   # given vector. In this case, merge the dataframes in the ERRORS list
   #errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
 
-  #better with join_all form plyr package because doesn't change the order of columns:
-  errors <- join_all(errors_list, type = "full")
+  #better with full_join because doesn't change the order of columns:
+  errors <- Reduce(function(x, y) dplyr::full_join(x, y), errors_list)
 
   if(separate_by_ia == FALSE){
     areas_influencia <- areas_influencia[, c("COD_PUERTO", "AREA_INF")]
