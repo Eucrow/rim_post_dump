@@ -96,8 +96,6 @@ format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
   return(errors)
 }
 
-
-
 #' Export error list to Excel files
 #' @param list List of error dataframes to export
 #' @param filename Base filename for export (without extension)
@@ -186,7 +184,6 @@ export_errors_list <- function (list, filename, separation = "") {
   })
 }
 
-
 #' Export error list to Google Sheets
 #' @param list List of error dataframes to export
 #' @param prefix Prefix for file names (default: "")
@@ -247,7 +244,6 @@ export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separati
   })
 }
 
-
 #' Copy all the error files generated to a shared folder
 #' @param path_errors_from Source path of error files
 #' @param path_errors_to Destination path for error files
@@ -282,7 +278,6 @@ copy_files_to_folder <- function (path_errors_from, path_errors_to){
 
 }
 
-
 #' Create character with month, months, or any other tag to name the months used in the names of files
 #' @param month Month or months used (default: MONTH)
 #' @param suffix_multiple_months Suffix used when multiple months are used
@@ -298,9 +293,6 @@ create_month_as_character <- function(month = MONTH, suffix_multiple_months = su
   }
 
 }
-
-
-
 
 #' Create identifier of the month/months with suffix, used to create filenames and folders
 #' @param month Month or months used
