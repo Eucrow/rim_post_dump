@@ -46,8 +46,8 @@ format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
   # given vector. In this case, merge the dataframes in the ERRORS list
   #errors <- Reduce(function(x, y) merge(x, y, all=TRUE), errors_list)
 
-  #better with join_all form plyr package because doesn't change the order of columns:
-  errors <- join_all(errors_list, type = "full")
+  #better with full_join because doesn't change the order of columns:
+  errors <- Reduce(function(x, y) dplyr::full_join(x, y), errors_list)
 
   if(separate_by_ia == FALSE){
     areas_influencia <- areas_influencia[, c("COD_PUERTO", "AREA_INF")]
@@ -95,8 +95,6 @@ format_errors_list <- function(errors_list = ERRORS, separate_by_ia = TRUE){
 
   return(errors)
 }
-
-
 
 #' Export error list to Excel files
 #' @param list List of error dataframes to export
@@ -186,7 +184,6 @@ export_errors_list <- function (list, filename, separation = "") {
   })
 }
 
-
 #' Export error list to Google Sheets
 #' @param list List of error dataframes to export
 #' @param prefix Prefix for file names (default: "")
@@ -247,7 +244,6 @@ export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separati
   })
 }
 
-
 #' Copy all the error files generated to a shared folder
 #' @param path_errors_from Source path of error files
 #' @param path_errors_to Destination path for error files
@@ -282,7 +278,6 @@ copy_files_to_folder <- function (path_errors_from, path_errors_to){
 
 }
 
-
 #' Create character with month, months, or any other tag to name the months used in the names of files
 #' @param month Month or months used (default: MONTH)
 #' @param suffix_multiple_months Suffix used when multiple months are used
@@ -298,9 +293,6 @@ create_month_as_character <- function(month = MONTH, suffix_multiple_months = su
   }
 
 }
-
-
-
 
 #' Create identifier of the month/months with suffix, used to create filenames and folders
 #' @param month Month or months used

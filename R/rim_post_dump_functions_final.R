@@ -1,8 +1,0 @@
-source(file.path(getwd(), "R", "prepare_lengths_for_check_measures.R"))
-source(file.path(getwd(), "R", "no_ships_1021.R"))
-source(file.path(getwd(), "R", "port_mismatch_for_same_trip_1051.R"))
-source(file.path(getwd(), "R", "incorrect_half_cm_measures_1076.R"))
-source(file.path(getwd(), "R", "incorrect_cm_measures_1084.R"))
-source(file.path(getwd(), "R", "trip_is_checked_1085.R"))
-source(file.path(getwd(), "R", "more_than_two_ships_1087.R"))
-source(file.path(getwd(), "R", "new_species_sampled_1088.R"))
