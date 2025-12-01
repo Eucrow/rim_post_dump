@@ -1,11 +1,11 @@
-#' Check code: 1051
 #' Check samples with same date, vessel, ESTRATO_RIM and TIPO_MUE but with different
-#' port variable.
-#' @param catches: catches data frame returned by the importRIMCatchesInLengths() 
-#' or importRIMFiles() functions.
+#' port variable
+#' @param catches catches data frame returned by the importRIMCatchesInLengths() 
+#' or importRIMFiles() functions
 #' @return dataframe with erroneous samples
+#' @note Check code: 1051
 
-checkPortMismatchForSameTrip <- function(catches) {
+port_mismatch_for_same_trip <- function(catches) {
   
   errors <- catches[, BASE_FIELDS] %>% 
     unique() %>% 
@@ -14,10 +14,10 @@ checkPortMismatchForSameTrip <- function(catches) {
     filter(DIST_PORTS != 1)
   
   if(nrow(errors) > 1){
-    errors <- addTypeOfError(errors,
+    errors <- add_type_of_error(errors,
                             "ERROR 1051: mismo fecha/barco/estrato_rim/tipo_muestreo con distinto PUERTO")
+    return(errors)
   }
   
-  return(errors)
-  
+  return(NULL)
 }

@@ -13,13 +13,16 @@
 #                     process and final files)
 #          - errors (folder with the errors found in the data)
 #          - finals (folder with the final files to dump in SIRENO database)
+#   - data-raw (folder with reference data: species lists, taxonomic confusion, etc.)
 #   - private (folder with sensitive information, like contacts, cfpo, etc.)
+#   - R (folder with individual check and helper function files)
+#     - Individual check function files named: {code}_{function_name}.R (e.g., 1016_detect_false_mt1.R)
+#     - Helper function files named: helper_{function_name}.R
+#     - rim_post_dump_functions_final.R (sources all check and helper functions)
 #
 # To use this script:
-# - Make sure the file "rim_post_dump_functions.R" is located in the same
-# directory that this file.
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
-# script.
+#   script.
 # - A file "contacts.csv" must be stored in private folder. This data set
 # contains the different person roles and its email, used in the distribution of
 # error files.
@@ -47,13 +50,16 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
+# Name of the folder where are stored raw data files (species lists, etc.).
+DATA_RAW_FOLDER_NAME <- "data-raw"
+
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
 # - FILENAME_DES_TOT: name of the file with the total catches data.
 # - FILENAME_DES_TAL: name of the file with the total lengths data.
 # - FILENAME_TAL: name of the file with the lengths data.
 # - PATH_SHARE_FOLDER: path of cloud service where the files will be shared.
-source(file.path(PRIVATE_FOLDER_NAME, ("user_settings.R")))
+source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 
 # YOU ONLY HAVE TO CHANGE THIS VARIABLES ---------------------------------------
 
@@ -83,7 +89,6 @@ cfpo_to_use <- "CFPO2024 DEF.xlsx"
 
 # PACKAGES ---------------------------------------------------------------------
 
-library(plyr)
 library(dplyr)
 library(blastula) # to send emails
 library(devtools)
@@ -100,8 +105,7 @@ library(sapmuebase)
 # FUNCTIONS --------------------------------------------------------------------
 
 source('rim_post_dump_auxiliary_functions.R')
-source('rim_post_dump_functions.R')
-source('R/rim_post_dump_functions_final.R')
+source('R/rim_post_dump_functions.R')
 
 # function to check the rim files:
 source('rim_check.R')
@@ -117,14 +121,11 @@ source('oab_check.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
 
-# list with all errors found in data frames:
-ERRORS <- list()
-
 # Month as character
-MONTH_AS_CHARACTER <- createMonthAsCharacter(MONTH, suffix_multiple_months)
+MONTH_AS_CHARACTER <- create_month_as_character(MONTH, suffix_multiple_months)
 
 # Identifier of the month/months, with suffixes
-IDENTIFIER <- createIdentifier(
+IDENTIFIER <- create_identifier(
   MONTH,
   YEAR,
   MONTH_AS_CHARACTER,
@@ -165,10 +166,15 @@ PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 FILES_TO_BACKUP <- c(
   "rim_post_dump.R",
   "rim_post_dump_functions.R",
+  "rim_post_dump_auxiliary_functions.R",
   "rim_check.R",
+  "rim_check_annual.R",
+  "rim_check_annual_nvdp_matched.R",
   "oab_check.R",
-  "especies_sujetas_a_posible_confusion_taxonomica.csv",
-  "especies_no_permitidas.csv"
+  list.files("R", pattern = "\\.R$", full.names = TRUE),
+  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -182,18 +188,20 @@ EMAIL_TEMPLATE <- "errors_email.Rmd"
 mixed_species <- especies_mezcla
 
 # Get the no mixed species data set.
-sampled_spe_no_mixed <- especies_no_mezcla
+sampled_species_no_mixed <- especies_no_mezcla
 
 # Get the not allowed species data set.
-NOT_ALLOWED_SPECIES <- read.csv("especies_no_permitidas.csv")
+NOT_ALLOWED_SPECIES <- read.csv(file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"))
 
 # Get the historical sampled species dataset
-historical_species_sampled <- read.csv("historical_species_sampled.csv",
-                                       sep = ";")
+historical_species_sampled <- read.csv(
+  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv"), 
+  sep = ";"
+)
 
 # Get the species susceptible to taxonomic confusion data set.
 ESP_TAXONOMIC_CONFUSION <- read.csv(
-  "especies_sujetas_a_posible_confusion_taxonomica.csv",
+  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   sep = ";",
   colClasses = c(
     "factor",
@@ -227,8 +235,7 @@ muestreos_up <- importRIMFiles(
   # ,  by_month = MONTH
 )
 
-
-##TODO: create a coherence check rim_stratum-origin??
+# TODO: Create a coherence check rim_stratum-origin
 # SEARCHING ERRORS -------------------------------------------------------------
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
@@ -243,7 +250,7 @@ errors <- rim_check(muestreos_up)
 
 # EXPORT ERRORS ----------------------------------------------------------------
 # by influence area
-exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
+export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # complete
 # write.xlsx(
 #   errors_complete,
@@ -253,10 +260,10 @@ exportErrorsList(errors, ERRORS_FILENAME, separation = "_")
 
 # CHECK CODE_ID ----------------------------------------------------------------
 # This check is not for send to the sups, so it's out the ERRORS dataframe
-# errors_cod_id <- checkCodId(muestreos_up$catches)
+# errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
+copy_files_to_folder(PATH_ERRORS, PATH_SHARE_ERRORS)
 
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
@@ -281,22 +288,22 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
 # aren't any error file of a certain AREA_INF, must be set to "".
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
-# accesory_email_info <- data.frame(
-#   AREA_INF = c("AC", "GC", "GN", "GS"),
-#   LINK = c("",
-#            "",
-#            "",
-#            ""),
-#   NOTES = c("",
-#             "",
-#             "",
-#             "")
-# )
-#
-#
-# sendErrorsByEmail(
-#   accesory_email_info = accesory_email_info,
-#   contacts = CONTACTS,
-#   credentials_file = "credentials",
-#   identification_sampling = IDENTIFIER
-# )
+accessory_email_info <- data.frame(
+  AREA_INF = c("AC", "GC", "GN", "GS"),
+  LINK = c("", 
+           "", 
+           "", 
+           ""),
+  NOTES = c("", 
+            "", 
+            "", 
+            "")
+)
+
+
+send_errors_by_email(
+  accessory_email_info = accessory_email_info,
+  contacts = CONTACTS,
+  credentials_file = "credentials",
+  identification_sampling = IDENTIFIER
+)
