@@ -65,7 +65,7 @@ rim_check_annual <- function(samples_imported) {
 
     # err$coherence_rim_mt2_prescriptions <- coherence_rim_mt2_prescriptions_post(catches)
 
-    err$no_ships <- no_ships(catches)
+    err$no_ships <- number_of_ships(catches)
     
     err$more_than_two_ships <- more_than_two_ships(catches)
 
