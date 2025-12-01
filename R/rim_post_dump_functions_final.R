@@ -178,18 +178,30 @@ source(file.path(getwd(), "R", "1082_categories_99_not_in_mt2b.R"))
 # Check code 1089
 source(file.path(getwd(), "R", "1089_foreign_ships_mt1.R"))
 
+# Check code 1051
+source(file.path(getwd(), "R", "1051_port_mismatch_for_same_trip.R"))
+
+# Check code 1076
+source(file.path(getwd(), "R", "1076_incorrect_half_cm_measures.R"))
+
+# Check code 1084
+source(file.path(getwd(), "R", "1084_incorrect_cm_measures.R"))
+
+# Check code 1085
+source(file.path(getwd(), "R", "1085_trip_is_checked.R"))
+
+# Check code 1087
+source(file.path(getwd(), "R", "1087_more_than_two_ships.R"))
+
+# Check code 1088
+source(file.path(getwd(), "R", "1088_new_species_sampled.R"))
+
 # Check code 1090
 source(file.path(getwd(), "R", "1090_mixed_as_no_mixed.R"))
 
 # Check code 1091
 source(file.path(getwd(), "R", "1091_sampling_is_checked.R"))
 
-# Additional helper functions (from R folder)
-source(file.path(getwd(), "R", "prepareLengthsForCheckMeasures.R"))
-source(file.path(getwd(), "R", "checkNoShips_1021.R"))
-source(file.path(getwd(), "R", "checkPortMismatchForSameTrip_1051.R"))
-source(file.path(getwd(), "R", "checkHalfCmMeasures_1076.R"))
-source(file.path(getwd(), "R", "checkCmMeasures_1084.R"))
-source(file.path(getwd(), "R", "tripIsChecked_1085.R"))
-source(file.path(getwd(), "R", "checkMoreThanTwoShips_1087.R"))
-source(file.path(getwd(), "R", "checkNewSpeciesSampled_1088.R"))
+# Helper functions (no check code)
+source(file.path(getwd(), "R", "helper_functions.R"))
+source(file.path(getwd(), "R", "helper_prepare_lengths_for_check_measures.R"))
