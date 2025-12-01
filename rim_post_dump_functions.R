@@ -654,31 +654,6 @@ detect_false_mt1 <- function(catches, lengths) {
   return(NULL)
 }
 
-#' Detect mixed species keyed as non mixed species
-#' @details In COD_ESP_MUE there are codes from non mixed species
-#' @param catches Data frame with catches data
-#' @return A data frame with errors if found, NULL otherwise
-mixed_as_no_mixed <- function(catches) {
-  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
-  non_mixed <- merge(
-    x = catches,
-    y = especies_mezcla["COD_ESP_CAT"],
-    by.x = "COD_ESP_MUE",
-    by.y = "COD_ESP_CAT"
-  )
-  non_mixed <- non_mixed[, c(selected_fields)]
-  
-  if (nrow(non_mixed) > 0) {
-    non_mixed <- add_type_of_error(
-      non_mixed,
-      "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo"
-    )
-    return(non_mixed)
-  }
-  
-  return(NULL)
-}
-
 #' Detect no mixed species keyed as mixed species
 #' @details In COD_ESP_MUE there are codes from mixed species
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
@@ -923,20 +898,7 @@ validate_cod_id <- function(lengths) {
 }
 
 
-#' Change the content of variable TALL.PESO to TRUE.
-#' This variable is T for lenghts samples and P for weight samples.
-#' We allways work with lengths samples so all of them must be T.
-#
-#' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
-#' @return Return a dataframe with the TALL.PESO variable fixed
-fix_length_weight_variable <- function(lengths) {
-  if ("TALL.PESO" %in% colnames(lengths)) {
-    lengths[["TALL.PESO"]] <- "T"
-    return(lengths)
-  } else {
-    stop(paste0("TALL.PESO doesn't exists in ", substitute(lengths)))
-  }
-}
+
 
 
 #' Detect if the content of variable TALL.PESO is allways TRUE
@@ -1326,6 +1288,7 @@ species_without_historical_range <- function(lengths) {
 #' of a species in an stratum exceed the 99th percentile of historical catches.
 #' @param catches Data frame with catches data
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1057
 check_catches_p99 <- function(catches) {
   warnings <- catches %>%
     select(any_of(BASE_FIELDS), COD_ESP_MUE, ESP_MUE, P_DESEM) %>%
@@ -1361,6 +1324,7 @@ check_catches_p99 <- function(catches) {
 #' Detect incoherence between ESTRATEGIA and COD_TIPO_MUE
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1053
 coherence_strategy_sample_type <- function(catches) {
   error_strategy <- catches %>%
     select(any_of(c(BASE_FIELDS, "ESTRATEGIA"))) %>%
@@ -1389,6 +1353,7 @@ coherence_strategy_sample_type <- function(catches) {
 #' Detect trips with the same COD_BARCO and FECHA_MUE but different COD_TIPO_MUE
 #' @param catches Data frame with catches data
 #' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1054
 multiple_type_sample <- function(catches) {
   error <- catches %>%
     select(COD_ID, COD_PUERTO, COD_BARCO, FECHA_MUE, COD_TIPO_MUE) %>%
@@ -1413,6 +1378,7 @@ multiple_type_sample <- function(catches) {
 #' than 3 or minor than 0
 #' @param catches Data frame with catches data
 #' @return A data frame with erroneous trips if found, NULL otherwise
+#' @note Check code: 1055
 elapsed_days_exceeded <- function(catches) {
   catches$FECHA_MUE <- as.POSIXlt(catches$FECHA_MUE, format = "%d-%m-%y")
 
@@ -1462,6 +1428,7 @@ elapsed_days_exceeded <- function(catches) {
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @param catches_in_lengths Data frame with catches and lengths data from sapmuebase::importRIMCatchesInLengths()
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1058
 taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
   err_catches <- catches %>%
     select(any_of(c(BASE_FIELDS, "COD_ORIGEN", "COD_ESP_MUE", "ESP_MUE"))) %>%
@@ -1506,6 +1473,7 @@ taxonomic_specie_confusion <- function(catches, catches_in_lengths) {
 #' ignore ESTRATO_RIM and COD_TIPO_MUE variables.
 #' @param catches Data frame with catches data
 #' @return A data frame with warnings if found, NULL otherwise
+#' @note Check code: 1059
 same_trip_in_various_ports <- function(catches) {
   err <- catches %>%
     select(COD_PUERTO, FECHA_MUE, COD_BARCO) %>%
@@ -1528,10 +1496,10 @@ same_trip_in_various_ports <- function(catches) {
 
 
 #' Check if the a variable is filled in all the rows
-#' TODO: put in sapmuebase???
 #' @param df Data frame to check
 #' @param var Variable name to check
 #' @return A data frame with errors
+#' @note Check code: 1056
 variable_not_filled <- function(df, var) {
   tryCatch(
     {
@@ -1554,65 +1522,6 @@ variable_not_filled <- function(df, var) {
   )
 }
 
-# TO DO: this function is usefull?????
-#' Detect variables which are not consistent with its SIRENO master
-#' Check if the value of variables are consistent to the value in its SIRENO master.
-#' It's only available for variables with a data source (master): ESTRATO_RIM, COD_PUERTO,
-#' COD_ORIGEN, COD_ARTE, COD_PROCEDENCIA and TIPO_MUESTREO
-#' @param df Data frame with RIM data
-#' @param variable one of this values: ESTRATO_RIM, COD_PUERTO, COD_ORIGEN,
-#' COD_ARTE, COD_PROCEDENCIA or TIPO_MUESTREO
-#' @return A data frame with samples containing erroneous variables if found, NULL otherwise
-variable_not_in_master <- function(df, variable) {
-  if (
-    variable != "ESTRATO_RIM" &&
-      variable != "COD_PUERTO" &&
-      variable != "COD_ORIGEN" &&
-      variable != "COD_ARTE" &&
-      variable != "PROCEDENCIA" &&
-      variable != "COD_TIPO_MUE"
-  ) {
-    stop(paste("This function is not available for ", variable))
-  }
-
-  # If the variable begin with "COD_", the name of the data source
-  # is the name of the variable without "COD_"
-  variable_formatted <- variable
-  if (grepl("^COD_", variable)) {
-    variable_formatted <- strsplit(variable, "COD_")
-    variable_formatted <- variable_formatted[[1]][2]
-  }
-
-  # In case COD_TIPO_MUE, the data set is "tipo_muestreo" instead of "tipo_mue":
-  if (variable_formatted == "TIPO_MUE") {
-    name_dataset <- "tipo_muestreo"
-  } else {
-    name_dataset <- tolower(variable_formatted)
-  }
-
-  #search the errors in variable
-  errors <- anti_join(df, get(name_dataset), by = variable)
-
-  #prepare to return
-  fields_to_filter <- c(BASE_FIELDS, variable, variable_formatted)
-
-  errors <- errors %>%
-    select(any_of(fields_to_filter)) %>%
-    unique()
-
-  if (nrow(errors) > 0) {
-    text_type_of_error <- paste0(
-      "ERROR: el campo ",
-      variable_formatted,
-      " no concuerda con los maestros de este script."
-    )
-    errors <- add_type_of_error(errors, text_type_of_error)
-    #return
-    return(errors)
-  }
-  
-  return(NULL)
-}
 
 #' Detect if there are samples with the same name vessel but with different
 #' SIRENO codification or SGPM codification
@@ -1935,113 +1844,6 @@ coherence_rim_mt2_prescriptions_post <- function(catches) {
 }
 
 
-#' Detect if a variable exists in a dataframe
-#' TODO: IS THIS FUNCTION USEFULL???
-#' @return TRUE if the variable exists. Otherwise return an error.
-#' @param variable: variable to check.
-#' @param df: dataframe to check
-#' @export
-variable_exists_in_df <- function(variable, df) {
-  # get all the variables of df with the variable name = variable
-  var_in_df <- colnames(df)[colnames(df) %in% variable]
-
-  # TO DO: THE FIRST CONDITIONAL IS NOT NEEDED, BECAUSE COLUMS NAMES
-  # ARE UNIQUE IN A DATAFRAME. CHECK IT AND REMOVE IT IF IT'S TRUE.
-  if (length(var_in_df) > 1) {
-    stop(paste(
-      "Hey hard worker! check the ",
-      variable,
-      "variable. Looks like there are multiple columns with the same variable name.
-               Using consistents dataframes we will get a better world. Really :) ",
-      variable,
-      "."
-    ))
-  } else if (length(var_in_df) == 0) {
-    stop(paste(variable, " does not exists in this dataframe."))
-  } else return(TRUE)
-}
-
-#' TODO: IS THIS FUNCTION USEFULL???
-#' Detect if a variable or variables of a dataframe contain empty values.
-#' @param variables: vector with variables to check.
-#' @param df: dataframe to check.
-#' @param df_name: name of the dataframe where the error is found.
-#' @return A list with a dataframe of every variable with empty values. Every
-#' dataframe contains erroneous rows.
-#' @export
-empty_values_in_variables <- function(df, variables, df_name) {
-  # check if all the variables are in the dataframe
-  if (!all(variables %in% colnames(df))) {
-    stop("Not all the variables are in the dataframe.")
-  }
-
-  variables <- as.list(variables)
-
-  if (df_name != "") {
-    df_name <- paste(" in", df_name, " screen")
-  }
-
-  errors <- lapply(variables, function(x) {
-    error <- (df[df[[x]] == "" | is.na(df[[x]]), ])
-
-    if (nrow(error) > 0) {
-      error <- add_type_of_error(error, "ERROR: Variable ", x, " vacía", df_name)
-      if (x %in% BASE_FIELDS) {
-        error <- error[, c(BASE_FIELDS, "TIPO_ERROR")]
-      } else {
-        # The variables "EJEM_MEDIDOS", "EJEM_PONDERADOS", "SOP"
-        # and "P_MUE_DESEM", must have more
-        # variables to properly identify the error:
-        if (x %in% c("EJEM_MEDIDOS", "EJEM_PONDERADOS", "SOP")) {
-          error <- error[, c(
-            BASE_FIELDS,
-            "COD_ESP_MUE",
-            "ESP_MUE",
-            "COD_CATEGORIA",
-            "CATEGORIA",
-            "COD_ESP_CAT",
-            "ESP_CAT",
-            "TALLA",
-            x,
-            "TIPO_ERROR"
-          )]
-        } else if (x %in% c("P_MUE_VIVO", "P_MUE_DESEM")) {
-          # The variables"P_MUE_DESEM", must have more
-          # variables to properly identify the error:
-          error <- error[, c(
-            BASE_FIELDS,
-            "COD_ESP_MUE",
-            "ESP_MUE",
-            "COD_CATEGORIA",
-            "CATEGORIA",
-            "COD_ESP_CAT",
-            "ESP_CAT",
-            x,
-            "TIPO_ERROR"
-          )]
-        } else {
-          error <- error[, c(BASE_FIELDS, x, "TIPO_ERROR")]
-        }
-      }
-    }
-    return(error)
-  })
-
-  errors <- lapply(errors, unique)
-
-  errors <- Filter(function(x) nrow(x) > 0, errors)
-
-  if (length(errors) > 0) {
-    errors <- Reduce(
-      function(x, y) {
-        merge(x, y, all = TRUE)
-      },
-      errors
-    )
-
-    return(errors)
-  }
-}
 
 #' TODO: IS THIS FUNCTION USEFULL???
 #' Empty fields in variables
@@ -2083,117 +1885,6 @@ empty_fields_in_variables <- function(
   }
   
   return(NULL)
-}
-
-#' Function to process length's RIM file for the functions checkMiddleMeasures() and
-#' checkMeasures()
-#' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
-#' @return A processed dataframe to work with it in the mentioned functions
-#' at the description
-process_length_file_for_check_measures <- function(lengths) {
-  # Work columns
-
-  columns <- c(
-    BASE_FIELDS,
-    "COD_ESP_MUE",
-    "COD_ESP_CAT",
-    "COD_CATEGORIA",
-    "TALLA"
-  )
-
-  lengths <- lengths[, columns]
-
-  # Count the number of measurement registers
-
-  lengths_register <- lengths %>%
-    group_by(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_CAT) %>%
-    mutate(REGISTROS = n_distinct(TALLA))
-
-  # Count the number of half centimeter measurements done
-
-  lengths_middle <- lengths %>%
-    group_by(COD_ID, FECHA_MUE, COD_BARCO, COD_ESP_CAT) %>%
-    filter(grepl("\\.5$", TALLA)) %>%
-    mutate(TALLAS_MED = n_distinct(TALLA)) %>%
-    select(-TALLA) %>%
-    unique()
-
-  # Merge both dataframes
-
-  lengths <- merge(lengths_register, lengths_middle, all.x = TRUE)
-
-  # Clean up NA values, make them zero
-
-  lengths[is.na(lengths)] <- 0
-
-  return(lengths)
-}
-
-#' Detech priority species with catches but not measured.
-#' Use MT2A and MT2B samples.
-#' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
-#' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
-#' @param group character vector with priority group ("G1" to "G6")
-#' @return Data frame with species of the priority group without samples measured
-#' @note
-#' This function does not return the errors column. Used in functions
-#' g1_species_not_measured and g2SpeciesNotMeasured.
-priority_species_not_measured <- function(catches, lengths, group) {
-  sps <- unique(especies_prioritarias[
-    especies_prioritarias$PRIORIDAD %in% group,
-    "COD_ESP_MUE"
-  ])
-
-  catches <- catches[
-    catches$COD_TIPO_MUE %in% c(2, 4),
-    c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
-  ]
-  catches <- unique(catches)
-
-  lengths <- lengths[
-    lengths$COD_TIPO_MUE %in% c(2, 4),
-    c(
-      BASE_FIELDS,
-      "COD_ESP_MUE",
-      "ESP_MUE",
-      "COD_ESP_CAT",
-      "ESP_CAT",
-      "EJEM_MEDIDOS"
-    )
-  ]
-  lengths <- lengths[lengths$COD_ESP_MUE %in% sps, ]
-
-  lengths <- lengths[!is.na(lengths$EJEM_MEDIDOS), ]
-  lengths <- lengths[lengths$EJEM_MEDIDOS != 0, ]
-  lengths$EJEM_MEDIDOS <- "T"
-  lengths <- unique(lengths)
-  lengths <- lengths[, c(
-    "COD_ID",
-    "COD_ESP_MUE",
-    "ESP_MUE",
-    "COD_ESP_CAT",
-    "ESP_CAT",
-    "EJEM_MEDIDOS"
-  )]
-
-  catches <- catches[catches$COD_ESP_MUE %in% sps, ]
-
-  errors <- merge(
-    catches,
-    lengths,
-    by = c("COD_ID", "COD_ESP_MUE", "ESP_MUE"),
-    all.x = TRUE
-  )
-
-  errors <- errors[is.na(errors$EJEM_MEDIDOS) | errors$EJEM_MEDIDOS == 0, ]
-
-  errors <- errors[, c(
-    BASE_FIELDS,
-    "COD_ESP_MUE",
-    "ESP_MUE",
-    "COD_ESP_CAT",
-    "ESP_CAT"
-  )]
 }
 
 #' Detect G1 priority species with catches but not measured
@@ -2425,7 +2116,7 @@ categories_99_not_in_mt2b <- function(catches) {
 #' @details Column "VALIDADO" from length dataframe with FALSE or NA values
 #' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
 #' @return Data frame with errors if found, NULL otherwise
-#' @note Check code: 1083
+#' @note Check code: 1091
 sampling_is_checked <- function(lengths){
   
   # Base work columns
@@ -2448,6 +2139,34 @@ sampling_is_checked <- function(lengths){
   
   return(NULL)
 }
+
+
+#' Detect mixed species keyed as non mixed species
+#' @details In COD_ESP_MUE there are codes from non mixed species
+#' @param catches Data frame with catches data
+#' @return A data frame with errors if found, NULL otherwise
+#' @note Check code: 1090
+mixed_as_no_mixed <- function(catches) {
+  selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
+  non_mixed <- merge(
+    x = catches,
+    y = especies_mezcla["COD_ESP_CAT"],
+    by.x = "COD_ESP_MUE",
+    by.y = "COD_ESP_CAT"
+  )
+  non_mixed <- non_mixed[, c(selected_fields)]
+  
+  if (nrow(non_mixed) > 0) {
+    non_mixed <- add_type_of_error(
+      non_mixed,
+      "ERROR: especie de mezcla tecleada sin agrupar en Especies del Muestreo"
+    )
+    return(non_mixed)
+  }
+  
+  return(NULL)
+}
+
 
 
 
