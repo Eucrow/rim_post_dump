@@ -16,17 +16,17 @@ rim_check_annual <- function(samples_imported) {
 
     # ---- REPEATED IN IPDTOSIRENO ----
 
-    err$estrato_rim <- check_variable_with_master(catches, "ESTRATO_RIM")
+    err$estrato_rim <- variable_not_in_master(catches, "ESTRATO_RIM")
 
-    err$puerto <- check_variable_with_master(catches, "COD_PUERTO")
+    err$puerto <- variable_not_in_master(catches, "COD_PUERTO")
 
-    err$arte <- check_variable_with_master(catches, "COD_ARTE")
+    err$arte <- variable_not_in_master(catches, "COD_ARTE")
 
-    err$origen <- check_variable_with_master(catches, "COD_ORIGEN")
+    err$origen <- variable_not_in_master(catches, "COD_ORIGEN")
 
-    err$procedencia <- check_variable_with_master(catches, "PROCEDENCIA")
+    err$procedencia <- variable_not_in_master(catches, "PROCEDENCIA")
 
-    err$tipo_muestreo <- check_variable_with_master(catches, "COD_TIPO_MUE")
+    err$tipo_muestreo <- variable_not_in_master(catches, "COD_TIPO_MUE")
 
     err$false_MT1 <- detect_false_mt1(catches, lengths_sampled)
 
@@ -65,7 +65,7 @@ rim_check_annual <- function(samples_imported) {
 
     # err$coherence_rim_mt2_prescriptions <- coherence_rim_mt2_prescriptions_post(catches)
 
-    err$no_ships <- no_ships(catches)
+    err$no_ships <- number_of_ships(catches)
     
     err$more_than_two_ships <- more_than_two_ships(catches)
 
@@ -96,15 +96,15 @@ rim_check_annual <- function(samples_imported) {
 
     err$errors_num_barcos_pareja <- ships_pair_bottom_trawl(catches)
 
-    err$estrategia <- check_strategy(catches)
+    err$estrategia <- coherence_strategy_sample_type(catches)
 
     err$multiple_tipo_muestreo <- multiple_type_sample(catches)
 
-    err$tiempo_transcurrido <- check_elapsed_days(catches)
+    err$tiempo_transcurrido <- elapsed_days_exceeded(catches)
 
-    err$check_same_trip_in_various_ports <- check_same_trip_in_various_ports(catches)
+    err$check_same_trip_in_various_ports <- same_trip_in_various_ports(catches)
 
-    err$checkSampleInCharge <- check_variable_filled(
+    err$checkSampleInCharge <- variable_not_filled(
       catches,
       "RESPONSABLE_MUESTREO"
     )
@@ -151,8 +151,8 @@ rim_check_annual <- function(samples_imported) {
     
     err$new_species_sampled <- new_species_sampled(catches_in_lengths)
 
-    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches, "A3_ESP_MUE")
+    # TODO: Find a better way to check this, which adds the species name
+    # err$a3CodeFilled <- variable_not_filled(catches, "A3_ESP_MUE")
 
     # ---- IN WEIGHTS ----
 
@@ -186,8 +186,8 @@ rim_check_annual <- function(samples_imported) {
       catches_in_lengths
     )
 
-    # TODO: FIND A BETTER WAY TO CHECK THIS, WHICH ADD THE SPECIES NAME
-    # err$a3CodeFilled <- check_variable_filled(catches_in_lengths, "A3_ESP_CAT")
+    # TODO: Find a better way to check this, which adds the species name
+    # err$a3CodeFilled <- variable_not_filled(catches_in_lengths, "A3_ESP_CAT")
 
     err$categories_99_not_in_mt2b <- categories_99_not_in_mt2b(catches)
 
