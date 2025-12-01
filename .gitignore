@@ -6,7 +6,6 @@
 .Ruserdata
 .Rproj
 *.Rproj
-/data-raw/
 .Rbuildignore
 IMP_ENVIAR_MARCO_BACKUP_FINAL.txt
 workspace.RData
