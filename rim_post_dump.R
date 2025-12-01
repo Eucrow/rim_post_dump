@@ -15,7 +15,10 @@
 #          - finals (folder with the final files to dump in SIRENO database)
 #   - data-raw (folder with reference data: species lists, taxonomic confusion, etc.)
 #   - private (folder with sensitive information, like contacts, cfpo, etc.)
-#   - R (folder with individual function files)
+#   - R (folder with individual check and helper function files)
+#     - Individual check function files named: {code}_{function_name}.R (e.g., 1016_detect_false_mt1.R)
+#     - Helper function files named: helper_{function_name}.R
+#     - rim_post_dump_functions_final.R (sources all check and helper functions)
 #
 # To use this script:
 # - Change variables in "YOU HAVE ONLY TO CHANGE THIS VARIABLES" section of this
@@ -102,8 +105,7 @@ library(sapmuebase)
 # FUNCTIONS --------------------------------------------------------------------
 
 source('rim_post_dump_auxiliary_functions.R')
-# source('rim_post_dump_functions.R')
-source('R/rim_post_dump_functions_final.R')
+source('R/rim_post_dump_functions.R')
 
 # function to check the rim files:
 source('rim_check.R')
