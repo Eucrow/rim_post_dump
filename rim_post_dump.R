@@ -50,6 +50,9 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
+# Name of the folder where are stored raw data files.
+DATA_RAW_FOLDER_NAME <- "data-raw"
+
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
 # - FILENAME_DES_TOT: name of the file with the total catches data.
@@ -85,7 +88,6 @@ suffix <- "TEST"
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
 
 # PACKAGES ---------------------------------------------------------------------
-
 library(dplyr)
 library(blastula) # to send emails
 library(devtools)
@@ -100,22 +102,7 @@ library(sapmuebase)
 
 
 # FUNCTIONS --------------------------------------------------------------------
-
-source('rim_post_dump_auxiliary_functions.R')
-source('rim_post_dump_functions.R')
-source('R/rim_post_dump_functions_final.R')
-
-# function to check the rim files:
-source('rim_check.R')
-
-# function to check the annual rim files:
-source('rim_check_annual.R')
-
-# function to check the annual rim files:
-source('rim_check_annual_nvdp_matched.R')
-
-# function to check the oab files:
-source('oab_check.R')
+source('R/rim_post_dump_functions.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
 
@@ -157,33 +144,21 @@ PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
 PATH_ERRORS <- file.path(PATH_FILES, ERRORS_FOLDER_NAME)
 # path to store backup files
 PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
-
-
-# create work folders
-
-work_folders <- list(backup = PATH_BACKUP,
-                     errors = PATH_ERRORS,
-                     input = PATH_INPUT_FILES)
-
-lapply(work_folders, 
-       manage_work_folder)
-
+# path to data-raw folder
+PATH_DATA_RAW <- file.path(getwd(), DATA_RAW_FOLDER_NAME)
 # path to shared folder
-PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
+PATH_SHARED_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
+
+# path to SIRENO folder.
+PATH_SIRENO <- "C:/sireno"
 
 # files to backup
 FILES_TO_BACKUP <- c(
   "rim_post_dump.R",
-  "rim_post_dump_functions.R",
-  "rim_post_dump_auxiliary_functions.R",
-  "rim_check.R",
-  "rim_check_annual.R",
-  "rim_check_annual_nvdp_matched.R",
-  "oab_check.R",
-  list.files("R", pattern = "\\.R$", full.names = TRUE),
-  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
-  file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
-  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
+  list.files("R", pattern = "\\.R$", full.names = TRUE, recursive = TRUE),
+  file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"),
+  file.path(PATH_DATA_RAW, "historical_species_sampled.csv")
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -191,19 +166,21 @@ ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
 
-# MOVE FILES FROM DOWNLOAD TO INPUT DIRECTORY-----------------------------------
+# CREATE WORKING FOLDERS -------------------------------------------------------
+working_folders <- list(backup = PATH_BACKUP,
+                        errors = PATH_ERRORS,
+                        input = PATH_INPUT_FILES)
 
-# By default, SIRENO store the downloaded data in a C: directory with the same 
-# name
-STORE_FILE_PATH <- "C:/sireno"
+lapply(working_folders, dir.create)
 
+# MOVE FILES FROM DOWNLOAD FOLDER TO INPUT DIRECTORY ---------------------------
 list_files <- list(des_tal = FILENAME_DES_TAL,
                    des_tot = FILENAME_DES_TOT,
                    tal = FILENAME_TAL)
 
-lapply(list_files, 
+lapply(list_files,
        move_file,
-       STORE_FILE_PATH,
+       PATH_SIRENO,
        PATH_INPUT_FILES)
 
 # IMPORT DATA ------------------------------------------------------------------
@@ -215,17 +192,17 @@ mixed_species <- especies_mezcla
 sampled_species_no_mixed <- especies_no_mezcla
 
 # Get the not allowed species data set.
-NOT_ALLOWED_SPECIES <- read.csv(file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"))
+NOT_ALLOWED_SPECIES <- read.csv(file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"))
 
 # Get the historical sampled species dataset
 historical_species_sampled <- read.csv(
-  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv"), 
+  file.path(PATH_DATA_RAW, "historical_species_sampled.csv"), 
   sep = ";"
 )
 
 # Get the species susceptible to taxonomic confusion data set.
 ESP_TAXONOMIC_CONFUSION <- read.csv(
-  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   sep = ";",
   colClasses = c(
     "factor",
@@ -287,7 +264,7 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copy_files_to_folder(PATH_ERRORS, PATH_SHARE_ERRORS)
+copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
 
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
@@ -314,11 +291,11 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("https://saco.csic.es/index.php/f/620605879", 
+  LINK = c("", 
            "", 
            "", 
            ""),
-  NOTES = c("IMPORTANTE: Errores puerto Avilés mes de julio post reenvío mareas faltantes.", 
+  NOTES = c("", 
             "", 
             "", 
             "")
