@@ -1,5 +1,4 @@
 
-
 #' Make a backup of the errors files
 #' @return NULL (creates backup directory and copies files)
 #' @details Creates a timestamped backup directory and copies all CSV files from PATH_ERRORS to it
@@ -251,30 +250,70 @@ export_list_to_google_sheet <- function(list, prefix = "", suffix = "", separati
 #' @details Used to copy errors files generated to the shared folder. Tests if source path exists and has files, creates destination folder if needed, and prevents overwriting existing files
 copy_files_to_folder <- function (path_errors_from, path_errors_to){
 
-  # test if path_errors_from exists
-  ifelse(!file.exists(path_errors_from), stop(paste("Folder", path_errors_from, "does not exists.")), FALSE)
 
+  tryCatch({
+
+  # test if path_files_from exists
+  ifelse(!file.exists(path_files_from), 
+          stop(paste("Folder", 
+                      path_files_from, 
+                      "does not exists.")), 
+          FALSE) 
+    
   # test if path_errors_from have files
-  ifelse(length(list.files(path_errors_from))==0, stop(paste("Folder", path_errors_from, "doesn't have files.")), FALSE)
-
-  # if the share errors directory does not exists, create it:
-  ifelse(!dir.exists(path_errors_to), dir.create(path_errors_to), FALSE)
-
+  ifelse(length(list.files(path_files_from))==0, 
+          stop(paste("Folder", 
+                path_files_from, 
+                "doesn't have files.")), 
+        FALSE)
+    
+  # if the share errors directory does not exists, create it, with the internal
+  # directories too.
+  internal_directories <- list.dirs(path_files_from,
+                                    recursive = FALSE,
+                                    full.names = FALSE)
+  
+  lapply(internal_directories, 
+    function(x){
+      ifelse(!dir.exists(file.path(path_files_to, x)), 
+              dir.create(file.path(path_files_to, x), 
+                         recursive = TRUE), 
+              FALSE)
+         })
+    
   # test if there are files with the same name in folder. In this case,
   # nothing is saved.
-  files_list_to <- list.files(path_errors_to)
+  files_list_to <- list.files(path_files_to,
+                              recursive = TRUE)
 
-  files_list_from <- list.files(path_errors_from)
-
+  files_list_from <- list.files(path_files_from,
+                                recursive = TRUE)
+    
   if(any(files_list_from %in% files_list_to)){
     ae <- which(files_list_from %in% files_list_to)
     ae <- paste(files_list_from[ae], collapse = ", ")
     stop(paste("The file(s)", ae, "already exist(s). Nothing has been saved" ))
 
-  }
+  }  
+  
+  # Copy all the files from path_files_from to path_files_to
+    
+  lapply(files_list_from, 
+         function(x){
+           file.copy(from = file.path(path_files_from, x), 
+                     to = file.path(path_files_to, x))
+         })
 
-  files_list_from <- file.path(path_errors_from, files_list_from)
-  file.copy(from=files_list_from, to=path_errors_to)
+  }, error = function(e){
+
+    cat("An error occurred:", conditionMessage(e), "\n")
+
+  }, warning = function(w){
+
+    cat("A warning occurred:", conditionMessage(w), "\n")
+
+  })
+
 
 }
 
@@ -385,4 +424,3 @@ send_errors_by_email <- function(accessory_email_info, contacts, credentials_fil
   })
 
 }
-
