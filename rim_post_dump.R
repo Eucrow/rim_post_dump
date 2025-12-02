@@ -50,12 +50,6 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
-<<<<<<< HEAD
-=======
-# Name of the folder where are stored raw data files (species lists, etc.).
-DATA_RAW_FOLDER_NAME <- "data-raw"
->>>>>>> origin/develop
-
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
 # - FILENAME_DES_TOT: name of the file with the total catches data.
@@ -74,11 +68,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-<<<<<<< HEAD
-MONTH <- c(7)
-=======
-MONTH <- c(4)
->>>>>>> origin/develop
+MONTH <- c(5)
 
 # YEAR
 YEAR <- 2025
@@ -111,37 +101,21 @@ library(sapmuebase)
 
 # FUNCTIONS --------------------------------------------------------------------
 
-<<<<<<< HEAD
-# Get the complete path for all function's files 
-function_files <- list.files(file.path(getwd(), 
-                                       "R"), 
-                             full.names = TRUE, 
-                             recursive = TRUE)
-=======
 source('rim_post_dump_auxiliary_functions.R')
-source('R/rim_post_dump_functions.R')
->>>>>>> origin/develop
+source('rim_post_dump_functions.R')
+source('R/rim_post_dump_functions_final.R')
 
-# Import all functions 
+# function to check the rim files:
+source('rim_check.R')
 
-sapply(function_files,
-       function(x){
-         tryCatch({
-           
-           source(x)
-           
-         }, error = function(e){
-           
-           cat("An error occurred:", conditionMessage(e), "\n")
-           
-         }, warning = function(w){
-           
-           cat("A warning occurred:", conditionMessage(w), "\n")
-           
-         }
-         )
-       })
+# function to check the annual rim files:
+source('rim_check_annual.R')
 
+# function to check the annual rim files:
+source('rim_check_annual_nvdp_matched.R')
+
+# function to check the oab files:
+source('oab_check.R')
 
 # GLOBAL VARIABLES -------------------------------------------------------------
 
