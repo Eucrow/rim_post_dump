@@ -71,7 +71,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(9)
 
 # YEAR
 YEAR <- 2025
@@ -96,10 +96,9 @@ library(openxlsx) # to read directly CFPO from a excel file
 # install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
-#install_github("eucrow/sapmuebase")
+# install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
-
 
 # FUNCTIONS --------------------------------------------------------------------
 source('R/rim_post_dump_functions.R')
@@ -273,6 +272,9 @@ rstudioapi::documentSaveAll()
 # and the backup the scripts and files:
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
+# SAVE FILES TO SHARED FOLDER --------------------------------------------------
+
+copyFilesToFolder(PATH_FILES, PATH_SHARE_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
@@ -291,10 +293,10 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
-           "", 
-           "", 
-           ""),
+  LINK = c("https://saco.csic.es/index.php/f/625892378", 
+           "https://saco.csic.es/index.php/f/625892370", 
+           "https://saco.csic.es/index.php/f/625892384", 
+           "https://saco.csic.es/index.php/f/625892374"),
   NOTES = c("", 
             "", 
             "", 
