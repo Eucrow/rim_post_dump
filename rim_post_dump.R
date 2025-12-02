@@ -40,16 +40,12 @@
 # FOLDER STRUCTURE -------------------------------------------------------------
 # Name of the folder where the input files must be stored.
 DATA_FOLDER_NAME <- "input"
-
 # Name of the folder where will be stored the errors generated in this script.
 ERRORS_FOLDER_NAME <- "errors"
-
 # Name of the folder where will be stored the backup files generated in this
 BACKUP_FOLDER_NAME <- "backup"
-
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
-
 # Name of the folder where are stored raw data files.
 DATA_RAW_FOLDER_NAME <- "data-raw"
 
@@ -96,10 +92,9 @@ library(openxlsx) # to read directly CFPO from a excel file
 # install sapmuebase from github
 # remove.packages("sapmuebase")
 # .rs.restartR()
-#install_github("eucrow/sapmuebase")
+# install_github("eucrow/sapmuebase")
 
 library(sapmuebase)
-
 
 # FUNCTIONS --------------------------------------------------------------------
 source('R/rim_post_dump_functions.R')
@@ -196,7 +191,7 @@ NOT_ALLOWED_SPECIES <- read.csv(file.path(PATH_DATA_RAW, "especies_no_permitidas
 
 # Get the historical sampled species dataset
 historical_species_sampled <- read.csv(
-  file.path(PATH_DATA_RAW, "historical_species_sampled.csv"), 
+  file.path(PATH_DATA_RAW, "historical_species_sampled.csv"),
   sep = ";"
 )
 
@@ -264,7 +259,7 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
+copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
@@ -273,6 +268,9 @@ rstudioapi::documentSaveAll()
 # and the backup the scripts and files:
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
+# SAVE FILES TO SHARED FOLDER --------------------------------------------------
+
+copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
@@ -291,13 +289,13 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
-           "", 
-           "", 
-           ""),
-  NOTES = c("", 
-            "", 
-            "", 
+  LINK = c("https://saco.csic.es/index.php/f/625892378",
+           "https://saco.csic.es/index.php/f/625892370",
+           "https://saco.csic.es/index.php/f/625892384",
+           "https://saco.csic.es/index.php/f/625892374"),
+  NOTES = c("",
+            "",
+            "",
             "")
 )
 
