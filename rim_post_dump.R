@@ -50,9 +50,6 @@ BACKUP_FOLDER_NAME <- "backup"
 # Name of the folder where are stored private files with sensitive information.
 PRIVATE_FOLDER_NAME <- "private"
 
-# Name of the folder where are stored raw data files (species lists, etc.).
-DATA_RAW_FOLDER_NAME <- "data-raw"
-
 # USER SETTINGS -------------------------------------------------------------
 # This file contains the user settings:
 # - FILENAME_DES_TOT: name of the file with the total catches data.
@@ -71,7 +68,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(4)
+MONTH <- c(5)
 
 # YEAR
 YEAR <- 2025
@@ -82,7 +79,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "TEST"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -105,7 +102,8 @@ library(sapmuebase)
 # FUNCTIONS --------------------------------------------------------------------
 
 source('rim_post_dump_auxiliary_functions.R')
-source('R/rim_post_dump_functions.R')
+source('rim_post_dump_functions.R')
+source('R/rim_post_dump_functions_final.R')
 
 # function to check the rim files:
 source('rim_check.R')
@@ -159,6 +157,17 @@ PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
 PATH_ERRORS <- file.path(PATH_FILES, ERRORS_FOLDER_NAME)
 # path to store backup files
 PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
+
+
+# create work folders
+
+work_folders <- list(backup = PATH_BACKUP,
+                     errors = PATH_ERRORS,
+                     input = PATH_INPUT_FILES)
+
+lapply(work_folders, 
+       manage_work_folder)
+
 # path to shared folder
 PATH_SHARE_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
@@ -181,6 +190,21 @@ ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
 
 EMAIL_TEMPLATE <- "errors_email.Rmd"
 
+
+# MOVE FILES FROM DOWNLOAD TO INPUT DIRECTORY-----------------------------------
+
+# By default, SIRENO store the downloaded data in a C: directory with the same 
+# name
+STORE_FILE_PATH <- "C:/sireno"
+
+list_files <- list(des_tal = FILENAME_DES_TAL,
+                   des_tot = FILENAME_DES_TOT,
+                   tal = FILENAME_TAL)
+
+lapply(list_files, 
+       move_file,
+       STORE_FILE_PATH,
+       PATH_INPUT_FILES)
 
 # IMPORT DATA ------------------------------------------------------------------
 
@@ -290,11 +314,11 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("", 
+  LINK = c("https://saco.csic.es/index.php/f/620605879", 
            "", 
            "", 
            ""),
-  NOTES = c("", 
+  NOTES = c("IMPORTANTE: Errores puerto Avilés mes de julio post reenvío mareas faltantes.", 
             "", 
             "", 
             "")
