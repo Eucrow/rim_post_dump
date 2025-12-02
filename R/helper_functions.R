@@ -23,13 +23,27 @@ variable_exists_in_df <- function(variable, df) {
   } else return(TRUE)
 }
 
-#' Detect if a variable or variables of a dataframe contain empty values.
-#' @param variables: vector with variables to check.
-#' @param df: dataframe to check.
-#' @param df_name: name of the dataframe where the error is found.
-#' @return A list with a dataframe of every variable with empty values. Every
-#' dataframe contains erroneous rows.
-#' @export
+#' Detect empty values in specified dataframe variables
+#'
+#' @description
+#' Checks for empty or NA values in specified variables of a RIM dataframe.
+#' Returns rows with errors, formatted with appropriate fields based on variable type.
+#'
+#' @param df Data frame. The dataframe to check (catches or lengths)
+#' @param variables Character vector. Names of variables to check for empty values
+#' @param df_name Character string. Name of the dataframe/screen where errors were found
+#'   (used in error messages). Can be empty string
+#'
+#' @return Data frame or NULL. If errors found, returns a merged dataframe with all
+#'   erroneous rows including TIPO_ERROR column. Returns NULL if no errors found
+#'
+#' @details
+#' Special handling for specific variable types:
+#' \itemize{
+#'   \item BASE_FIELDS variables: Returns only BASE_FIELDS + TIPO_ERROR
+#'   \item EJEM_MEDIDOS, EJEM_PONDERADOS, SOP: Includes species and category details
+#'   \item P_MUE_VIVO, P_MUE_DESEM: Includes species and category info without TALLA
+#' }
 empty_values_in_variables <- function(df, variables, df_name) {
   # check if all the variables are in the dataframe
   if (!all(variables %in% colnames(df))) {
@@ -111,7 +125,8 @@ empty_values_in_variables <- function(df, variables, df_name) {
 #' @param group character vector with priority group ("G1" to "G6")
 #' @return Data frame with species of the priority group without samples measured
 #' @note
-#' Used in functions g1_species_not_measured and g2SpeciesNotMeasured.
+#' This is a helper function used by \code{g1_species_not_measured()} and
+#' \code{g2_species_not_measured()} check functions.
 priority_species_not_measured <- function(catches, lengths, group) {
   sps <- unique(especies_prioritarias[
     especies_prioritarias$PRIORIDAD %in% group,
@@ -170,11 +185,21 @@ priority_species_not_measured <- function(catches, lengths, group) {
   )]
 }
 
-#' Function to process RIM length file for use in the functions checkMiddleMeasures()
-#' and checkMeasures()
-#' @param lengths Lengths data frame returned by the importRIMLengths() or
-#' importRIMFiles() functions.
-#' @return a data frame ready to be used in the functions described below.
+#' Prepare RIM length data for measurement validation checks
+#'
+#' @description
+#' Processes length data to count total measurements and half-centimeter measurements
+#' per species sample, preparing it for use in measurement validation functions.
+#'
+#' @param lengths Data frame with lengths data from sapmuebase::importRIMLengths()
+#'
+#' @return Data frame. Processed lengths data with two additional columns:
+#'   REGISTROS: Count of distinct size measurements per species sample
+#'   TALLAS_MED: Count of half-centimeter measurements (ending in .5) per sample
+#'
+#' @note
+#' Used by check functions 1076 (incorrect_half_cm_measures) and
+#' 1084 (incorrect_cm_measures).
 prepare_lengths_for_check_measures <- function(lengths) {
   lengths <- lengths[, c(
     BASE_FIELDS,
