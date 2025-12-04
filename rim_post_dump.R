@@ -162,21 +162,26 @@ EMAIL_TEMPLATE <- "errors_email.Rmd"
 
 
 # CREATE WORKING FOLDERS -------------------------------------------------------
-working_folders <- list(backup = PATH_BACKUP,
-                        errors = PATH_ERRORS,
-                        input = PATH_INPUT_FILES)
+working_folders <- list(
+  backup = PATH_BACKUP,
+  errors = PATH_ERRORS,
+  input = PATH_INPUT_FILES)
 
 lapply(working_folders, dir.create)
 
 # MOVE FILES FROM DOWNLOAD FOLDER TO INPUT DIRECTORY ---------------------------
-list_files <- list(des_tal = FILENAME_DES_TAL,
-                   des_tot = FILENAME_DES_TOT,
-                   tal = FILENAME_TAL)
+list_files <- list(
+  des_tal = FILENAME_DES_TAL,
+  des_tot = FILENAME_DES_TOT,
+  tal = FILENAME_TAL
+)
 
-lapply(list_files,
-       move_file,
-       PATH_SIRENO,
-       PATH_INPUT_FILES)
+lapply(
+  list_files,
+  move_file,
+  PATH_SIRENO,
+  PATH_INPUT_FILES
+)
 
 # IMPORT DATA ------------------------------------------------------------------
 
