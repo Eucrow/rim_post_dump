@@ -5,7 +5,7 @@
 doubtful_sampled_species <- function(catches) {
   selected_fields <- c(BASE_FIELDS, "COD_ESP_MUE", "ESP_MUE")
 
-  #create a dataframe with other species not allowed
+  # create a dataframe with other species not allowed
   # by sufixex
   to_check_genus <- grep(
     "(.+(formes$))|(.+(spp$))|(.+(sp$))|(.+(dae$))",
@@ -29,16 +29,15 @@ doubtful_sampled_species <- function(catches) {
   # remove other allowed species
   # genus_not_allowed <- genus_not_allowed[!(genus_not_allowed[["COD_ESP_MUE"]] %in% ALLOWED_GENUS[["COD_ESP"]]),] %>%
   #  select(any_of(selected_fields))
-  
+
 
   if (nrow(errors) > 0) {
-    errors <- unique(genus_not_allowed)
-    errors <- add_type_of_error(
-      errors,
-      "WARNING: ¿seguro que es esa especie en Especies del Muestreo?"
-    )
+    errors <- unique(errors) %>%
+      add_type_of_error(
+        "WARNING: ¿seguro que es esa especie en Especies del Muestreo?"
+      )
     return(errors)
   }
-  
+
   return(NULL)
 }
