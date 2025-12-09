@@ -67,7 +67,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(5)
+MONTH <- c(10)
 
 # YEAR
 YEAR <- 2025
@@ -167,7 +167,7 @@ working_folders <- list(
   errors = PATH_ERRORS,
   input = PATH_INPUT_FILES)
 
-lapply(working_folders, dir.create)
+lapply(working_folders, dir.create, recursive = TRUE)
 
 # MOVE FILES FROM DOWNLOAD FOLDER TO INPUT DIRECTORY ---------------------------
 list_files <- list(
@@ -204,16 +204,8 @@ historical_species_sampled <- read.csv(
 ESP_TAXONOMIC_CONFUSION <- read.csv(
   file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   sep = ";",
-  colClasses = c(
-    "factor",
-    "factor",
-    "factor",
-    "factor",
-    "factor",
-    "factor",
-    "character",
-    "character"
-  )
+  colClasses = c("factor", "factor", "factor", "factor", "factor",
+    "factor", "character", "character")
 )
 
 # Get the CFPO
