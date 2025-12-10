@@ -120,18 +120,8 @@ PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 
 # list with the common fields used in all tables
-BASE_FIELDS <- c(
-  "COD_ID",
-  "COD_PUERTO",
-  "PUERTO",
-  "LOCODE",
-  "FECHA_MUE",
-  "COD_BARCO",
-  "BARCO",
-  "ESTRATO_RIM",
-  "COD_TIPO_MUE",
-  "TIPO_MUE"
-)
+BASE_FIELDS <- c( "COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
+  "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
 
 # path where the input files must be stored
 PATH_INPUT_FILES <- file.path(PATH_FILES, DATA_FOLDER_NAME)
@@ -213,8 +203,8 @@ CFPO <- read.xlsx(
   file.path(PATH_PRIVATE_FILES, cfpo_to_use),
   detectDates = TRUE
 )
-CFPO <- CFPO[, c("CFR", "Matrícula", "Estado.actual")]
-colnames(CFPO) <- c("CFR", "MATRICULA", "ESTADO")
+CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual")]
+colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO")
 
 # Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
