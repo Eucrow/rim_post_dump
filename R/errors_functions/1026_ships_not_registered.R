@@ -7,9 +7,11 @@
 #' @note Check code: 1026
 ships_not_registered <- function(catches, cfpo = CFPO) {
   catches <- unique(catches[, c(BASE_FIELDS, "COD_SGPM")])
-  catches[, "CFR"] <- sprintf("ESP%09d", as.numeric(as.character(catches[["COD_SGPM"]])))
 
-  errors <- merge(x = catches, y = cfpo, by.x = "CFR", by.y = "CFR", all.x = TRUE)
+  errors <- merge(catches,
+                  cfpo,
+                  by = "COD_SGPM",
+                  all.x = TRUE)
 
   errors <- errors[
     errors[["ESTADO"]] %in% c("Baja Definitiva", "Baja Provisional"),
@@ -24,6 +26,6 @@ ships_not_registered <- function(catches, cfpo = CFPO) {
     errors <- cbind(errors, "TIPO_ERROR" = text_type_of_error)
     return(errors)
   }
-  
+
   return(NULL)
 }
