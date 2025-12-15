@@ -67,7 +67,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(10)
+MONTH <- c(9)
 
 # YEAR
 YEAR <- 2025
@@ -120,7 +120,7 @@ PATH_FILES <- file.path(getwd(), "data", YEAR, IDENTIFIER)
 PATH_PRIVATE_FILES <- file.path(getwd(), PRIVATE_FOLDER_NAME)
 
 # list with the common fields used in all tables
-BASE_FIELDS <- c( "COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
+BASE_FIELDS <- c("COD_ID", "COD_PUERTO", "PUERTO", "LOCODE", "FECHA_MUE",
   "COD_BARCO", "BARCO", "ESTRATO_RIM", "COD_TIPO_MUE", "TIPO_MUE")
 
 # path where the input files must be stored
@@ -203,8 +203,11 @@ CFPO <- read.xlsx(
   file.path(PATH_PRIVATE_FILES, cfpo_to_use),
   detectDates = TRUE
 )
-CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual")]
-colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO")
+CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual", "Censo.por.modalidad")]
+colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO", "CENSO_MODALIDAD")
+
+# Get the censo_modalidad_caladero data set.
+FISHING_GROUND_CENSUS <- read.csv2(file.path(PATH_DATA_RAW, "censo_modalidad_caladero.csv"))
 
 # Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
