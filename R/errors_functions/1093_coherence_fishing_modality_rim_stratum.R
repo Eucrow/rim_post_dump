@@ -1,4 +1,5 @@
-#' Function to check the coherence between the fishing ship and its respective ESTRATO_RIM
+#' Function to check the coherence between the fishing ship's ESTRATO_RIM and its census modality 
+#' with the master
 #' in the work data
 #' @param catches Data frame with catches data from sapmuebase::importRIMCatches()
 #' @return Data frame with those ships and its ESTRATO_RIM do no match with the master
