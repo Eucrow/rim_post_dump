@@ -67,7 +67,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(10)
+MONTH <- c(3)
 
 # YEAR
 YEAR <- 2025
@@ -78,7 +78,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "TEST"
+suffix <- "b"
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -224,6 +224,8 @@ errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
+errors <- list("GS" = errors[["GS"]][errors[["GS"]]$PUERTO == "Muros", ])
+
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
 # errors <- oab_check(muestreos_up)
@@ -245,9 +247,6 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
-# SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
-
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
 # first save all files opened
@@ -257,7 +256,7 @@ sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
 
-copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
+copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
@@ -276,14 +275,14 @@ copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("https://saco.csic.es/index.php/f/625892378",
-           "https://saco.csic.es/index.php/f/625892370",
-           "https://saco.csic.es/index.php/f/625892384",
-           "https://saco.csic.es/index.php/f/625892374"),
+  LINK = c("",
+           "",
+           "",
+           "https://saco.csic.es/index.php/f/667021968"),
   NOTES = c("",
             "",
             "",
-            "")
+            "Nota. Reenvío errores/warning Muros marzo 2025 tras detección de fallos. Muchas gracias por su comprensión y felices fiestas.")
 )
 
 
