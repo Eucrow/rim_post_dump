@@ -67,7 +67,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(10)
+MONTH <- c(11)
 
 # YEAR
 YEAR <- 2025
@@ -78,7 +78,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- "TEST"
+suffix <- ""
 
 # cfpo to use in the script
 cfpo_to_use <- "CFPO2024 DEF.xlsx"
@@ -132,7 +132,7 @@ PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
 # path to data-raw folder
 PATH_DATA_RAW <- file.path(getwd(), DATA_RAW_FOLDER_NAME)
 # path to shared folder
-PATH_SHARED_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
+PATH_SHARED_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER, ERRORS_FOLDER_NAME)
 
 # path to SIRENO folder.
 PATH_SIRENO <- "C:/sireno"
@@ -141,9 +141,9 @@ PATH_SIRENO <- "C:/sireno"
 FILES_TO_BACKUP <- c(
   "rim_post_dump.R",
   list.files("R", pattern = "\\.R$", full.names = TRUE, recursive = TRUE),
-  file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
-  file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"),
-  file.path(PATH_DATA_RAW, "historical_species_sampled.csv")
+  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
+  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -160,18 +160,18 @@ working_folders <- list(
 lapply(working_folders, dir.create, recursive = TRUE)
 
 # MOVE FILES FROM DOWNLOAD FOLDER TO INPUT DIRECTORY ---------------------------
-list_files <- list(
-  des_tal = FILENAME_DES_TAL,
-  des_tot = FILENAME_DES_TOT,
-  tal = FILENAME_TAL
-)
-
-lapply(
-  list_files,
-  move_file,
-  PATH_SIRENO,
-  PATH_INPUT_FILES
-)
+# list_files <- list(
+#   des_tal = FILENAME_DES_TAL,
+#   des_tot = FILENAME_DES_TOT,
+#   tal = FILENAME_TAL
+# )
+#
+# lapply(
+#   list_files,
+#   move_file,
+#   PATH_SIRENO,
+#   PATH_INPUT_FILES
+# )
 
 # IMPORT DATA ------------------------------------------------------------------
 
@@ -246,7 +246,7 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
+# copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 
 
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
@@ -276,10 +276,10 @@ copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("https://saco.csic.es/index.php/f/625892378",
-           "https://saco.csic.es/index.php/f/625892370",
-           "https://saco.csic.es/index.php/f/625892384",
-           "https://saco.csic.es/index.php/f/625892374"),
+  LINK = c("https://saco.csic.es/index.php/f/681688219",
+           "https://saco.csic.es/index.php/f/681688216",
+           "https://saco.csic.es/index.php/f/681688218",
+           "https://saco.csic.es/index.php/f/681688217"),
   NOTES = c("",
             "",
             "",
