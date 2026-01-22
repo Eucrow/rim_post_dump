@@ -67,7 +67,8 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(3)
+MONTH <- c(9)
+
 
 # YEAR
 YEAR <- 2025
@@ -143,7 +144,8 @@ FILES_TO_BACKUP <- c(
   list.files("R", pattern = "\\.R$", full.names = TRUE, recursive = TRUE),
   file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
   file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"),
-  file.path(PATH_DATA_RAW, "historical_species_sampled.csv")
+  file.path(PATH_DATA_RAW, "historical_species_sampled.csv"),
+  file.path(PATH_DATA_RAW, "censo_modalidad_caladero.csv")
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -184,6 +186,12 @@ sampled_species_no_mixed <- especies_no_mezcla
 # Get the not allowed species data set.
 NOT_ALLOWED_SPECIES <- read.csv(file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"))
 
+# Get the fishing ground census master data set.
+FISHING_GROUND_CENSUS <- read.csv(
+  file.path(PATH_DATA_RAW, "censo_modalidad_caladero.csv"),
+  sep = ";"
+)
+
 # Get the historical sampled species dataset
 historical_species_sampled <- read.csv(
   file.path(PATH_DATA_RAW, "historical_species_sampled.csv"),
@@ -203,8 +211,8 @@ CFPO <- read.xlsx(
   file.path(PATH_PRIVATE_FILES, cfpo_to_use),
   detectDates = TRUE
 )
-CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual")]
-colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO")
+CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual", "Censo.por.modalidad")]
+colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO", "CENSO_MODALIDAD")
 
 # Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
