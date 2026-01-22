@@ -288,7 +288,7 @@ copy_files_to_folder <- function(path_files_from, path_files_to) {
 
       # if the share errors folder does not exists, create it, with its subfolders
       folders <- list.dirs(path_files_from,
-        recursive = FALSE,
+        recursive = TRUE,
         full.names = FALSE
       )
 

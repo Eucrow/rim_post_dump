@@ -68,6 +68,10 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(11)
+=======
+MONTH <- c(9)
+
+>>>>>>> 9ffe295e59dd8187e270517ef77a48315329062c
 
 # YEAR
 YEAR <- 2025
