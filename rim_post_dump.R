@@ -68,10 +68,6 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 
 # MONTH: 1 to 12, or vector with month in numbers
 MONTH <- c(11)
-=======
-MONTH <- c(9)
-
->>>>>>> 9ffe295e59dd8187e270517ef77a48315329062c
 
 # YEAR
 YEAR <- 2025
@@ -145,9 +141,11 @@ PATH_SIRENO <- "C:/sireno"
 FILES_TO_BACKUP <- c(
   "rim_post_dump.R",
   list.files("R", pattern = "\\.R$", full.names = TRUE, recursive = TRUE),
-  file.path(DATA_RAW_FOLDER_NAME, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
-  file.path(DATA_RAW_FOLDER_NAME, "especies_no_permitidas.csv"),
-  file.path(DATA_RAW_FOLDER_NAME, "historical_species_sampled.csv")
+  file.path(PATH_DATA_RAW, "especies_sujetas_a_posible_confusion_taxonomica.csv"),
+  file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"),
+  file.path(PATH_DATA_RAW, "historical_species_sampled.csv"),
+  file.path(PATH_DATA_RAW, "censo_modalidad_caladero.csv")
+
 )
 
 ERRORS_FILENAME <- paste0("errors", "_", IDENTIFIER)
@@ -188,6 +186,12 @@ sampled_species_no_mixed <- especies_no_mezcla
 # Get the not allowed species data set.
 NOT_ALLOWED_SPECIES <- read.csv(file.path(PATH_DATA_RAW, "especies_no_permitidas.csv"))
 
+# Get the fishing ground census master data set.
+FISHING_GROUND_CENSUS <- read.csv(
+  file.path(PATH_DATA_RAW, "censo_modalidad_caladero.csv"),
+  sep = ";"
+)
+
 # Get the historical sampled species dataset
 historical_species_sampled <- read.csv(
   file.path(PATH_DATA_RAW, "historical_species_sampled.csv"),
@@ -207,8 +211,8 @@ CFPO <- read.xlsx(
   file.path(PATH_PRIVATE_FILES, cfpo_to_use),
   detectDates = TRUE
 )
-CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual")]
-colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO")
+CFPO <- CFPO[, c("Código", "CFR", "Matrícula", "Estado.actual", "Censo.por.modalidad")]
+colnames(CFPO) <- c("COD_SGPM", "CFR", "MATRICULA", "ESTADO", "CENSO_MODALIDAD")
 
 # Get the contacts data set.
 CONTACTS <- read.csv(file.path(PATH_PRIVATE_FILES, "contacts.csv"))
@@ -227,6 +231,8 @@ muestreos_up <- importRIMFiles(
 errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
+
+errors <- list("GS" = errors[["GS"]][errors[["GS"]]$PUERTO == "Muros", ])
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
@@ -249,10 +255,6 @@ export_errors_list(errors, ERRORS_FILENAME, separation = "_")
 # This check is not for send to the sups, so it's out the ERRORS dataframe
 # errors_cod_id <- validate_cod_id(muestreos_up$catches)
 
-# SAVE FILES TO SHARED FOLDER --------------------------------------------------
-# copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
-
-
 # BACKUP SCRIPTS AND RELATED FILES ---------------------------------------------
 # first save all files opened
 rstudioapi::documentSaveAll()
@@ -260,8 +262,7 @@ rstudioapi::documentSaveAll()
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
-
-copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
+copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
 # The first time the errors will be sent by email, a credential file must be
@@ -280,10 +281,11 @@ copy_files_to_folder(PATH_ERRORS, PATH_SHARED_ERRORS)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("https://saco.csic.es/index.php/f/681688219",
-           "https://saco.csic.es/index.php/f/681688216",
-           "https://saco.csic.es/index.php/f/681688218",
-           "https://saco.csic.es/index.php/f/681688217"),
+  LINK = c("",
+           "",
+           "",
+           ""),
+
   NOTES = c("",
             "",
             "",
