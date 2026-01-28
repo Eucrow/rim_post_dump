@@ -67,7 +67,7 @@ source(file.path(PRIVATE_FOLDER_NAME, "user_settings.R"))
 # FILENAME_TAL <- "IEOUPMUETALSIRENO.TXT"
 
 # MONTH: 1 to 12, or vector with month in numbers
-MONTH <- c(11)
+MONTH <- c(12)
 
 # YEAR
 YEAR <- 2025
@@ -132,7 +132,7 @@ PATH_BACKUP <- file.path(PATH_FILES, BACKUP_FOLDER_NAME)
 # path to data-raw folder
 PATH_DATA_RAW <- file.path(getwd(), DATA_RAW_FOLDER_NAME)
 # path to shared folder
-PATH_SHARED_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER, ERRORS_FOLDER_NAME)
+PATH_SHARED_ERRORS <- file.path(PATH_SHARE_FOLDER, YEAR, IDENTIFIER)
 
 # path to SIRENO folder.
 PATH_SIRENO <- "C:/sireno"
@@ -232,7 +232,7 @@ errors <- rim_check(muestreos_up)
 # errors <- rim_check_annual(muestreos_up)
 # errors <- rim_check_annual_nvdp_matched(muestreos_up)
 
-errors <- list("GS" = errors[["GS"]][errors[["GS"]]$PUERTO == "Muros", ])
+# errors <- list("GS" = errors[["GS"]][errors[["GS"]]$PUERTO == "Muros", ])
 
 # Check oab data dumped in rim:
 #   - sampled type 4, MT2B
@@ -262,6 +262,7 @@ rstudioapi::documentSaveAll()
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 
 # SAVE FILES TO SHARED FOLDER --------------------------------------------------
+
 copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 
 # SEND EMAILS AUTOMATICALLY ----------------------------------------------------
@@ -281,10 +282,10 @@ copy_files_to_folder(PATH_FILES, PATH_SHARED_ERRORS)
 # - NOTES: any notes to add to the email. If there aren't, must be set to "".
 accessory_email_info <- data.frame(
   AREA_INF = c("AC", "GC", "GN", "GS"),
-  LINK = c("",
-           "",
-           "",
-           ""),
+  LINK = c("https://saco.csic.es/index.php/f/694456590",
+           "https://saco.csic.es/index.php/f/694456585",
+           "https://saco.csic.es/index.php/f/694456587",
+           "https://saco.csic.es/index.php/f/694456586"),
 
   NOTES = c("",
             "",
